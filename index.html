@@ -953,7 +953,8 @@
                 payload[field] = parseFloat(value);
             }
             
-            if(payload.weight && payload.height) {
+            // ป้องกัน Error กรณีส่วนสูงเป็น 0 หรือค่าว่าง
+            if(payload.weight && payload.height && payload.height > 0) {
                 const h_m = payload.height / 100;
                 payload.bmi = parseFloat((payload.weight / (h_m * h_m)).toFixed(2));
             } else {
