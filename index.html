@@ -65,7 +65,7 @@
                 -webkit-print-color-adjust: exact; 
                 print-color-adjust: exact; 
             }
-            #sidebar, #mobile-menu-btn, .no-print { display: none !important; }
+            #sidebar, #mobile-menu-btn, .no-print, #floating-save-btn { display: none !important; }
             #main-content { margin-left: 0 !important; padding: 0 !important; width: 100% !important; overflow: visible !important; }
             .glass-panel { background: none !important; border: none !important; box-shadow: none !important; color: black !important; backdrop-filter: none !important; }
             .glass-panel * { color: black !important; border-color: #ccc !important; }
@@ -164,7 +164,7 @@
                     </div>
                 </div>
 
-                <div class="glass-panel rounded-2xl overflow-hidden">
+                <div class="glass-panel rounded-2xl overflow-hidden mb-20">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left whitespace-nowrap">
                             <thead class="bg-indigo-900/50 border-b border-white/10">
@@ -203,7 +203,7 @@
                     </div>
                 </div>
 
-                <div class="glass-panel rounded-2xl overflow-hidden">
+                <div class="glass-panel rounded-2xl overflow-hidden mb-20">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left whitespace-nowrap">
                             <thead class="bg-indigo-900/50 border-b border-white/10 text-sm">
@@ -235,7 +235,7 @@
                     </button>
                 </header>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="students-grid"></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-10" id="students-grid"></div>
 
                 <!-- Student Modal -->
                 <div id="student-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/50 backdrop-blur-sm">
@@ -286,7 +286,7 @@
                     </div>
                 </header>
 
-                <div class="glass-panel rounded-2xl overflow-hidden">
+                <div class="glass-panel rounded-2xl overflow-hidden mb-20">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left whitespace-nowrap">
                             <thead class="bg-indigo-900/50 border-b border-white/10">
@@ -312,7 +312,7 @@
                     <p class="text-indigo-200">ระบบจะปิดการเช็คชื่อในวันหยุดที่กำหนด</p>
                 </header>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-10">
                     <div class="glass-panel p-6 rounded-2xl lg:col-span-1 h-fit">
                         <h3 class="font-bold mb-4 text-lg text-yellow-400">เพิ่มวันหยุด</h3>
                         <form id="holiday-form" onsubmit="addHoliday(event)" class="space-y-4">
@@ -382,7 +382,7 @@
                 </div>
 
                 <!-- Printable Area -->
-                <div id="printable-report" class="bg-white text-black p-4 md:p-8 rounded-xl shadow-2xl min-h-[500px] hidden relative">
+                <div id="printable-report" class="bg-white text-black p-4 md:p-8 rounded-xl shadow-2xl min-h-[500px] hidden relative pb-10">
                     <div id="report-header" class="text-center mb-4"></div>
                     <div id="report-content" class="mb-8"></div>
                     <div id="report-signatures" class="grid grid-cols-3 gap-4 mt-8 pt-8 page-break-inside-avoid px-2"></div>
@@ -396,7 +396,7 @@
                     <p class="text-indigo-200">ข้อมูลพื้นฐาน โลโก้ และรายชื่อผู้ลงนาม</p>
                 </header>
 
-                <div class="glass-panel p-6 rounded-2xl max-w-2xl">
+                <div class="glass-panel p-6 rounded-2xl max-w-2xl mb-10">
                     <form id="settings-form" onsubmit="saveSettings(event)">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="md:col-span-2">
@@ -459,6 +459,11 @@
                 </div>
             </section>
 
+            <!-- Floating Save Button (Manual Save) -->
+            <button id="floating-save-btn" onclick="manualSave()" class="fixed bottom-6 right-6 z-[100] bg-green-500 hover:bg-green-400 text-white rounded-full px-6 py-3 shadow-[0_4px_20px_rgba(34,197,94,0.4)] transition-all duration-300 transform translate-y-24 opacity-0 flex items-center justify-center">
+                <i class="fas fa-save text-xl mr-2"></i> <span class="font-bold text-lg">บันทึกข้อมูล</span>
+            </button>
+
         </div>
     </main>
 
@@ -492,6 +497,7 @@
         // Deep copy mock data as default
         let appData = JSON.parse(JSON.stringify(MOCK_DATA)); 
         let tempLogoData = '';
+        let hasUnsavedChanges = false; // State สำหรับเช็คว่ามีการแก้ไขข้อมูลที่ยังไม่ได้เซฟหรือไม่
 
         // Fetch Data from Supabase safely
         async function initData() {
@@ -542,16 +548,59 @@
         async function saveData() {
             if (!supabaseClient) return; // Silent if no client
             try {
-                // Upsert ensures row is created if missing, updated if exists
                 const { error } = await supabaseClient
                     .from('classroom_data')
                     .upsert({ id: 1, data: appData });
 
                 if (error) throw error;
-                console.log('✅ Auto-saved');
+                console.log('✅ Data saved successfully');
             } catch (error) {
                 console.error('❌ Failed to save:', error);
             }
+        }
+
+        // --- 3. Manual Save Handlers ---
+        function showSaveButton() {
+            hasUnsavedChanges = true;
+            const btn = document.getElementById('floating-save-btn');
+            btn.classList.remove('translate-y-24', 'opacity-0');
+            btn.classList.add('translate-y-0', 'opacity-100');
+        }
+
+        function hideSaveButton() {
+            hasUnsavedChanges = false;
+            const btn = document.getElementById('floating-save-btn');
+            btn.classList.remove('translate-y-0', 'opacity-100');
+            btn.classList.add('translate-y-24', 'opacity-0');
+        }
+
+        async function manualSave() {
+            if (!hasUnsavedChanges) return;
+
+            const btn = document.getElementById('floating-save-btn');
+            const originalHTML = btn.innerHTML;
+            
+            // UI Loading state
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin text-xl mr-2"></i> <span class="font-bold text-lg">กำลังบันทึก...</span>';
+            btn.classList.replace('bg-green-500', 'bg-yellow-500');
+            btn.classList.replace('hover:bg-green-400', 'hover:bg-yellow-400');
+            
+            await saveData(); 
+            
+            // UI Success state
+            btn.innerHTML = '<i class="fas fa-check-circle text-xl mr-2"></i> <span class="font-bold text-lg">บันทึกสำเร็จ</span>';
+            btn.classList.replace('bg-yellow-500', 'bg-blue-500');
+            btn.classList.replace('hover:bg-yellow-400', 'hover:bg-blue-400');
+            
+            setTimeout(() => {
+                hideSaveButton();
+                setTimeout(() => {
+                    // Reset styling after hidden
+                    btn.innerHTML = originalHTML;
+                    btn.classList.replace('bg-blue-500', 'bg-green-500');
+                    btn.classList.replace('hover:bg-blue-400', 'hover:bg-green-400');
+                }, 300);
+            }, 1500);
         }
 
         // --- Utils & Helpers ---
@@ -620,6 +669,7 @@
 
             if(window.innerWidth < 768) toggleSidebar();
 
+            // Refresh view based on selected tab
             if(tabId === 'attendance') renderDaily();
             if(tabId === 'health') renderHealth();
             if(tabId === 'students') renderStudents();
@@ -648,6 +698,7 @@
                 holidayBanner.classList.add('hidden');
             }
 
+            // Initialize defaults if not exist for the day
             if (!appData.dailyRecords[selectedDate]) {
                 appData.dailyRecords[selectedDate] = {};
                 let hasChanges = false;
@@ -655,7 +706,7 @@
                     appData.dailyRecords[selectedDate][s.id] = { status: 'มา', milk: false, brush: false };
                     hasChanges = true;
                 });
-                if(hasChanges) saveData();
+                if(hasChanges) saveData(); // Initial save for structure
             }
 
             const records = appData.dailyRecords[selectedDate];
@@ -715,7 +766,7 @@
                 renderDaily(); 
             }
 
-            saveData();
+            showSaveButton(); // แจ้งเตือนให้กดเซฟแบบแมนนวล
         }
 
         // --- Module 1.5: Health Check ---
@@ -784,8 +835,8 @@
             }
             
             appData.healthRecords[date][studentId][field] = isPass;
-            saveData();
             renderHealth();
+            showSaveButton(); // แจ้งเตือนให้กดเซฟแบบแมนนวล
         }
 
         // --- Module 2: Students Data ---
@@ -860,6 +911,7 @@
                 appData.students.push(newStudent);
             }
 
+            // Student/Settings changes save immediately
             saveData();
             closeStudentModal();
             renderStudents();
@@ -946,8 +998,8 @@
                 appData.nutritionRecords[month][studentId].bmi = 0;
             }
 
-            saveData();
             renderNutrition();
+            showSaveButton(); // แจ้งเตือนให้กดเซฟแบบแมนนวล
         }
 
         // --- Module 4: Holidays ---
@@ -982,7 +1034,7 @@
             }
 
             appData.holidays.push({ id: Date.now().toString(), date, name });
-            saveData();
+            saveData(); // Explicit UI action save immediately
             
             document.getElementById('holiday-form').reset();
             renderHolidays();
@@ -1412,7 +1464,7 @@
                     document.getElementById('set-sign3').value
                 ]
             };
-            saveData();
+            saveData(); // Save immediately for explicit form submits
             loadSettings();
             
             showConfirm('บันทึกสำเร็จ', 'การตั้งค่าระบบถูกบันทึกเรียบร้อยแล้ว', null);
