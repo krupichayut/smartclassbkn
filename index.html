@@ -912,7 +912,7 @@
             tbody.innerHTML = '';
 
             studentsData.forEach(student => {
-                const rec = currentNutritionRecords[student.id] || { weight: '', height: '', bmi: null };
+                const rec = currentNutritionRecords[student.id] || { weight: null, height: null, bmi: null };
                 let bmiResult = { text: '-', color: 'text-gray-400' };
                 if(rec.bmi) {
                     if(rec.bmi < 18.5) bmiResult = { text: 'ผอม', color: 'text-blue-400' };
@@ -927,11 +927,11 @@
                         <td class="p-4">${student.name}</td>
                         <td class="p-4">
                             <input type="number" step="0.1" class="glass-input w-full p-1.5 rounded-lg text-center" 
-                                value="${rec.weight}" onchange="updateLocalNutrition('${student.id}', '${monthStr}', 'weight', this.value)">
+                                value="${rec.weight !== null && rec.weight !== undefined ? rec.weight : ''}" onchange="updateLocalNutrition('${student.id}', '${monthStr}', 'weight', this.value)">
                         </td>
                         <td class="p-4">
                             <input type="number" step="0.1" class="glass-input w-full p-1.5 rounded-lg text-center" 
-                                value="${rec.height}" onchange="updateLocalNutrition('${student.id}', '${monthStr}', 'height', this.value)">
+                                value="${rec.height !== null && rec.height !== undefined ? rec.height : ''}" onchange="updateLocalNutrition('${student.id}', '${monthStr}', 'height', this.value)">
                         </td>
                         <td class="p-4 text-center font-bold text-yellow-400">${rec.bmi ? rec.bmi : '-'}</td>
                         <td class="p-4 text-center font-bold ${bmiResult.color}">
@@ -943,14 +943,19 @@
         }
 
         function updateLocalNutrition(studentId, month, field, value) {
-            let payload = currentNutritionRecords[studentId] || { student_id: studentId, record_month: month, weight: '', height: '', bmi: null };
+            let payload = currentNutritionRecords[studentId] || { student_id: studentId, record_month: month, weight: null, height: null, bmi: null };
             payload.student_id = studentId;
             payload.record_month = month;
-            payload[field] = value ? parseFloat(value) : null;
+            
+            if (value === '' || value === null || value === undefined) {
+                payload[field] = null;
+            } else {
+                payload[field] = parseFloat(value);
+            }
             
             if(payload.weight && payload.height) {
                 const h_m = payload.height / 100;
-                payload.bmi = (payload.weight / (h_m * h_m)).toFixed(2);
+                payload.bmi = parseFloat((payload.weight / (h_m * h_m)).toFixed(2));
             } else {
                 payload.bmi = null;
             }
