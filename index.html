@@ -447,11 +447,13 @@
 
     <script>
         // ============================================================================
-        // 1. SUPABASE INITIALIZATION
+        // 1. SUPABASE INITIALIZATION (แก้บั๊กชื่อตัวแปรชนกัน)
         // ============================================================================
         const SUPABASE_URL = 'https://nnxfkprivlvwturbybhf.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ueGZrcHJpdmx2d3R1cmJ5YmhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NTAwNzUsImV4cCI6MjA5NDMyNjA3NX0.1VJgA5v7roJAGxUdUu052pwlrRH0y2SVs8elhka5Ofk';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // เราเปลี่ยนชื่อเป็น supabaseClient เพื่อไม่ให้ไปชนกับตัวแปรจาก CDN
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // ============================================================================
         // 2. GLOBAL STATE & CACHE
@@ -461,7 +463,7 @@
         let holidaysData = [];
         let classroomSettings = {};
         
-        // Caches for current viewed dates to allow partial field updates (Upsert)
+        // Caches for current viewed dates
         let currentDailyRecords = {}; 
         let currentHealthRecords = {};
         let currentNutritionRecords = {};
@@ -537,16 +539,16 @@
             const statusEl = document.getElementById('db-status');
             try {
                 // Fetch Settings
-                const { data: cData, error: cErr } = await supabase.from('classrooms').select('*').eq('id', CLASSROOM_ID).single();
+                const { data: cData, error: cErr } = await supabaseClient.from('classrooms').select('*').eq('id', CLASSROOM_ID).single();
                 if(cErr) throw cErr;
                 classroomSettings = cData;
 
                 // Fetch Students
-                const { data: sData } = await supabase.from('students').select('*').eq('classroom_id', CLASSROOM_ID).order('code');
+                const { data: sData } = await supabaseClient.from('students').select('*').eq('classroom_id', CLASSROOM_ID).order('code');
                 studentsData = sData || [];
 
                 // Fetch Holidays
-                const { data: hData } = await supabase.from('holidays').select('*').eq('classroom_id', CLASSROOM_ID).order('holiday_date');
+                const { data: hData } = await supabaseClient.from('holidays').select('*').eq('classroom_id', CLASSROOM_ID).order('holiday_date');
                 holidaysData = hData || [];
 
                 statusEl.innerHTML = '<span class="text-green-400"><i class="fas fa-cloud"></i> ออนไลน์ (ฐานข้อมูลใหม่)</span>';
@@ -628,7 +630,7 @@
             };
             if(id) payload.id = id;
 
-            const { data, error } = await supabase.from('students').upsert(payload).select();
+            const { data, error } = await supabaseClient.from('students').upsert(payload).select();
             if(!error && data) {
                 if(!id) studentsData.push(data[0]);
                 else {
@@ -644,7 +646,7 @@
 
         function deleteStudent(id) {
             showConfirm('ลบนักเรียน', 'ยืนยันการลบนักเรียน? (ข้อมูลประวัติของเด็กจะถูกลบไปด้วย)', async () => {
-                const { error } = await supabase.from('students').delete().eq('id', id);
+                const { error } = await supabaseClient.from('students').delete().eq('id', id);
                 if(!error) {
                     studentsData = studentsData.filter(s => s.id !== id);
                     renderStudents();
@@ -670,13 +672,12 @@
             }
 
             // Fetch records for current date
-            const { data: records } = await supabase.from('daily_records').select('*').eq('record_date', dateStr);
+            const { data: records } = await supabaseClient.from('daily_records').select('*').eq('record_date', dateStr);
             currentDailyRecords = {};
             if(records) records.forEach(r => currentDailyRecords[r.student_id] = r);
 
             tbody.innerHTML = '';
             studentsData.forEach(student => {
-                // Use existing DB record or default struct
                 const rec = currentDailyRecords[student.id] || { status: 'มา', drink_milk: false, brush_teeth: false };
                 const disabled = isHoliday ? 'disabled opacity-50 cursor-not-allowed' : '';
                 
@@ -707,7 +708,6 @@
         }
 
         async function saveDaily(studentId, date, field, value) {
-            // Setup base payload from cache or default
             let payload = currentDailyRecords[studentId] || { 
                 student_id: studentId, record_date: date, status: 'มา', drink_milk: false, brush_teeth: false 
             };
@@ -716,20 +716,17 @@
             payload.record_date = date;
             payload[field] = value;
             
-            // Business Logic: If absent, clear activities
             if(field === 'status' && (value === 'ขาด' || value === 'ลา')) {
                 payload.drink_milk = false;
                 payload.brush_teeth = false;
-                setTimeout(renderDaily, 100); // Trigger UI refresh
+                setTimeout(renderDaily, 100); 
             }
 
-            // Update local cache
             currentDailyRecords[studentId] = payload;
 
-            // Upsert into Supabase (Matches unique constraint: student_id, record_date)
-            const { data, error } = await supabase.from('daily_records').upsert(payload, { onConflict: 'student_id, record_date' }).select();
+            const { data, error } = await supabaseClient.from('daily_records').upsert(payload, { onConflict: 'student_id, record_date' }).select();
             if(!error && data) {
-                currentDailyRecords[studentId] = data[0]; // Update cache with DB version (gets ID)
+                currentDailyRecords[studentId] = data[0]; 
                 showNotification('บันทึกข้อมูลรายวันอัตโนมัติ');
             }
         }
@@ -742,17 +739,18 @@
             const tbody = document.getElementById('health-tbody');
             tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4">กำลังโหลดข้อมูล...</td></tr>';
 
-            const { data: records } = await supabase.from('health_records').select('*').eq('record_date', dateStr);
+            const { data: records } = await supabaseClient.from('health_records').select('*').eq('record_date', dateStr);
             currentHealthRecords = {};
             if(records) records.forEach(r => currentHealthRecords[r.student_id] = r);
 
             tbody.innerHTML = '';
             studentsData.forEach(student => {
                 const rec = currentHealthRecords[student.id] || { uniform_pass: true, hair_pass: true, ears_pass: true, skin_pass: true, teeth_pass: true };
-                
+                const disabled = holidaysData.find(h => h.holiday_date === dateStr) ? 'disabled opacity-50 cursor-not-allowed' : '';
+
                 const genSelect = (field, isPass) => `
                     <select class="glass-input p-1 rounded-lg text-xs w-full ${isPass ? 'text-green-400' : 'text-red-400 border-red-500'}" 
-                        onchange="saveHealth('${student.id}', '${dateStr}', '${field}', this.value === 'true')">
+                        onchange="saveHealth('${student.id}', '${dateStr}', '${field}', this.value === 'true')" ${disabled}>
                         <option value="true" ${isPass ? 'selected' : ''} class="text-green-400">ผ่าน</option>
                         <option value="false" ${!isPass ? 'selected' : ''} class="text-red-400">ไม่ผ่าน</option>
                     </select>
@@ -783,11 +781,11 @@
 
             currentHealthRecords[studentId] = payload;
 
-            const { data, error } = await supabase.from('health_records').upsert(payload, { onConflict: 'student_id, record_date' }).select();
+            const { data, error } = await supabaseClient.from('health_records').upsert(payload, { onConflict: 'student_id, record_date' }).select();
             if(!error && data) {
                 currentHealthRecords[studentId] = data[0];
                 showNotification('บันทึกข้อมูลสุขภาพอัตโนมัติ');
-                renderHealth(); // Refresh colors
+                renderHealth(); 
             }
         }
 
@@ -799,7 +797,7 @@
             const tbody = document.getElementById('nutrition-tbody');
             tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4">กำลังโหลดข้อมูล...</td></tr>';
 
-            const { data: records } = await supabase.from('nutrition_records').select('*').eq('record_month', monthStr);
+            const { data: records } = await supabaseClient.from('nutrition_records').select('*').eq('record_month', monthStr);
             currentNutritionRecords = {};
             if(records) records.forEach(r => currentNutritionRecords[r.student_id] = r);
 
@@ -841,7 +839,6 @@
             payload.record_month = month;
             payload[field] = value ? parseFloat(value) : null;
             
-            // Calculate BMI
             if(payload.weight && payload.height) {
                 const h_m = payload.height / 100;
                 payload.bmi = (payload.weight / (h_m * h_m)).toFixed(2);
@@ -851,11 +848,11 @@
 
             currentNutritionRecords[studentId] = payload;
 
-            const { data, error } = await supabase.from('nutrition_records').upsert(payload, { onConflict: 'student_id, record_month' }).select();
+            const { data, error } = await supabaseClient.from('nutrition_records').upsert(payload, { onConflict: 'student_id, record_month' }).select();
             if(!error && data) {
                 currentNutritionRecords[studentId] = data[0];
                 showNotification('บันทึกโภชนาการและคำนวณ BMI แล้ว');
-                renderNutrition(); // Update UI
+                renderNutrition();
             }
         }
 
@@ -885,7 +882,7 @@
             const date = document.getElementById('holiday-date-input').value;
             const name = document.getElementById('holiday-name').value;
             
-            const { data, error } = await supabase.from('holidays').insert({ classroom_id: CLASSROOM_ID, holiday_date: date, name: name }).select();
+            const { data, error } = await supabaseClient.from('holidays').insert({ classroom_id: CLASSROOM_ID, holiday_date: date, name: name }).select();
             if(!error && data) {
                 holidaysData.push(data[0]);
                 holidaysData.sort((a,b) => a.holiday_date.localeCompare(b.holiday_date));
@@ -899,7 +896,7 @@
 
         async function deleteHoliday(id) {
             showConfirm('ลบวันหยุด', 'ต้องการลบวันหยุดนี้หรือไม่?', async () => {
-                await supabase.from('holidays').delete().eq('id', id);
+                await supabaseClient.from('holidays').delete().eq('id', id);
                 holidaysData = holidaysData.filter(h => h.id !== id);
                 renderHolidays();
                 showNotification('ลบวันหยุดเรียบร้อยแล้ว');
@@ -932,25 +929,21 @@
             const fileExt = file.name.split('.').pop();
             const fileName = `logo_${Date.now()}.${fileExt}`;
             
-            // Upload to Supabase Storage 'logos' bucket
-            const { data, error } = await supabase.storage.from('logos').upload(fileName, file);
+            const { data, error } = await supabaseClient.storage.from('logos').upload(fileName, file);
             if(error) {
                 showConfirm('อัปโหลดล้มเหลว', 'โปรดตรวจสอบว่าสร้าง Bucket ชื่อ "logos" และตั้งเป็น Public หรือยัง', null);
                 return;
             }
 
-            // Get Public URL
-            const { data: publicData } = supabase.storage.from('logos').getPublicUrl(fileName);
+            const { data: publicData } = supabaseClient.storage.from('logos').getPublicUrl(fileName);
             const logoUrl = publicData.publicUrl;
 
-            // Save URL to DB
-            await supabase.from('classrooms').update({ logo_url: logoUrl }).eq('id', CLASSROOM_ID);
+            await supabaseClient.from('classrooms').update({ logo_url: logoUrl }).eq('id', CLASSROOM_ID);
             classroomSettings.logo_url = logoUrl;
             
             renderSettings();
             showNotification('อัปโหลดโลโก้สำเร็จ!');
             
-            // Update Sidebar visually
             document.getElementById('sidebar-logo-img').src = logoUrl;
             document.getElementById('sidebar-logo-img').classList.remove('hidden');
             document.getElementById('sidebar-default-icon').classList.add('hidden');
@@ -970,7 +963,7 @@
                 director: document.getElementById('set-sign3').value
             };
 
-            const { error } = await supabase.from('classrooms').update(payload).eq('id', CLASSROOM_ID);
+            const { error } = await supabaseClient.from('classrooms').update(payload).eq('id', CLASSROOM_ID);
             if(!error) {
                 classroomSettings = { ...classroomSettings, ...payload };
                 document.getElementById('sidebar-school-name').innerText = payload.school_name;
@@ -1001,20 +994,17 @@
             loader.classList.remove('hidden');
 
             try {
-                // Determine Date Range
                 const [year, month] = monthStr.split('-');
                 const startDate = `${year}-${month}-01`;
                 const daysInMonth = new Date(parseInt(year), parseInt(month), 0).getDate();
                 const endDate = `${year}-${month}-${daysInMonth}`;
 
-                // Fetch Target Data for the whole month
                 let targetData = [];
                 if(type === 'attendance' || type === 'milk' || type === 'brush') {
-                    const { data } = await supabase.from('daily_records').select('*').gte('record_date', startDate).lte('record_date', endDate);
+                    const { data } = await supabaseClient.from('daily_records').select('*').gte('record_date', startDate).lte('record_date', endDate);
                     targetData = data || [];
                 }
 
-                // Render Header
                 let logoHTML = classroomSettings.logo_url ? `<img src="${classroomSettings.logo_url}" alt="Logo" class="h-20 w-20 object-contain mx-auto mb-3">` : '';
                 headerDiv.innerHTML = `
                     ${logoHTML}
@@ -1023,7 +1013,6 @@
                     <p class="text-sm text-gray-600">ชั้นเรียน: ${classroomSettings.room_name || '-'} | ปีการศึกษา: ${classroomSettings.academic_year || '-'}</p>
                 `;
 
-                // Render Content Table
                 let tableHTML = `<div class="overflow-x-auto"><table class="w-full text-[11px] md:text-xs border-collapse border border-gray-400">
                     <thead class="bg-gray-100">
                         <tr>
@@ -1038,7 +1027,6 @@
                 }
                 tableHTML += `</tr><tr>`;
 
-                // Render Days Header & Count Working Days
                 let totalWorkingDays = 0;
                 for(let d = 1; d <= daysInMonth; d++) {
                     const dateKey = `${year}-${month.padStart(2, '0')}-${String(d).padStart(2, '0')}`;
@@ -1050,9 +1038,8 @@
                     const bgClass = (isWeekend || isHoliday) ? 'bg-gray-300' : '';
                     tableHTML += `<th class="border border-gray-400 p-0.5 w-5 ${bgClass}" ${bgClass ? 'style="background-color: #d1d5db !important;"' : ''}>${d}</th>`;
                 }
-                if(totalWorkingDays === 0) totalWorkingDays = 1; // Prevent Div/0
+                if(totalWorkingDays === 0) totalWorkingDays = 1; 
 
-                // Render Summary Headers
                 if(type === 'attendance') {
                     tableHTML += `<th class="border border-gray-400 p-0.5 w-6 bg-green-50">มา</th><th class="border border-gray-400 p-0.5 w-6 bg-orange-50">สาย</th><th class="border border-gray-400 p-0.5 w-6 bg-blue-50">ลา</th><th class="border border-gray-400 p-0.5 w-6 bg-red-50">ขาด</th>`;
                 } else {
@@ -1060,7 +1047,6 @@
                 }
                 tableHTML += `</tr></thead><tbody>`;
 
-                // Render Rows for Students
                 studentsData.forEach(student => {
                     let present = 0, late = 0, leave = 0, absent = 0, actionCount = 0;
                     
@@ -1100,7 +1086,6 @@
                         tableHTML += `<td class="border border-gray-400 p-0 text-center font-bold text-[10px] ${bgClass}" style="${textStyle}">${cellContent}</td>`;
                     }
 
-                    // Render Row Summary
                     if(type === 'attendance') {
                         const totalPresent = present + late;
                         const percent = ((totalPresent / totalWorkingDays) * 100).toFixed(1);
@@ -1120,7 +1105,6 @@
                 tableHTML += `</tbody></table></div>`;
                 contentDiv.innerHTML = tableHTML;
 
-                // Render Signatures
                 signDiv.innerHTML = `
                     <div class="text-center">
                         <p class="mb-10 text-sm">ลงชื่อ.......................................................</p>
