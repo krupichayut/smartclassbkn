@@ -143,11 +143,14 @@
                 <header class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 mt-8 md:mt-0">
                     <div>
                         <h2 class="text-2xl font-bold text-yellow-400"><i class="fas fa-calendar-check mr-2"></i> บันทึกรายวัน</h2>
-                        <p class="text-indigo-200">เช็คชื่อ ดื่มนม และแปรงฟัน (ข้อมูลจะบันทึกอัตโนมัติ)</p>
+                        <p class="text-indigo-200">เช็คชื่อ ดื่มนม และแปรงฟัน (กดปุ่มบันทึกเมื่อกรอกเสร็จ)</p>
                     </div>
-                    <div class="flex items-center space-x-2">
-                        <label class="text-gray-300">เลือกวันที่:</label>
-                        <input type="date" id="daily-date" class="glass-input px-3 py-2 rounded-lg" onchange="renderDaily()">
+                    <div class="flex items-center space-x-2 w-full md:w-auto">
+                        <label class="text-gray-300 hidden md:block">เลือกวันที่:</label>
+                        <input type="date" id="daily-date" class="glass-input px-3 py-2 rounded-lg flex-1 md:flex-none" onchange="loadDaily()">
+                        <button id="btn-save-daily" onclick="submitDaily()" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg transition-colors shadow-lg whitespace-nowrap">
+                            <i class="fas fa-save mr-1"></i> บันทึก
+                        </button>
                     </div>
                 </header>
 
@@ -182,11 +185,14 @@
                 <header class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 mt-8 md:mt-0">
                     <div>
                         <h2 class="text-2xl font-bold text-yellow-400"><i class="fas fa-notes-medical mr-2"></i> บันทึกสุขภาพ</h2>
-                        <p class="text-indigo-200">ประเมินสุขอนามัยประจำวัน</p>
+                        <p class="text-indigo-200">ประเมินสุขอนามัยประจำวัน (กดปุ่มบันทึกเมื่อกรอกเสร็จ)</p>
                     </div>
-                    <div class="flex items-center space-x-2">
-                        <label class="text-gray-300">เลือกวันที่:</label>
-                        <input type="date" id="health-date" class="glass-input px-3 py-2 rounded-lg" onchange="renderHealth()">
+                    <div class="flex items-center space-x-2 w-full md:w-auto">
+                        <label class="text-gray-300 hidden md:block">เลือกวันที่:</label>
+                        <input type="date" id="health-date" class="glass-input px-3 py-2 rounded-lg flex-1 md:flex-none" onchange="loadHealth()">
+                        <button id="btn-save-health" onclick="submitHealth()" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg transition-colors shadow-lg whitespace-nowrap">
+                            <i class="fas fa-save mr-1"></i> บันทึก
+                        </button>
                     </div>
                 </header>
 
@@ -223,7 +229,7 @@
                 <header class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 mt-8 md:mt-0">
                     <div>
                         <h2 class="text-2xl font-bold text-yellow-400"><i class="fas fa-user-graduate mr-2"></i> ข้อมูลนักเรียน</h2>
-                        <p class="text-indigo-200">จัดการรายชื่อนักเรียนในห้อง</p>
+                        <p class="text-indigo-200">จัดการรายชื่อนักเรียนและข้อมูลผู้ปกครองในห้อง</p>
                     </div>
                     <button onclick="openStudentModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg transition-colors shadow-lg">
                         <i class="fas fa-plus mr-1"></i> เพิ่มนักเรียน
@@ -233,32 +239,52 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-10" id="students-grid"></div>
 
                 <!-- Student Modal -->
-                <div id="student-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/50 backdrop-blur-sm">
-                    <div class="glass-panel p-6 rounded-2xl w-full max-w-md mx-4 relative fade-in">
+                <div id="student-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/50 backdrop-blur-sm overflow-y-auto py-10">
+                    <div class="glass-panel p-6 rounded-2xl w-full max-w-md mx-4 relative fade-in my-auto">
                         <button onclick="closeStudentModal()" type="button" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
                         <h3 class="text-xl font-bold text-yellow-400 mb-4" id="student-modal-title">เพิ่มนักเรียน</h3>
                         <form id="student-form" onsubmit="saveStudent(event)">
                             <input type="hidden" id="student-id">
                             <div class="space-y-4">
-                                <div>
-                                    <label class="block text-sm mb-1 text-gray-300">เลขที่</label>
-                                    <input type="number" id="student-code" required class="glass-input w-full p-2 rounded-lg">
+                                <div class="border-b border-white/10 pb-4">
+                                    <h4 class="text-indigo-300 font-semibold mb-3">ข้อมูลนักเรียน</h4>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="block text-sm mb-1 text-gray-300">เลขที่</label>
+                                            <input type="number" id="student-code" required class="glass-input w-full p-2 rounded-lg">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm mb-1 text-gray-300">ชื่อ - นามสกุล</label>
+                                            <input type="text" id="student-name" required class="glass-input w-full p-2 rounded-lg">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm mb-1 text-gray-300">เพศ</label>
+                                            <select id="student-gender" class="glass-input w-full p-2 rounded-lg">
+                                                <option value="ชาย">ชาย</option>
+                                                <option value="หญิง">หญิง</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm mb-1 text-gray-300">ข้อมูลสุขภาพ (แพ้นม, โรคประจำตัว)</label>
+                                            <input type="text" id="student-health-info" placeholder="เช่น แพ้นมวัว, หอบหืด (เว้นว่างได้)" class="glass-input w-full p-2 rounded-lg">
+                                        </div>
+                                    </div>
                                 </div>
+                                
                                 <div>
-                                    <label class="block text-sm mb-1 text-gray-300">ชื่อ - นามสกุล</label>
-                                    <input type="text" id="student-name" required class="glass-input w-full p-2 rounded-lg">
+                                    <h4 class="text-indigo-300 font-semibold mb-3">ข้อมูลผู้ปกครอง</h4>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="block text-sm mb-1 text-gray-300">ชื่อผู้ปกครอง</label>
+                                            <input type="text" id="student-parent-name" placeholder="ชื่อ-นามสกุล ผู้ปกครอง" class="glass-input w-full p-2 rounded-lg">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm mb-1 text-gray-300">เบอร์ติดต่อ</label>
+                                            <input type="tel" id="student-parent-phone" placeholder="เช่น 0812345678" class="glass-input w-full p-2 rounded-lg">
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="block text-sm mb-1 text-gray-300">เพศ</label>
-                                    <select id="student-gender" class="glass-input w-full p-2 rounded-lg">
-                                        <option value="ชาย">ชาย</option>
-                                        <option value="หญิง">หญิง</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm mb-1 text-gray-300">ข้อมูลสุขภาพ (แพ้นม, โรคประจำตัว)</label>
-                                    <input type="text" id="student-health-info" placeholder="เช่น แพ้นมวัว, หอบหืด (เว้นว่างได้)" class="glass-input w-full p-2 rounded-lg">
-                                </div>
+
                                 <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-400 text-indigo-900 font-bold py-2 rounded-lg transition-colors mt-4 shadow-lg">
                                     บันทึกข้อมูล
                                 </button>
@@ -273,11 +299,14 @@
                 <header class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 mt-8 md:mt-0">
                     <div>
                         <h2 class="text-2xl font-bold text-yellow-400"><i class="fas fa-apple-whole mr-2"></i> ภาวะโภชนาการ</h2>
-                        <p class="text-indigo-200">บันทึกน้ำหนัก-ส่วนสูง และคำนวณ BMI</p>
+                        <p class="text-indigo-200">บันทึกน้ำหนัก-ส่วนสูง และคำนวณ BMI (กดปุ่มบันทึกเมื่อกรอกเสร็จ)</p>
                     </div>
-                    <div class="flex items-center space-x-2">
-                        <label class="text-gray-300">ประจำเดือน:</label>
-                        <input type="month" id="nutrition-month" class="glass-input px-3 py-2 rounded-lg" onchange="renderNutrition()">
+                    <div class="flex items-center space-x-2 w-full md:w-auto">
+                        <label class="text-gray-300 hidden md:block">ประจำเดือน:</label>
+                        <input type="month" id="nutrition-month" class="glass-input px-3 py-2 rounded-lg flex-1 md:flex-none" onchange="loadNutrition()">
+                        <button id="btn-save-nutrition" onclick="submitNutrition()" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg transition-colors shadow-lg whitespace-nowrap">
+                            <i class="fas fa-save mr-1"></i> บันทึก
+                        </button>
                     </div>
                 </header>
 
@@ -504,10 +533,10 @@
             
             if(window.innerWidth < 768) toggleSidebar();
 
-            if(tabId === 'attendance') renderDaily();
-            if(tabId === 'health') renderHealth();
+            if(tabId === 'attendance') loadDaily();
+            if(tabId === 'health') loadHealth();
             if(tabId === 'students') renderStudents();
-            if(tabId === 'nutrition') renderNutrition();
+            if(tabId === 'nutrition') loadNutrition();
             if(tabId === 'holidays') renderHolidays();
             if(tabId === 'settings') renderSettings();
         }
@@ -573,16 +602,29 @@
             
             studentsData.forEach(student => {
                 let healthHTML = student.health_info ? `<div class="mt-2 text-xs bg-red-500/20 text-red-200 border border-red-500/50 p-2 rounded-lg"><i class="fas fa-notes-medical mr-1"></i> ${student.health_info}</div>` : '';
+                
+                let parentHTML = '';
+                if(student.parent_name || student.parent_phone) {
+                    parentHTML = `
+                        <div class="mt-3 pt-3 border-t border-white/10 text-xs text-indigo-200 space-y-1">
+                            ${student.parent_name ? `<p><i class="fas fa-user-tie text-indigo-400 w-4"></i> ${student.parent_name}</p>` : ''}
+                            ${student.parent_phone ? `<p><i class="fas fa-phone text-indigo-400 w-4"></i> <a href="tel:${student.parent_phone}" class="hover:text-yellow-400 transition-colors">${student.parent_phone}</a></p>` : ''}
+                        </div>
+                    `;
+                }
+
                 grid.innerHTML += `
-                    <div class="glass-panel p-5 rounded-2xl relative group">
+                    <div class="glass-panel p-5 rounded-2xl relative group flex flex-col h-full">
                         <div class="absolute top-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button onclick="editStudent('${student.id}')" class="text-blue-400 hover:text-blue-300"><i class="fas fa-edit"></i></button>
                             <button onclick="deleteStudent('${student.id}')" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
                         </div>
                         <div class="w-12 h-12 bg-indigo-800 rounded-full flex items-center justify-center text-xl font-bold text-yellow-400 mb-3">${student.code}</div>
                         <h4 class="font-bold text-lg text-white">${student.name}</h4>
-                        <p class="text-sm text-gray-400">เพศ: ${student.gender || '-'}</p>
+                        <p class="text-sm text-gray-400 mb-1">เพศ: ${student.gender || '-'}</p>
                         ${healthHTML}
+                        <div class="flex-grow"></div>
+                        ${parentHTML}
                     </div>
                 `;
             });
@@ -603,6 +645,9 @@
             document.getElementById('student-name').value = student.name;
             document.getElementById('student-gender').value = student.gender;
             document.getElementById('student-health-info').value = student.health_info || '';
+            document.getElementById('student-parent-name').value = student.parent_name || '';
+            document.getElementById('student-parent-phone').value = student.parent_phone || '';
+
             document.getElementById('student-modal-title').innerText = 'แก้ไขข้อมูลนักเรียน';
             document.getElementById('student-modal').classList.remove('hidden');
         }
@@ -615,7 +660,9 @@
                 code: parseInt(document.getElementById('student-code').value),
                 name: document.getElementById('student-name').value,
                 gender: document.getElementById('student-gender').value,
-                health_info: document.getElementById('student-health-info').value
+                health_info: document.getElementById('student-health-info').value,
+                parent_name: document.getElementById('student-parent-name').value,
+                parent_phone: document.getElementById('student-parent-phone').value
             };
             if(id) payload.id = id;
 
@@ -630,6 +677,9 @@
                 renderStudents();
                 closeStudentModal();
                 showNotification('บันทึกข้อมูลนักเรียนสำเร็จ');
+            } else {
+                console.error(error);
+                alert("เกิดข้อผิดพลาด กรุณาตรวจสอบว่าได้สร้างคอลัมน์ parent_name และ parent_phone ในฐานข้อมูลแล้วหรือยัง");
             }
         }
 
@@ -647,10 +697,21 @@
         // ============================================================================
         // 6. MODULE: DAILY ATTENDANCE
         // ============================================================================
-        async function renderDaily() {
+        async function loadDaily() {
             const dateStr = document.getElementById('daily-date').value;
             const tbody = document.getElementById('daily-tbody');
             tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4">กำลังโหลดข้อมูล...</td></tr>';
+
+            const { data: records } = await supabaseClient.from('daily_records').select('*').eq('record_date', dateStr);
+            currentDailyRecords = {};
+            if(records) records.forEach(r => currentDailyRecords[r.student_id] = r);
+
+            renderDailyUI();
+        }
+
+        function renderDailyUI() {
+            const dateStr = document.getElementById('daily-date').value;
+            const tbody = document.getElementById('daily-tbody');
 
             const isHoliday = holidaysData.find(h => h.holiday_date === dateStr);
             if(isHoliday) {
@@ -659,10 +720,6 @@
             } else {
                 document.getElementById('attendance-holiday-banner').classList.add('hidden');
             }
-
-            const { data: records } = await supabaseClient.from('daily_records').select('*').eq('record_date', dateStr);
-            currentDailyRecords = {};
-            if(records) records.forEach(r => currentDailyRecords[r.student_id] = r);
 
             tbody.innerHTML = '';
             studentsData.forEach(student => {
@@ -675,7 +732,7 @@
                         <td class="p-4">${student.name}</td>
                         <td class="p-4 text-center">
                             <select class="glass-input p-1.5 rounded-lg text-sm w-full" 
-                                onchange="saveDaily('${student.id}', '${dateStr}', 'status', this.value)" ${disabled}>
+                                onchange="updateLocalDaily('${student.id}', '${dateStr}', 'status', this.value)" ${disabled}>
                                 <option value="มา" ${rec.status==='มา'?'selected':''}>มา</option>
                                 <option value="สาย" ${rec.status==='สาย'?'selected':''}>สาย</option>
                                 <option value="ลา" ${rec.status==='ลา'?'selected':''}>ลา</option>
@@ -684,22 +741,19 @@
                         </td>
                         <td class="p-4 text-center">
                             <input type="checkbox" class="w-5 h-5 accent-yellow-500 rounded" 
-                                onchange="saveDaily('${student.id}', '${dateStr}', 'drink_milk', this.checked)" ${rec.drink_milk?'checked':''} ${disabled}>
+                                onchange="updateLocalDaily('${student.id}', '${dateStr}', 'drink_milk', this.checked)" ${rec.drink_milk?'checked':''} ${disabled}>
                         </td>
                         <td class="p-4 text-center">
                             <input type="checkbox" class="w-5 h-5 accent-yellow-500 rounded" 
-                                onchange="saveDaily('${student.id}', '${dateStr}', 'brush_teeth', this.checked)" ${rec.brush_teeth?'checked':''} ${disabled}>
+                                onchange="updateLocalDaily('${student.id}', '${dateStr}', 'brush_teeth', this.checked)" ${rec.brush_teeth?'checked':''} ${disabled}>
                         </td>
                     </tr>
                 `;
             });
         }
 
-        async function saveDaily(studentId, date, field, value) {
-            let payload = currentDailyRecords[studentId] || { 
-                student_id: studentId, record_date: date, status: 'มา', drink_milk: false, brush_teeth: false 
-            };
-            
+        function updateLocalDaily(studentId, date, field, value) {
+            let payload = currentDailyRecords[studentId] || { student_id: studentId, record_date: date, status: 'มา', drink_milk: false, brush_teeth: false };
             payload.student_id = studentId;
             payload.record_date = date;
             payload[field] = value;
@@ -707,21 +761,47 @@
             if(field === 'status' && (value === 'ขาด' || value === 'ลา')) {
                 payload.drink_milk = false;
                 payload.brush_teeth = false;
-                setTimeout(renderDaily, 100); 
+                currentDailyRecords[studentId] = payload;
+                renderDailyUI(); 
+            } else {
+                currentDailyRecords[studentId] = payload;
             }
+        }
 
-            currentDailyRecords[studentId] = payload;
+        async function submitDaily() {
+            const dateStr = document.getElementById('daily-date').value;
+            const isHoliday = holidaysData.find(h => h.holiday_date === dateStr);
+            if(isHoliday) return showNotification('วันนี้เป็นวันหยุด ไม่สามารถบันทึกได้');
+
+            const btn = document.getElementById('btn-save-daily');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> กำลังบันทึก...';
+            btn.disabled = true;
+
+            let payload = [];
+            studentsData.forEach(student => {
+                let rec = currentDailyRecords[student.id] || { student_id: student.id, record_date: dateStr, status: 'มา', drink_milk: false, brush_teeth: false };
+                payload.push(rec);
+            });
+
             const { data, error } = await supabaseClient.from('daily_records').upsert(payload, { onConflict: 'student_id, record_date' }).select();
+            
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+
             if(!error && data) {
-                currentDailyRecords[studentId] = data[0]; 
-                showNotification('บันทึกข้อมูลรายวันอัตโนมัติ');
+                data.forEach(r => currentDailyRecords[r.student_id] = r);
+                showNotification('บันทึกข้อมูลรายวันครบถ้วนแล้ว');
+            } else {
+                console.error(error);
+                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
             }
         }
 
         // ============================================================================
         // 7. MODULE: HEALTH
         // ============================================================================
-        async function renderHealth() {
+        async function loadHealth() {
             const dateStr = document.getElementById('health-date').value;
             const tbody = document.getElementById('health-tbody');
             tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4">กำลังโหลดข้อมูล...</td></tr>';
@@ -730,14 +810,29 @@
             currentHealthRecords = {};
             if(records) records.forEach(r => currentHealthRecords[r.student_id] = r);
 
+            renderHealthUI();
+        }
+
+        function renderHealthUI() {
+            const dateStr = document.getElementById('health-date').value;
+            const tbody = document.getElementById('health-tbody');
+
+            const isHoliday = holidaysData.find(h => h.holiday_date === dateStr);
+            if(isHoliday) {
+                document.getElementById('health-holiday-banner').classList.remove('hidden');
+                document.getElementById('health-holiday-reason').innerText = `วันหยุด: ${isHoliday.name}`;
+            } else {
+                document.getElementById('health-holiday-banner').classList.add('hidden');
+            }
+
             tbody.innerHTML = '';
             studentsData.forEach(student => {
                 const rec = currentHealthRecords[student.id] || { uniform_pass: true, hair_pass: true, ears_pass: true, skin_pass: true, teeth_pass: true };
-                const disabled = holidaysData.find(h => h.holiday_date === dateStr) ? 'disabled opacity-50 cursor-not-allowed' : '';
+                const disabled = isHoliday ? 'disabled opacity-50 cursor-not-allowed' : '';
 
                 const genSelect = (field, isPass) => `
                     <select class="glass-input p-1 rounded-lg text-xs w-full ${isPass ? 'text-green-400' : 'text-red-400 border-red-500'}" 
-                        onchange="saveHealth('${student.id}', '${dateStr}', '${field}', this.value === 'true')" ${disabled}>
+                        onchange="updateLocalHealth('${student.id}', '${dateStr}', '${field}', this.value === 'true')" ${disabled}>
                         <option value="true" ${isPass ? 'selected' : ''} class="text-green-400">ผ่าน</option>
                         <option value="false" ${!isPass ? 'selected' : ''} class="text-red-400">ไม่ผ่าน</option>
                     </select>
@@ -757,28 +852,49 @@
             });
         }
 
-        async function saveHealth(studentId, date, field, value) {
-            let payload = currentHealthRecords[studentId] || { 
-                student_id: studentId, record_date: date, uniform_pass: true, hair_pass: true, ears_pass: true, skin_pass: true, teeth_pass: true 
-            };
-            
+        function updateLocalHealth(studentId, date, field, value) {
+            let payload = currentHealthRecords[studentId] || { student_id: studentId, record_date: date, uniform_pass: true, hair_pass: true, ears_pass: true, skin_pass: true, teeth_pass: true };
             payload.student_id = studentId;
             payload.record_date = date;
             payload[field] = value;
             currentHealthRecords[studentId] = payload;
+            renderHealthUI();
+        }
+
+        async function submitHealth() {
+            const dateStr = document.getElementById('health-date').value;
+            const isHoliday = holidaysData.find(h => h.holiday_date === dateStr);
+            if(isHoliday) return showNotification('วันนี้เป็นวันหยุด ไม่สามารถบันทึกได้');
+
+            const btn = document.getElementById('btn-save-health');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> กำลังบันทึก...';
+            btn.disabled = true;
+
+            let payload = [];
+            studentsData.forEach(student => {
+                let rec = currentHealthRecords[student.id] || { student_id: student.id, record_date: dateStr, uniform_pass: true, hair_pass: true, ears_pass: true, skin_pass: true, teeth_pass: true };
+                payload.push(rec);
+            });
 
             const { data, error } = await supabaseClient.from('health_records').upsert(payload, { onConflict: 'student_id, record_date' }).select();
+            
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+
             if(!error && data) {
-                currentHealthRecords[studentId] = data[0];
-                showNotification('บันทึกข้อมูลสุขภาพอัตโนมัติ');
-                renderHealth(); 
+                data.forEach(r => currentHealthRecords[r.student_id] = r);
+                showNotification('บันทึกข้อมูลสุขภาพครบถ้วนแล้ว');
+            } else {
+                console.error(error);
+                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
             }
         }
 
         // ============================================================================
         // 8. MODULE: NUTRITION
         // ============================================================================
-        async function renderNutrition() {
+        async function loadNutrition() {
             const monthStr = document.getElementById('nutrition-month').value;
             const tbody = document.getElementById('nutrition-tbody');
             tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4">กำลังโหลดข้อมูล...</td></tr>';
@@ -787,7 +903,14 @@
             currentNutritionRecords = {};
             if(records) records.forEach(r => currentNutritionRecords[r.student_id] = r);
 
+            renderNutritionUI();
+        }
+
+        function renderNutritionUI() {
+            const monthStr = document.getElementById('nutrition-month').value;
+            const tbody = document.getElementById('nutrition-tbody');
             tbody.innerHTML = '';
+
             studentsData.forEach(student => {
                 const rec = currentNutritionRecords[student.id] || { weight: '', height: '', bmi: null };
                 let bmiResult = { text: '-', color: 'text-gray-400' };
@@ -804,11 +927,11 @@
                         <td class="p-4">${student.name}</td>
                         <td class="p-4">
                             <input type="number" step="0.1" class="glass-input w-full p-1.5 rounded-lg text-center" 
-                                value="${rec.weight}" onchange="saveNutrition('${student.id}', '${monthStr}', 'weight', this.value)">
+                                value="${rec.weight}" onchange="updateLocalNutrition('${student.id}', '${monthStr}', 'weight', this.value)">
                         </td>
                         <td class="p-4">
                             <input type="number" step="0.1" class="glass-input w-full p-1.5 rounded-lg text-center" 
-                                value="${rec.height}" onchange="saveNutrition('${student.id}', '${monthStr}', 'height', this.value)">
+                                value="${rec.height}" onchange="updateLocalNutrition('${student.id}', '${monthStr}', 'height', this.value)">
                         </td>
                         <td class="p-4 text-center font-bold text-yellow-400">${rec.bmi ? rec.bmi : '-'}</td>
                         <td class="p-4 text-center font-bold ${bmiResult.color}">
@@ -819,8 +942,8 @@
             });
         }
 
-        async function saveNutrition(studentId, month, field, value) {
-            let payload = currentNutritionRecords[studentId] || { student_id: studentId, record_month: month };
+        function updateLocalNutrition(studentId, month, field, value) {
+            let payload = currentNutritionRecords[studentId] || { student_id: studentId, record_month: month, weight: '', height: '', bmi: null };
             payload.student_id = studentId;
             payload.record_month = month;
             payload[field] = value ? parseFloat(value) : null;
@@ -833,12 +956,38 @@
             }
 
             currentNutritionRecords[studentId] = payload;
-            const { data, error } = await supabaseClient.from('nutrition_records').upsert(payload, { onConflict: 'student_id, record_month' }).select();
-            if(!error && data) {
-                currentNutritionRecords[studentId] = data[0];
-                showNotification('บันทึกโภชนาการและคำนวณ BMI แล้ว');
-                renderNutrition();
+            renderNutritionUI();
+        }
+
+        async function submitNutrition() {
+            const monthStr = document.getElementById('nutrition-month').value;
+            const btn = document.getElementById('btn-save-nutrition');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> กำลังบันทึก...';
+            btn.disabled = true;
+
+            let payload = [];
+            studentsData.forEach(student => {
+                if(currentNutritionRecords[student.id]) {
+                    payload.push(currentNutritionRecords[student.id]);
+                }
+            });
+
+            if(payload.length > 0) {
+                const { data, error } = await supabaseClient.from('nutrition_records').upsert(payload, { onConflict: 'student_id, record_month' }).select();
+                if(!error && data) {
+                    data.forEach(r => currentNutritionRecords[r.student_id] = r);
+                    showNotification('บันทึกข้อมูลโภชนาการครบถ้วนแล้ว');
+                } else {
+                    console.error(error);
+                    alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+                }
+            } else {
+                showNotification('ไม่มีข้อมูลให้บันทึก');
             }
+
+            btn.innerHTML = originalText;
+            btn.disabled = false;
         }
 
         // ============================================================================
