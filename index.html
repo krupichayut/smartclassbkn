@@ -470,6 +470,8 @@
     <script>
         // --- 1. Supabase Setup (Robust Initialization) ---
         const SUPABASE_URL = 'https://nnxfkprivlvwturbybhf.supabase.co';
+        // Note: Using hardcoded keys client-side is for testing/prototyping.
+        // For production, ensure Row Level Security (RLS) is properly configured on your Supabase tables.
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ueGZrcHJpdmx2d3R1cmJ5YmhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NTAwNzUsImV4cCI6MjA5NDMyNjA3NX0.1VJgA5v7roJAGxUdUu052pwlrRH0y2SVs8elhka5Ofk';
         
         let supabaseClient = null;
