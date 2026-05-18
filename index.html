@@ -781,7 +781,14 @@
             let payload = [];
             studentsData.forEach(student => {
                 let rec = currentDailyRecords[student.id] || { student_id: student.id, record_date: dateStr, status: 'มา', drink_milk: false, brush_teeth: false };
-                payload.push(rec);
+                // ส่งเฉพาะฟิลด์ที่ฐานข้อมูลต้องการเท่านั้น (เพื่อป้องกัน Error คีย์ไม่ตรงกัน)
+                payload.push({
+                    student_id: rec.student_id,
+                    record_date: rec.record_date,
+                    status: rec.status,
+                    drink_milk: rec.drink_milk,
+                    brush_teeth: rec.brush_teeth
+                });
             });
 
             const { data, error } = await supabaseClient.from('daily_records').upsert(payload, { onConflict: 'student_id, record_date' }).select();
@@ -874,7 +881,15 @@
             let payload = [];
             studentsData.forEach(student => {
                 let rec = currentHealthRecords[student.id] || { student_id: student.id, record_date: dateStr, uniform_pass: true, hair_pass: true, ears_pass: true, skin_pass: true, teeth_pass: true };
-                payload.push(rec);
+                payload.push({
+                    student_id: rec.student_id,
+                    record_date: rec.record_date,
+                    uniform_pass: rec.uniform_pass,
+                    hair_pass: rec.hair_pass,
+                    ears_pass: rec.ears_pass,
+                    skin_pass: rec.skin_pass,
+                    teeth_pass: rec.teeth_pass
+                });
             });
 
             const { data, error } = await supabaseClient.from('health_records').upsert(payload, { onConflict: 'student_id, record_date' }).select();
@@ -975,7 +990,14 @@
             let payload = [];
             studentsData.forEach(student => {
                 if(currentNutritionRecords[student.id]) {
-                    payload.push(currentNutritionRecords[student.id]);
+                    let rec = currentNutritionRecords[student.id];
+                    payload.push({
+                        student_id: rec.student_id,
+                        record_month: rec.record_month,
+                        weight: rec.weight,
+                        height: rec.height,
+                        bmi: rec.bmi
+                    });
                 }
             });
 
