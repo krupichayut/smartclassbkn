@@ -209,13 +209,14 @@
                         <table class="w-full text-left whitespace-nowrap">
                             <thead class="bg-indigo-900/50 border-b border-white/10 text-sm">
                                 <tr>
-                                    <th class="p-3 text-center w-12">เลขที่</th>
-                                    <th class="p-3 min-w-[150px]">ชื่อ - นามสกุล</th>
-                                    <th class="p-3 text-center w-28">เครื่องแต่งกาย</th>
-                                    <th class="p-3 text-center w-28">ผม/ศีรษะ</th>
-                                    <th class="p-3 text-center w-28">ใบหู/ซอกหู</th>
-                                    <th class="p-3 text-center w-28">ใบหน้า/ผิวหนัง</th>
-                                    <th class="p-3 text-center w-28">ฟัน/ช่องปาก</th>
+                                    <th class="p-3 text-center w-12 align-top">เลขที่</th>
+                                    <th class="p-3 min-w-[150px] align-top">ชื่อ - นามสกุล</th>
+                                    <th class="p-2 text-center w-28 align-top leading-snug">ผมและศีรษะ<br><span class="text-[10px] text-gray-400 font-normal mt-1 block whitespace-normal">ไม่มีเหา,ไข่เหา,รังแค</span></th>
+                                    <th class="p-2 text-center w-28 align-top leading-snug">ใบหูและซอกหู<br><span class="text-[10px] text-gray-400 font-normal mt-1 block whitespace-normal">ไม่มีคราบ,ขี้หู</span></th>
+                                    <th class="p-2 text-center w-28 align-top leading-snug">ฟัน<br><span class="text-[10px] text-gray-400 font-normal mt-1 block whitespace-normal">ไม่มีเศษอาหาร,ขี้ฟัน</span></th>
+                                    <th class="p-2 text-center w-28 align-top leading-snug">ใบหน้า/ผิวหนัง<br><span class="text-[10px] text-gray-400 font-normal mt-1 block whitespace-normal">ไม่มีคราบ,ขี้ไคล</span></th>
+                                    <th class="p-2 text-center w-28 align-top leading-snug">เสื้อผ้า<br><span class="text-[10px] text-gray-400 font-normal mt-1 block whitespace-normal">สะอาด,ไม่มีกลิ่น</span></th>
+                                    <th class="p-2 text-center w-28 align-top leading-snug">ถุงเท้า/รองเท้า<br><span class="text-[10px] text-gray-400 font-normal mt-1 block whitespace-normal">สะอาด,ไม่มีกลิ่น</span></th>
                                 </tr>
                             </thead>
                             <tbody id="health-tbody" class="divide-y divide-white/10"></tbody>
@@ -781,7 +782,6 @@
             let payload = [];
             studentsData.forEach(student => {
                 let rec = currentDailyRecords[student.id] || { student_id: student.id, record_date: dateStr, status: 'มา', drink_milk: false, brush_teeth: false };
-                // ส่งเฉพาะฟิลด์ที่ฐานข้อมูลต้องการเท่านั้น (เพื่อป้องกัน Error คีย์ไม่ตรงกัน)
                 payload.push({
                     student_id: rec.student_id,
                     record_date: rec.record_date,
@@ -811,7 +811,7 @@
         async function loadHealth() {
             const dateStr = document.getElementById('health-date').value;
             const tbody = document.getElementById('health-tbody');
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4">กำลังโหลดข้อมูล...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center p-4">กำลังโหลดข้อมูล...</td></tr>';
 
             const { data: records } = await supabaseClient.from('health_records').select('*').eq('record_date', dateStr);
             currentHealthRecords = {};
@@ -834,7 +834,15 @@
 
             tbody.innerHTML = '';
             studentsData.forEach(student => {
-                const rec = currentHealthRecords[student.id] || { uniform_pass: true, hair_pass: true, ears_pass: true, skin_pass: true, teeth_pass: true };
+                // อ่านค่าจาก DB หรือถ้าไม่มีให้ตั้งเป็น true อัตโนมัติ (และป้องกันค่า null จากคอลัมน์เก่า)
+                const rec = currentHealthRecords[student.id] || {};
+                const isHairPass = rec.hair_pass !== false;
+                const isEarsPass = rec.ears_pass !== false;
+                const isTeethPass = rec.teeth_pass !== false;
+                const isSkinPass = rec.skin_pass !== false;
+                const isUniformPass = rec.uniform_pass !== false;
+                const isShoesPass = rec.shoes_pass !== false; // คอลัมน์ใหม่
+                
                 const disabled = isHoliday ? 'disabled opacity-50 cursor-not-allowed' : '';
 
                 const genSelect = (field, isPass) => `
@@ -849,18 +857,23 @@
                     <tr>
                         <td class="p-3 text-center text-gray-400">${student.code}</td>
                         <td class="p-3">${student.name}</td>
-                        <td class="p-2 text-center">${genSelect('uniform_pass', rec.uniform_pass)}</td>
-                        <td class="p-2 text-center">${genSelect('hair_pass', rec.hair_pass)}</td>
-                        <td class="p-2 text-center">${genSelect('ears_pass', rec.ears_pass)}</td>
-                        <td class="p-2 text-center">${genSelect('skin_pass', rec.skin_pass)}</td>
-                        <td class="p-2 text-center">${genSelect('teeth_pass', rec.teeth_pass)}</td>
+                        <td class="p-2 text-center">${genSelect('hair_pass', isHairPass)}</td>
+                        <td class="p-2 text-center">${genSelect('ears_pass', isEarsPass)}</td>
+                        <td class="p-2 text-center">${genSelect('teeth_pass', isTeethPass)}</td>
+                        <td class="p-2 text-center">${genSelect('skin_pass', isSkinPass)}</td>
+                        <td class="p-2 text-center">${genSelect('uniform_pass', isUniformPass)}</td>
+                        <td class="p-2 text-center">${genSelect('shoes_pass', isShoesPass)}</td>
                     </tr>
                 `;
             });
         }
 
         function updateLocalHealth(studentId, date, field, value) {
-            let payload = currentHealthRecords[studentId] || { student_id: studentId, record_date: date, uniform_pass: true, hair_pass: true, ears_pass: true, skin_pass: true, teeth_pass: true };
+            let payload = currentHealthRecords[studentId] || { 
+                student_id: studentId, record_date: date, 
+                hair_pass: true, ears_pass: true, teeth_pass: true, 
+                skin_pass: true, uniform_pass: true, shoes_pass: true 
+            };
             payload.student_id = studentId;
             payload.record_date = date;
             payload[field] = value;
@@ -880,15 +893,16 @@
 
             let payload = [];
             studentsData.forEach(student => {
-                let rec = currentHealthRecords[student.id] || { student_id: student.id, record_date: dateStr, uniform_pass: true, hair_pass: true, ears_pass: true, skin_pass: true, teeth_pass: true };
+                let rec = currentHealthRecords[student.id] || {};
                 payload.push({
-                    student_id: rec.student_id,
-                    record_date: rec.record_date,
-                    uniform_pass: rec.uniform_pass,
-                    hair_pass: rec.hair_pass,
-                    ears_pass: rec.ears_pass,
-                    skin_pass: rec.skin_pass,
-                    teeth_pass: rec.teeth_pass
+                    student_id: student.id,
+                    record_date: dateStr,
+                    hair_pass: rec.hair_pass !== false,
+                    ears_pass: rec.ears_pass !== false,
+                    teeth_pass: rec.teeth_pass !== false,
+                    skin_pass: rec.skin_pass !== false,
+                    uniform_pass: rec.uniform_pass !== false,
+                    shoes_pass: rec.shoes_pass !== false
                 });
             });
 
@@ -902,7 +916,7 @@
                 showNotification('บันทึกข้อมูลสุขภาพครบถ้วนแล้ว');
             } else {
                 console.error(error);
-                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาตรวจสอบว่าเพิ่มคอลัมน์ shoes_pass ในฐานข้อมูลแล้วหรือยัง');
             }
         }
 
@@ -968,7 +982,6 @@
                 payload[field] = parseFloat(value);
             }
             
-            // ป้องกัน Error กรณีส่วนสูงเป็น 0 หรือค่าว่าง
             if(payload.weight && payload.height && payload.height > 0) {
                 const h_m = payload.height / 100;
                 payload.bmi = parseFloat((payload.weight / (h_m * h_m)).toFixed(2));
@@ -1187,30 +1200,32 @@
                     tableHTML = `<table class="w-full text-sm border-collapse border border-gray-400 mb-6">
                         <thead class="bg-gray-100">
                             <tr>
-                                <th rowspan="2" class="border border-gray-400 p-2 w-16">เลขที่</th>
-                                <th rowspan="2" class="border border-gray-400 p-2 text-left">ชื่อ-สกุล</th>
-                                <th colspan="5" class="border border-gray-400 p-2 text-center bg-red-50 text-red-700">สรุปจำนวนครั้งที่ <u class="font-bold">"ไม่ผ่าน"</u> ในเดือนนี้ (ครั้ง)</th>
+                                <th rowspan="2" class="border border-gray-400 p-2 w-16 align-middle">เลขที่</th>
+                                <th rowspan="2" class="border border-gray-400 p-2 text-left align-middle">ชื่อ-สกุล</th>
+                                <th colspan="6" class="border border-gray-400 p-2 text-center bg-red-50 text-red-700">สรุปจำนวนครั้งที่ <u class="font-bold">"ไม่ผ่าน"</u> ในเดือนนี้ (ครั้ง)</th>
                             </tr>
                             <tr>
-                                <th class="border border-gray-400 p-2 w-24">เครื่องแต่งกาย</th>
-                                <th class="border border-gray-400 p-2 w-24">ผม/ศีรษะ</th>
-                                <th class="border border-gray-400 p-2 w-24">ใบหู/ซอกหู</th>
-                                <th class="border border-gray-400 p-2 w-24">ผิวหนัง</th>
-                                <th class="border border-gray-400 p-2 w-24">ฟัน/ช่องปาก</th>
+                                <th class="border border-gray-400 p-1 w-20 leading-tight align-top pt-2">ผมและศีรษะ<br><span class="text-[9px] font-normal text-gray-600 block mt-1">(ไม่มีเหา,รังแค,ผมเหนียวสกปรก)</span></th>
+                                <th class="border border-gray-400 p-1 w-20 leading-tight align-top pt-2">ใบหูและซอกหู<br><span class="text-[9px] font-normal text-gray-600 block mt-1">(ไม่มีคราบสกปรก,ขี้ไคลหรือขี้หู)</span></th>
+                                <th class="border border-gray-400 p-1 w-20 leading-tight align-top pt-2">ฟัน<br><span class="text-[9px] font-normal text-gray-600 block mt-1">(ไม่มีเศษอาหารหรือขี้ฟัน)</span></th>
+                                <th class="border border-gray-400 p-1 w-20 leading-tight align-top pt-2">ใบหน้าและผิวหนัง<br><span class="text-[9px] font-normal text-gray-600 block mt-1">(ไม่มีคราบสกปรกหรือขี้ไคล)</span></th>
+                                <th class="border border-gray-400 p-1 w-20 leading-tight align-top pt-2">เสื้อผ้า<br><span class="text-[9px] font-normal text-gray-600 block mt-1">(สะอาดไม่มีกลิ่นเหม็น)</span></th>
+                                <th class="border border-gray-400 p-1 w-20 leading-tight align-top pt-2">ถุงเท้า/รองเท้า<br><span class="text-[9px] font-normal text-gray-600 block mt-1">(สะอาดไม่มีกลิ่นเหม็น)</span></th>
                             </tr>
                         </thead><tbody>`;
 
                     studentsData.forEach(student => {
-                        let failCounts = { uniform: 0, hair: 0, ears: 0, skin: 0, teeth: 0 };
+                        let failCounts = { hair: 0, ears: 0, teeth: 0, skin: 0, uniform: 0, shoes: 0 };
                         
                         if(healthData) {
                             const studentRecords = healthData.filter(r => r.student_id === student.id);
                             studentRecords.forEach(rec => {
-                                if(rec.uniform_pass === false) failCounts.uniform++;
                                 if(rec.hair_pass === false) failCounts.hair++;
                                 if(rec.ears_pass === false) failCounts.ears++;
-                                if(rec.skin_pass === false) failCounts.skin++;
                                 if(rec.teeth_pass === false) failCounts.teeth++;
+                                if(rec.skin_pass === false) failCounts.skin++;
+                                if(rec.uniform_pass === false) failCounts.uniform++;
+                                if(rec.shoes_pass === false) failCounts.shoes++;
                             });
                         }
 
@@ -1222,11 +1237,12 @@
                         tableHTML += `<tr>
                             <td class="border border-gray-400 p-1.5 text-center">${student.code}</td>
                             <td class="border border-gray-400 p-1.5 text-left">${student.name}</td>
-                            <td class="border border-gray-400 p-1.5 text-center ${failCounts.uniform > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.uniform)}</td>
                             <td class="border border-gray-400 p-1.5 text-center ${failCounts.hair > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.hair)}</td>
                             <td class="border border-gray-400 p-1.5 text-center ${failCounts.ears > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.ears)}</td>
-                            <td class="border border-gray-400 p-1.5 text-center ${failCounts.skin > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.skin)}</td>
                             <td class="border border-gray-400 p-1.5 text-center ${failCounts.teeth > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.teeth)}</td>
+                            <td class="border border-gray-400 p-1.5 text-center ${failCounts.skin > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.skin)}</td>
+                            <td class="border border-gray-400 p-1.5 text-center ${failCounts.uniform > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.uniform)}</td>
+                            <td class="border border-gray-400 p-1.5 text-center ${failCounts.shoes > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.shoes)}</td>
                         </tr>`;
                     });
                     tableHTML += `</tbody></table>`;
