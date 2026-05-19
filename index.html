@@ -53,11 +53,11 @@
         .fade-in { animation: fadeIn 0.4s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Print Styles - บังคับพอดี A4 แนวนอน จัดสัดส่วนแบบราชการ */
+        /* Print Styles - บังคับพอดี A4 แนวนอน จัดสัดส่วนแบบราชการให้ลง 1 หน้า */
         @media print {
             @page { 
                 size: A4 landscape; 
-                margin: 10mm; /* ระยะขอบกระดาษมาตรฐาน */
+                margin: 8mm; /* ลดระยะขอบกระดาษให้แคบลงเพื่อเพิ่มพื้นที่ */
             }
             body { 
                 background: white !important; 
@@ -84,26 +84,23 @@
                 box-shadow: none !important; 
             }
             
-            /* บังคับโครงสร้างหลักให้สูงพอดี 1 หน้ากระดาษ และกระจายระยะห่าง */
+            /* บังคับโครงสร้างหลักให้แสดงเป็น Block เพื่อป้องกัน Flexbox ทำให้หน้าล้น */
             #printable-report { 
-                display: flex !important; 
-                flex-direction: column !important;
-                justify-content: space-between !important;
-                height: 95vh !important; /* จัดให้สูงเต็มแผ่น */
+                display: block !important; 
                 box-shadow: none !important; 
                 padding: 0 !important; 
                 width: 100% !important;
             }
             
             /* ส่วนหัวกระดาษ */
-            #report-header { margin-bottom: 12px !important; }
-            #report-header img { height: 50px !important; width: auto !important; margin-bottom: 5px !important; }
-            #report-header h2 { font-size: 16px !important; margin-bottom: 2px !important; margin-top: 0 !important; }
+            #report-header { margin-bottom: 8px !important; }
+            #report-header img { height: 45px !important; width: auto !important; margin-bottom: 4px !important; }
+            #report-header h2 { font-size: 15px !important; margin-bottom: 2px !important; margin-top: 0 !important; }
             #report-header h3 { font-size: 14px !important; margin-bottom: 2px !important; margin-top: 0 !important; }
             #report-header p { font-size: 12px !important; margin-bottom: 0 !important; margin-top: 0 !important; }
             
             /* ส่วนของตารางหลัก */
-            #report-content { flex-grow: 1; overflow: hidden; margin-bottom: 15px !important; }
+            #report-content { margin-bottom: 10px !important; }
             table { 
                 border-collapse: collapse; 
                 width: 100% !important; 
@@ -112,54 +109,55 @@
             }
             th, td { 
                 border: 1px solid black !important; 
-                padding: 8px 6px !important; /* เพิ่ม Padding ให้ตารางดูโปร่งอ่านง่าย */
+                padding: 4px 4px !important; /* ลด Padding ให้ตารางกระชับขึ้น */
                 text-align: center; 
                 color: black !important; 
                 border-color: black !important; 
-                font-size: 13px !important; /* ขยายขนาดตัวอักษรในตาราง */
+                font-size: 12px !important; /* ปรับตัวอักษรให้เล็กลงนิดหน่อย */
                 line-height: 1.2 !important;
             }
             
-            /* ย่อช่องขนาดเล็ก (สำหรับหน้ารายงานประจำวันและสุขภาพที่มีหลายคอลัมน์) */
+            /* ย่อช่องขนาดเล็ก */
             th.w-5, td.w-5 {
-                padding: 2px !important;
+                padding: 1px !important;
                 font-size: 9px !important;
                 width: 18px !important;
             }
             th.w-8, td.w-8, th.w-10, td.w-10, th.w-12, td.w-12, th.w-16, td.w-16, th.w-20, td.w-20 {
                 font-size: 11px !important;
-                padding: 4px 2px !important;
+                padding: 2px !important;
             }
 
             /* คลาสเฉพาะสำหรับกล่องสรุปผล เพื่อให้กะทัดรัดลง */
             .summary-box {
-                padding: 12px 16px !important;
+                padding: 8px 12px !important;
                 margin-bottom: 0 !important;
             }
             .summary-box h4 {
-                font-size: 13px !important;
-                margin-bottom: 8px !important;
+                font-size: 12px !important;
+                margin-bottom: 4px !important;
             }
             .summary-box p {
-                font-size: 12px !important;
-                margin-bottom: 2px !important;
+                font-size: 11px !important;
+                margin-bottom: 0 !important;
             }
             .summary-box .text-lg {
-                font-size: 16px !important;
+                font-size: 14px !important;
             }
 
-            /* ลายเซ็นด้านล่าง ดันไปติดขอบล่างของหน้า */
+            /* ลายเซ็นด้านล่าง ขยับขึ้นมาให้ชิดตารางมากขึ้น */
             #report-signatures {
-                margin-top: auto !important;
-                padding-top: 20px !important;
-                margin-bottom: 10px !important;
+                margin-top: 15px !important;
+                padding-top: 0 !important;
+                margin-bottom: 0 !important;
+                page-break-inside: avoid;
             }
             #report-signatures p {
-                font-size: 13px !important;
+                font-size: 12px !important;
                 margin-bottom: 0 !important;
             }
             #report-signatures .mb-10 {
-                margin-bottom: 40px !important; /* เพิ่มช่องว่างสำหรับเซ็นชื่อ */
+                margin-bottom: 25px !important; /* ลดช่องว่างสำหรับเซ็นชื่อ ให้พอดี 1 หน้า */
             }
             
             .page-break-inside-avoid { page-break-inside: avoid; }
@@ -1304,14 +1302,14 @@
 
                 // ================== HEALTH REPORT ==================
                 if (type === 'health') {
-                    const { data: healthData } = await supabaseClient.from('health_records').select('*').eq('record_month', monthStr);
+                    const { data: healthData } = await supabaseClient.from('health_records').select('*').gte('record_date', startDate).lte('record_date', endDate);
                     
-                    tableHTML = `<table class="w-full text-sm border-collapse border border-black mb-6 text-black">
+                    tableHTML = `<table class="w-full text-sm border-collapse border border-black mb-3 text-black">
                         <thead>
                             <tr>
                                 <th rowspan="2" class="border border-black p-2 w-16 align-middle font-bold">เลขที่</th>
                                 <th rowspan="2" class="border border-black p-2 text-left align-middle font-bold">ชื่อ - สกุล</th>
-                                <th colspan="6" class="border border-black p-2 text-center font-bold">ผลการประเมินสุขอนามัยประจำเดือน</th>
+                                <th colspan="6" class="border border-black p-2 text-center font-bold">จำนวนครั้งที่ไม่ผ่านการประเมินสุขอนามัยในเดือนนี้ (ครั้ง)</th>
                             </tr>
                             <tr>
                                 <th class="border border-black p-1 w-20 leading-tight align-top pt-2">ผมและศีรษะ<br><span class="text-[10px] font-normal block mt-1">(ไม่มีเหา,ไข่เหา,<br>รังแค,ผมเหนียวสกปรก)</span></th>
@@ -1350,7 +1348,7 @@
                     const { data: nutritionData } = await supabaseClient.from('nutrition_records').select('*').eq('record_month', monthStr);
                     let stats = { total: 0, thin: 0, normal: 0, fat_1: 0, fat_2: 0, sumBMI: 0 };
 
-                    tableHTML = `<table class="w-full text-sm border-collapse border border-black mb-6 text-black">
+                    tableHTML = `<table class="w-full text-sm border-collapse border border-black mb-3 text-black">
                         <thead>
                             <tr>
                                 <th class="border border-black p-2 w-16 font-bold">เลขที่</th>
