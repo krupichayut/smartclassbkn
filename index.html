@@ -53,17 +53,20 @@
         .fade-in { animation: fadeIn 0.4s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Print Styles - บังคับพอดี A4 แนวนอน 1 หน้าเป๊ะๆ */
+        /* Print Styles - สัดส่วน A4 แนวนอน พอดี 1 หน้าเป๊ะ */
         @media print {
             @page { 
                 size: A4 landscape; 
-                margin: 15mm 5mm 5mm 5mm; /* เพิ่มระยะขอบด้านบนเป็น 15mm (ขอบอื่น 5mm) */
+                margin: 10mm; /* ระยะขอบกระดาษมาตรฐาน */
             }
-            body { 
+            body, html { 
                 background: white !important; 
                 color: black !important; 
                 -webkit-print-color-adjust: exact; 
                 print-color-adjust: exact; 
+                height: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
             #sidebar, #mobile-menu-btn, .no-print, #notification-toast { 
                 display: none !important; 
@@ -84,26 +87,32 @@
                 box-shadow: none !important; 
             }
             
-            /* บังคับโครงสร้างหลักให้สูงพอดี 1 หน้ากระดาษ */
+            /* บังคับโครงสร้างหลักเป็น Flexbox สูง 95vh ให้เต็มแผ่นพอดี */
             #printable-report { 
                 display: flex !important; 
                 flex-direction: column !important;
-                justify-content: space-between !important;
-                height: 92vh !important; /* ลดความสูงลงเพื่อชดเชยพื้นที่ขอบบนที่เพิ่มขึ้น */
-                box-shadow: none !important; 
+                height: 95vh !important; 
+                box-sizing: border-box !important; 
                 padding: 0 !important; 
                 width: 100% !important;
             }
             
-            /* บีบส่วนหัวกระดาษให้แคบลงและขยับลงมาอีกนิด */
-            #report-header { margin-top: 10px !important; margin-bottom: 4px !important; }
-            #report-header img { height: 40px !important; width: auto !important; margin-bottom: 2px !important; }
-            #report-header h2 { font-size: 14px !important; margin-bottom: 0 !important; margin-top: 0 !important; }
-            #report-header h3 { font-size: 12px !important; margin-bottom: 0 !important; margin-top: 0 !important; }
-            #report-header p { font-size: 10px !important; margin-bottom: 4px !important; margin-top: 0 !important; }
+            /* ส่วนหัวกระดาษจัดกลาง */
+            #report-header { 
+                flex-shrink: 0 !important; 
+                margin-bottom: 10px !important; 
+                text-align: center !important;
+            }
+            #report-header img { height: 50px !important; width: auto !important; margin-bottom: 4px !important; display: inline-block; }
+            #report-header h2 { font-size: 16px !important; margin-bottom: 2px !important; margin-top: 0 !important; font-weight: bold; }
+            #report-header h3 { font-size: 14px !important; margin-bottom: 2px !important; margin-top: 0 !important; font-weight: bold; }
+            #report-header p { font-size: 12px !important; margin-bottom: 0 !important; margin-top: 0 !important; }
             
-            /* บีบตารางให้พอดี */
-            #report-content { flex-grow: 1; overflow: hidden; }
+            /* พื้นที่ตาราง ให้ยืดหยุ่นพอดี */
+            #report-content { 
+                flex-grow: 0 !important; 
+                margin-bottom: 0 !important; 
+            }
             table { 
                 border-collapse: collapse; 
                 width: 100% !important; 
@@ -112,35 +121,36 @@
             }
             th, td { 
                 border: 1px solid black !important; 
-                padding: 1px 2px !important; /* ลดระยะขอบในช่อง */
+                padding: 6px 4px !important; /* ระยะห่างในตาราง */
                 text-align: center; 
                 color: black !important; 
-                font-size: 9px !important; /* ย่อขนาดอักษรในตาราง */
-                line-height: 1.1 !important;
+                font-size: 12px !important; /* ขนาดฟอนต์ตาราง */
+                line-height: 1.2 !important;
             }
+            th { font-weight: bold !important; }
             
-            /* ช่องวันที่และผลลัพธ์เล็กๆ ให้แคบเป็นพิเศษ */
+            /* ช่องวันที่ในรายงานเช็คชื่อ ปรับให้เล็กลง */
             th.w-5, td.w-5 {
-                padding: 0 !important;
-                font-size: 8px !important;
-                width: 14px !important;
+                padding: 2px 1px !important;
+                font-size: 9px !important;
+                width: 16px !important;
             }
             th.w-8, td.w-8, th.w-10, td.w-10, th.w-12, td.w-12, th.w-16, td.w-16 {
-                font-size: 9px !important;
-                padding: 1px !important;
+                font-size: 11px !important;
+                padding: 2px !important;
             }
 
-            /* คลาสเฉพาะสำหรับกล่องสรุปผลโภชนาการให้อยู่ในบรรทัดเดียวกัน */
+            /* กล่องสรุปผล */
             .summary-box {
                 border: 1px solid black !important;
-                padding: 6px 10px !important;
-                margin-top: 8px !important;
+                padding: 8px 12px !important;
+                margin-top: 10px !important;
                 margin-bottom: 0 !important;
                 width: 100% !important;
                 box-sizing: border-box !important;
             }
             .summary-box h4 {
-                font-size: 11px !important;
+                font-size: 12px !important;
                 font-weight: bold !important;
                 margin-bottom: 8px !important;
                 text-align: left !important;
@@ -151,33 +161,30 @@
                 width: 100% !important;
             }
             .summary-box .summary-label {
-                font-size: 10px !important;
-                margin-bottom: 2px !important;
+                font-size: 11px !important;
+                margin-bottom: 4px !important;
             }
             .summary-box .summary-value {
-                font-size: 12px !important;
+                font-size: 14px !important;
                 font-weight: bold !important;
             }
 
-            /* ลายเซ็นด้านล่าง ดันไปติดขอบล่าง */
+            /* ส่วนลายเซ็น ใช้ margin-top: auto เพื่อดันไปติดขอบกระดาษด้านล่างสุดเสมอ */
             #report-signatures {
-                margin-top: auto !important;
-                padding-top: 10px !important;
+                margin-top: auto !important; 
+                padding-top: 20px !important;
+                padding-bottom: 5px !important;
+                display: grid !important;
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+                text-align: center !important;
+                page-break-inside: avoid;
             }
             #report-signatures p {
-                font-size: 11px !important;
+                font-size: 12px !important;
                 margin-bottom: 0 !important;
             }
             #report-signatures .mb-10 {
-                margin-bottom: 1.5rem !important; /* ลดที่ว่างสำหรับเซ็นชื่อ */
-            }
-            
-            /* ข้อความอธิบายใต้ตาราง */
-            .text-\\[11px\\] {
-                font-size: 9px !important;
-            }
-            .mt-2 {
-                margin-top: 2px !important;
+                margin-bottom: 30px !important; /* ช่องว่างให้เซ็นชื่อ */
             }
             
             .page-break-inside-avoid { page-break-inside: avoid; }
