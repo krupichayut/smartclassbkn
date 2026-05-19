@@ -519,6 +519,17 @@
             };
         }
 
+        // ฟังก์ชันประมวลผล BMI กลาง (ให้หน้า UI และหน้ารายงานใช้ตัวเดียวกัน 100%)
+        function getBMIResult(bmi) {
+            if(!bmi || isNaN(bmi)) return { text: '-', color: 'text-gray-400', bgPrint: '' };
+            const b = parseFloat(bmi);
+            if(b < 18.5) return { text: 'ผอม', color: 'text-blue-500', bgPrint: 'background-color: #3b82f6 !important; color: white !important;' };
+            if(b < 23.0) return { text: 'สมส่วน', color: 'text-green-500', bgPrint: 'background-color: #22c55e !important; color: white !important;' };
+            if(b < 25.0) return { text: 'ท้วม', color: 'text-orange-500', bgPrint: 'background-color: #f97316 !important; color: white !important;' };
+            if(b < 30.0) return { text: 'อ้วน', color: 'text-red-500', bgPrint: 'background-color: #ef4444 !important; color: white !important;' };
+            return { text: 'อ้วนมาก', color: 'text-red-700', bgPrint: 'background-color: #b91c1c !important; color: white !important;' };
+        }
+
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
 
         function switchTab(tabId) {
@@ -834,14 +845,13 @@
 
             tbody.innerHTML = '';
             studentsData.forEach(student => {
-                // อ่านค่าจาก DB หรือถ้าไม่มีให้ตั้งเป็น true อัตโนมัติ (และป้องกันค่า null จากคอลัมน์เก่า)
                 const rec = currentHealthRecords[student.id] || {};
                 const isHairPass = rec.hair_pass !== false;
                 const isEarsPass = rec.ears_pass !== false;
                 const isTeethPass = rec.teeth_pass !== false;
                 const isSkinPass = rec.skin_pass !== false;
                 const isUniformPass = rec.uniform_pass !== false;
-                const isShoesPass = rec.shoes_pass !== false; // คอลัมน์ใหม่
+                const isShoesPass = rec.shoes_pass !== false;
                 
                 const disabled = isHoliday ? 'disabled opacity-50 cursor-not-allowed' : '';
 
@@ -942,13 +952,7 @@
 
             studentsData.forEach(student => {
                 const rec = currentNutritionRecords[student.id] || { weight: null, height: null, bmi: null };
-                let bmiResult = { text: '-', color: 'text-gray-400' };
-                if(rec.bmi) {
-                    if(rec.bmi < 18.5) bmiResult = { text: 'ผอม', color: 'text-blue-400' };
-                    else if(rec.bmi <= 22.9) bmiResult = { text: 'สมส่วน', color: 'text-green-400' };
-                    else if(rec.bmi <= 24.9) bmiResult = { text: 'ท้วม', color: 'text-orange-400' };
-                    else bmiResult = { text: 'อ้วน', color: 'text-red-500' };
-                }
+                const res = getBMIResult(rec.bmi);
 
                 tbody.innerHTML += `
                     <tr>
@@ -963,8 +967,8 @@
                                 value="${rec.height !== null && rec.height !== undefined ? rec.height : ''}" onchange="updateLocalNutrition('${student.id}', '${monthStr}', 'height', this.value)">
                         </td>
                         <td class="p-4 text-center font-bold text-yellow-400">${rec.bmi ? rec.bmi : '-'}</td>
-                        <td class="p-4 text-center font-bold ${bmiResult.color}">
-                            <span class="bg-black/20 px-3 py-1 rounded-full">${bmiResult.text}</span>
+                        <td class="p-4 text-center font-bold ${res.color}">
+                            <span class="bg-black/20 px-3 py-1 rounded-full">${res.text}</span>
                         </td>
                     </tr>
                 `;
@@ -1150,14 +1154,6 @@
         // ============================================================================
         // 11. MODULE: REPORTS GENERATION
         // ============================================================================
-        function getBMIResult(bmi) {
-            if(!bmi) return { text: '-', color: 'text-gray-400' };
-            if(bmi < 18.5) return { text: 'ผอม', color: 'text-blue-500' };
-            if(bmi >= 18.5 && bmi <= 22.9) return { text: 'สมส่วน', color: 'text-green-500' };
-            if(bmi >= 23.0 && bmi <= 24.9) return { text: 'ท้วม', color: 'text-orange-500' };
-            return { text: 'อ้วน', color: 'text-red-500' };
-        }
-
         async function generateReport() {
             const type = document.getElementById('report-type').value;
             const typeName = document.getElementById('report-type').options[document.getElementById('report-type').selectedIndex].text;
@@ -1269,6 +1265,8 @@
                         const w = rec && rec.weight ? rec.weight : '-';
                         const h = rec && rec.height ? rec.height : '-';
                         const bmi = rec && rec.bmi ? parseFloat(rec.bmi) : 0;
+                        
+                        // เรียกใช้ฟังก์ชันที่รวมศูนย์แล้ว
                         const res = getBMIResult(bmi);
 
                         if(bmi > 0) {
@@ -1277,7 +1275,7 @@
                             if(res.text === 'ผอม') stats.thin++;
                             else if(res.text === 'สมส่วน') stats.normal++;
                             else if(res.text === 'ท้วม') stats.fat_1++;
-                            else if(res.text === 'อ้วน') stats.fat_2++;
+                            else if(res.text === 'อ้วน' || res.text === 'อ้วนมาก') stats.fat_2++;
                         }
 
                         tableHTML += `<tr>
@@ -1286,7 +1284,7 @@
                             <td class="border border-black p-1.5 text-center">${w}</td>
                             <td class="border border-black p-1.5 text-center">${h}</td>
                             <td class="border border-black p-1.5 text-center font-bold">${bmi ? bmi.toFixed(2) : '-'}</td>
-                            <td class="border border-black p-1.5 text-center font-bold">${res.text}</td>
+                            <td class="border border-black p-1.5 text-center font-bold" style="${res.bgPrint}">${res.text}</td>
                         </tr>`;
                     });
                     
@@ -1299,7 +1297,7 @@
                             <div><p>ผอม</p><p class="text-lg font-bold">${stats.thin} คน</p></div>
                             <div><p>สมส่วน</p><p class="text-lg font-bold">${stats.normal} คน</p></div>
                             <div><p>ท้วม</p><p class="text-lg font-bold">${stats.fat_1} คน</p></div>
-                            <div><p>อ้วน</p><p class="text-lg font-bold">${stats.fat_2} คน</p></div>
+                            <div><p>อ้วน/อ้วนมาก</p><p class="text-lg font-bold">${stats.fat_2} คน</p></div>
                         </div>
                     </div>`;
                 }
