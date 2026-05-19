@@ -53,11 +53,11 @@
         .fade-in { animation: fadeIn 0.4s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Print Styles - ปรับปรุงให้พอดีกับ A4 แนวนอน 100% */
+        /* Print Styles - บังคับพอดี A4 แนวนอน 1 หน้าเป๊ะๆ */
         @media print {
             @page { 
                 size: A4 landscape; 
-                margin: 8mm; /* ลดขอบกระดาษเพื่อเพิ่มพื้นที่ */
+                margin: 5mm; /* ลดขอบกระดาษให้เล็กที่สุด */
             }
             body { 
                 background: white !important; 
@@ -73,9 +73,8 @@
                 padding: 0 !important; 
                 width: 100% !important; 
                 max-width: 100% !important;
-                overflow: visible !important; /* สำคัญ: ป้องกันการโดนตัดขอบ */
+                overflow: visible !important;
             }
-            /* ปลดล็อกคลาสที่ทำให้ตารางเลื่อนได้ เพื่อให้โชว์เต็มหน้ากระดาษ */
             .overflow-x-auto, .overflow-hidden, .overflow-y-auto {
                 overflow: visible !important;
             }
@@ -83,49 +82,76 @@
                 background: none !important; 
                 border: none !important; 
                 box-shadow: none !important; 
-                color: black !important; 
-                backdrop-filter: none !important; 
-            }
-            .glass-panel * { color: black !important; }
-            
-            table { 
-                border-collapse: collapse; 
-                width: 100% !important; 
-                max-width: 100% !important;
-                table-layout: auto; /* ปล่อยให้เบราว์เซอร์จัดการขนาดช่องให้พอดี */
-            }
-            th, td { 
-                border: 1px solid black !important; 
-                padding: 2px 4px !important; /* ลดช่องว่างในเซลล์เพื่อประหยัดที่ */
-                text-align: center; 
-                color: black !important; 
-                border-color: black !important; 
-                font-size: 11px !important; /* ลดขนาดอักษรฐาน */
             }
             
-            /* บังคับช่องวันที่ 1-31 ในหน้ารายงานให้เล็กพิเศษ */
-            th.w-5, td.w-5 {
-                padding: 1px !important;
-                font-size: 9px !important;
-            }
-            
+            /* บังคับโครงสร้างหลักให้สูงพอดี 1 หน้ากระดาษ */
             #printable-report { 
-                display: block !important; 
+                display: flex !important; 
+                flex-direction: column !important;
+                justify-content: space-between !important;
+                height: 96vh !important; /* ความสูงเกือบเต็ม 1 หน้า (ป้องกันล้น) */
                 box-shadow: none !important; 
                 padding: 0 !important; 
                 width: 100% !important;
             }
-            .page-break-inside-avoid { page-break-inside: avoid; }
+            
+            /* บีบส่วนหัวกระดาษให้แคบลง */
+            #report-header { margin-bottom: 4px !important; }
+            #report-header img { height: 40px !important; width: auto !important; margin-bottom: 2px !important; }
+            #report-header h2 { font-size: 14px !important; margin-bottom: 0 !important; margin-top: 0 !important; }
+            #report-header h3 { font-size: 12px !important; margin-bottom: 0 !important; margin-top: 0 !important; }
+            #report-header p { font-size: 10px !important; margin-bottom: 4px !important; margin-top: 0 !important; }
+            
+            /* บีบตารางให้พอดี */
+            #report-content { flex-grow: 1; overflow: hidden; }
+            table { 
+                border-collapse: collapse; 
+                width: 100% !important; 
+                max-width: 100% !important;
+                table-layout: auto !important;
+            }
+            th, td { 
+                border: 1px solid black !important; 
+                padding: 1px 2px !important; /* ลดระยะขอบในช่อง */
+                text-align: center; 
+                color: black !important; 
+                font-size: 9px !important; /* ย่อขนาดอักษรในตาราง */
+                line-height: 1.1 !important;
+            }
+            
+            /* ช่องวันที่และผลลัพธ์เล็กๆ ให้แคบเป็นพิเศษ */
+            th.w-5, td.w-5 {
+                padding: 0 !important;
+                font-size: 8px !important;
+                width: 14px !important;
+            }
+            th.w-8, td.w-8, th.w-10, td.w-10, th.w-12, td.w-12, th.w-16, td.w-16 {
+                font-size: 9px !important;
+                padding: 1px !important;
+            }
 
-            /* ปรับขนาดลายเซ็น */
+            /* ลายเซ็นด้านล่าง ดันไปติดขอบล่าง */
             #report-signatures {
-                margin-top: 15px !important;
-                padding-top: 15px !important;
+                margin-top: auto !important;
+                padding-top: 10px !important;
             }
             #report-signatures p {
-                font-size: 12px !important;
-                margin-bottom: 2px !important;
+                font-size: 11px !important;
+                margin-bottom: 0 !important;
             }
+            #report-signatures .mb-10 {
+                margin-bottom: 1.5rem !important; /* ลดที่ว่างสำหรับเซ็นชื่อ */
+            }
+            
+            /* ข้อความอธิบายใต้ตาราง */
+            .text-\\[11px\\] {
+                font-size: 9px !important;
+            }
+            .mt-2 {
+                margin-top: 2px !important;
+            }
+            
+            .page-break-inside-avoid { page-break-inside: avoid; }
         }
     </style>
 </head>
@@ -256,6 +282,14 @@
                         </button>
                     </div>
                 </header>
+
+                <div id="health-holiday-banner" class="hidden mb-6 bg-red-500/20 border border-red-500/50 text-red-200 p-4 rounded-xl flex items-center gap-3">
+                    <i class="fas fa-bullhorn text-2xl text-red-400"></i>
+                    <div>
+                        <h4 class="font-bold text-lg">วันนี้เป็นวันหยุด!</h4>
+                        <p id="health-holiday-reason" class="text-sm">ปิดการบันทึกข้อมูลสำหรับวันนี้</p>
+                    </div>
+                </div>
 
                 <div class="glass-panel rounded-2xl overflow-hidden mb-20">
                     <div class="overflow-x-auto">
