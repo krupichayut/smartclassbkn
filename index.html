@@ -53,11 +53,11 @@
         .fade-in { animation: fadeIn 0.4s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Print Styles - บังคับพอดี A4 แนวนอน 1 หน้าเป๊ะๆ */
+        /* Print Styles - บังคับพอดี A4 แนวนอน จัดสัดส่วนแบบราชการ */
         @media print {
             @page { 
                 size: A4 landscape; 
-                margin: 5mm; /* ลดขอบกระดาษให้เล็กที่สุด */
+                margin: 10mm; /* ระยะขอบกระดาษมาตรฐาน */
             }
             body { 
                 background: white !important; 
@@ -84,26 +84,26 @@
                 box-shadow: none !important; 
             }
             
-            /* บังคับโครงสร้างหลักให้สูงพอดี 1 หน้ากระดาษ */
+            /* บังคับโครงสร้างหลักให้สูงพอดี 1 หน้ากระดาษ และกระจายระยะห่าง */
             #printable-report { 
                 display: flex !important; 
                 flex-direction: column !important;
                 justify-content: space-between !important;
-                height: 96vh !important; /* ความสูงเกือบเต็ม 1 หน้า (ป้องกันล้น) */
+                height: 95vh !important; /* จัดให้สูงเต็มแผ่น */
                 box-shadow: none !important; 
                 padding: 0 !important; 
                 width: 100% !important;
             }
             
-            /* บีบส่วนหัวกระดาษให้แคบลง */
-            #report-header { margin-bottom: 4px !important; }
-            #report-header img { height: 40px !important; width: auto !important; margin-bottom: 2px !important; }
-            #report-header h2 { font-size: 14px !important; margin-bottom: 0 !important; margin-top: 0 !important; }
-            #report-header h3 { font-size: 12px !important; margin-bottom: 0 !important; margin-top: 0 !important; }
-            #report-header p { font-size: 10px !important; margin-bottom: 4px !important; margin-top: 0 !important; }
+            /* ส่วนหัวกระดาษ */
+            #report-header { margin-bottom: 12px !important; }
+            #report-header img { height: 50px !important; width: auto !important; margin-bottom: 5px !important; }
+            #report-header h2 { font-size: 16px !important; margin-bottom: 2px !important; margin-top: 0 !important; }
+            #report-header h3 { font-size: 14px !important; margin-bottom: 2px !important; margin-top: 0 !important; }
+            #report-header p { font-size: 12px !important; margin-bottom: 0 !important; margin-top: 0 !important; }
             
-            /* บีบตารางให้พอดี */
-            #report-content { flex-grow: 1; overflow: hidden; }
+            /* ส่วนของตารางหลัก */
+            #report-content { flex-grow: 1; overflow: hidden; margin-bottom: 15px !important; }
             table { 
                 border-collapse: collapse; 
                 width: 100% !important; 
@@ -112,43 +112,54 @@
             }
             th, td { 
                 border: 1px solid black !important; 
-                padding: 1px 2px !important; /* ลดระยะขอบในช่อง */
+                padding: 8px 6px !important; /* เพิ่ม Padding ให้ตารางดูโปร่งอ่านง่าย */
                 text-align: center; 
                 color: black !important; 
-                font-size: 9px !important; /* ย่อขนาดอักษรในตาราง */
-                line-height: 1.1 !important;
+                border-color: black !important; 
+                font-size: 13px !important; /* ขยายขนาดตัวอักษรในตาราง */
+                line-height: 1.2 !important;
             }
             
-            /* ช่องวันที่และผลลัพธ์เล็กๆ ให้แคบเป็นพิเศษ */
+            /* ย่อช่องขนาดเล็ก (สำหรับหน้ารายงานประจำวันและสุขภาพที่มีหลายคอลัมน์) */
             th.w-5, td.w-5 {
-                padding: 0 !important;
-                font-size: 8px !important;
-                width: 14px !important;
-            }
-            th.w-8, td.w-8, th.w-10, td.w-10, th.w-12, td.w-12, th.w-16, td.w-16 {
+                padding: 2px !important;
                 font-size: 9px !important;
-                padding: 1px !important;
+                width: 18px !important;
+            }
+            th.w-8, td.w-8, th.w-10, td.w-10, th.w-12, td.w-12, th.w-16, td.w-16, th.w-20, td.w-20 {
+                font-size: 11px !important;
+                padding: 4px 2px !important;
             }
 
-            /* ลายเซ็นด้านล่าง ดันไปติดขอบล่าง */
+            /* คลาสเฉพาะสำหรับกล่องสรุปผล เพื่อให้กะทัดรัดลง */
+            .summary-box {
+                padding: 12px 16px !important;
+                margin-bottom: 0 !important;
+            }
+            .summary-box h4 {
+                font-size: 13px !important;
+                margin-bottom: 8px !important;
+            }
+            .summary-box p {
+                font-size: 12px !important;
+                margin-bottom: 2px !important;
+            }
+            .summary-box .text-lg {
+                font-size: 16px !important;
+            }
+
+            /* ลายเซ็นด้านล่าง ดันไปติดขอบล่างของหน้า */
             #report-signatures {
                 margin-top: auto !important;
-                padding-top: 10px !important;
+                padding-top: 20px !important;
+                margin-bottom: 10px !important;
             }
             #report-signatures p {
-                font-size: 11px !important;
+                font-size: 13px !important;
                 margin-bottom: 0 !important;
             }
             #report-signatures .mb-10 {
-                margin-bottom: 1.5rem !important; /* ลดที่ว่างสำหรับเซ็นชื่อ */
-            }
-            
-            /* ข้อความอธิบายใต้ตาราง */
-            .text-\\[11px\\] {
-                font-size: 9px !important;
-            }
-            .mt-2 {
-                margin-top: 2px !important;
+                margin-bottom: 40px !important; /* เพิ่มช่องว่างสำหรับเซ็นชื่อ */
             }
             
             .page-break-inside-avoid { page-break-inside: avoid; }
@@ -1379,7 +1390,7 @@
                     
                     const avgBMI = stats.total > 0 ? (stats.sumBMI / stats.total).toFixed(2) : 0;
                     tableHTML += `</tbody></table>
-                    <div class="p-4 border border-black text-sm page-break-inside-avoid text-black">
+                    <div class="summary-box border border-black text-sm page-break-inside-avoid text-black">
                         <h4 class="font-bold mb-2">สรุปภาพรวมโภชนาการ (จากผู้ที่มีข้อมูล ${stats.total} คน)</h4>
                         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
                             <div><p>BMI เฉลี่ย</p><p class="text-lg font-bold">${avgBMI}</p></div>
