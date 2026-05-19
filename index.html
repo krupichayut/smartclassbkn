@@ -441,6 +441,18 @@
                             </div>
                         </div>
 
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 pt-6 border-t border-white/10">
+                            <div>
+                                <label class="block text-sm mb-1 text-gray-300">วันเปิดภาคเรียน</label>
+                                <input type="date" id="set-term-start" class="glass-input w-full p-2 rounded-lg">
+                            </div>
+                            <div>
+                                <label class="block text-sm mb-1 text-gray-300">วันปิดภาคเรียน</label>
+                                <input type="date" id="set-term-end" class="glass-input w-full p-2 rounded-lg">
+                            </div>
+                            <p class="text-xs text-gray-400 md:col-span-2">* ระบุเพื่อใช้เป็นเกณฑ์ในการคำนวณวันมาเรียนในหน้ารายงานผลให้ถูกต้องแม่นยำ</p>
+                        </div>
+
                         <div class="pt-6 mt-6 border-t border-white/10">
                             <h3 class="font-bold text-yellow-400 mb-4 text-lg">โลโก้โรงเรียน (Supabase Storage)</h3>
                             <div class="flex items-center space-x-4">
@@ -566,6 +578,14 @@
             const [year, month] = dateStr.split('-');
             const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
             return `${thaiMonths[parseInt(month) - 1]} ${parseInt(year) + 543}`;
+        };
+
+        // ตรวจสอบว่าวันนั้นอยู่ในช่วงเปิดเทอมหรือไม่
+        const isWithinTerm = (dateStr, startStr, endStr) => {
+            if (!startStr && !endStr) return true;
+            if (startStr && !endStr) return dateStr >= startStr;
+            if (!startStr && endStr) return dateStr <= endStr;
+            return dateStr >= startStr && dateStr <= endStr;
         };
 
         // ============================================================================
@@ -926,7 +946,7 @@
                 showNotification('บันทึกข้อมูลสุขภาพครบถ้วนแล้ว');
             } else {
                 console.error(error);
-                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาตรวจสอบว่าเพิ่มคอลัมน์ shoes_pass ในฐานข้อมูลแล้วหรือยัง');
+                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
             }
         }
 
@@ -1089,6 +1109,10 @@
             document.getElementById('set-school').value = classroomSettings.school_name || '';
             document.getElementById('set-room').value = classroomSettings.room_name || '';
             document.getElementById('set-year').value = classroomSettings.academic_year || '';
+            
+            document.getElementById('set-term-start').value = classroomSettings.term_start || '';
+            document.getElementById('set-term-end').value = classroomSettings.term_end || '';
+
             document.getElementById('set-sign1').value = classroomSettings.teacher_1 || '';
             document.getElementById('set-sign2').value = classroomSettings.teacher_2 || '';
             document.getElementById('set-sign3').value = classroomSettings.director || '';
@@ -1137,6 +1161,8 @@
                 school_name: document.getElementById('set-school').value,
                 room_name: document.getElementById('set-room').value,
                 academic_year: document.getElementById('set-year').value,
+                term_start: document.getElementById('set-term-start').value || null,
+                term_end: document.getElementById('set-term-end').value || null,
                 teacher_1: document.getElementById('set-sign1').value,
                 teacher_2: document.getElementById('set-sign2').value,
                 director: document.getElementById('set-sign3').value
@@ -1147,6 +1173,8 @@
                 classroomSettings = { ...classroomSettings, ...payload };
                 document.getElementById('sidebar-school-name').innerText = payload.school_name;
                 showNotification('บันทึกการตั้งค่าระบบเรียบร้อย');
+            } else {
+                alert('เกิดข้อผิดพลาด กรุณาอัปเดต SQL เพื่อเพิ่มคอลัมน์ term_start และ term_end ก่อน');
             }
             btn.innerHTML = 'บันทึกการตั้งค่า';
         }
@@ -1265,8 +1293,6 @@
                         const w = rec && rec.weight ? rec.weight : '-';
                         const h = rec && rec.height ? rec.height : '-';
                         const bmi = rec && rec.bmi ? parseFloat(rec.bmi) : 0;
-                        
-                        // เรียกใช้ฟังก์ชันที่รวมศูนย์แล้ว
                         const res = getBMIResult(bmi);
 
                         if(bmi > 0) {
@@ -1284,7 +1310,7 @@
                             <td class="border border-black p-1.5 text-center">${w}</td>
                             <td class="border border-black p-1.5 text-center">${h}</td>
                             <td class="border border-black p-1.5 text-center font-bold">${bmi ? bmi.toFixed(2) : '-'}</td>
-                            <td class="border border-black p-1.5 text-center font-bold" style="${res.bgPrint}">${res.text}</td>
+                            <td class="border border-black p-1.5 text-center font-bold">${res.text}</td>
                         </tr>`;
                     });
                     
@@ -1326,9 +1352,15 @@
                         const dObj = new Date(parseInt(year), parseInt(month) - 1, d);
                         const isWeekend = dObj.getDay() === 0 || dObj.getDay() === 6;
                         const isHoliday = holidaysData.some(h => h.holiday_date === dateKey);
+                        const inTerm = isWithinTerm(dateKey, classroomSettings.term_start, classroomSettings.term_end);
                         
-                        if(!isWeekend && !isHoliday) totalWorkingDays++;
-                        const bgClass = (isWeekend || isHoliday) ? 'bg-gray-200' : '';
+                        // เป็นวันทำการก็ต่อเมื่อ ไม่ใช่วันหยุด ไม่ใช่ส.-อา. และ อยู่ในช่วงเปิดเทอม
+                        const isWorkingDay = !isWeekend && !isHoliday && inTerm;
+
+                        if(isWorkingDay) totalWorkingDays++;
+                        
+                        // ระบายสีทึบถ้าไม่ใช่วันทำการ
+                        const bgClass = (!isWorkingDay) ? 'bg-gray-200' : '';
                         tableHTML += `<th class="border border-black p-0.5 w-5 ${bgClass}">${d}</th>`;
                     }
                     if(totalWorkingDays === 0) totalWorkingDays = 1; 
@@ -1352,15 +1384,20 @@
                             const dObj = new Date(parseInt(year), parseInt(month) - 1, d);
                             const isWeekend = dObj.getDay() === 0 || dObj.getDay() === 6;
                             const isHoliday = holidaysData.some(h => h.holiday_date === dateKey);
-                            const bgClass = (isWeekend || isHoliday) ? 'bg-gray-200' : '';
+                            const inTerm = isWithinTerm(dateKey, classroomSettings.term_start, classroomSettings.term_end);
+                            
+                            const isWorkingDay = !isWeekend && !isHoliday && inTerm;
+                            const bgClass = (!isWorkingDay) ? 'bg-gray-200' : '';
                             
                             let cellContent = '';
-                            const rec = targetData.find(r => r.student_id === student.id && r.record_date === dateKey);
-
-                            if (!isHoliday && (!isWeekend || rec)) {
+                            
+                            // แสดงข้อมูลเฉพาะวันทำการ (หรือถ้ามีการบังคับบันทึกในวันหยุด ก็จะแสดงออกมาด้วย)
+                            if (isWorkingDay) {
+                                const rec = targetData.find(r => r.student_id === student.id && r.record_date === dateKey);
                                 if(rec) {
                                     if(type === 'attendance') {
-                                        if(rec.status === 'มา') { cellContent = '/'; present++; }
+                                        // เปลี่ยนสัญลักษณ์ / เป็นเครื่องหมายถูก ✓
+                                        if(rec.status === 'มา') { cellContent = '✓'; present++; }
                                         else if(rec.status === 'สาย') { cellContent = 'ส'; late++; }
                                         else if(rec.status === 'ลา') { cellContent = 'ล'; leave++; }
                                         else if(rec.status === 'ขาด') { cellContent = 'ข'; absent++; }
