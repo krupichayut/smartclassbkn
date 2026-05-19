@@ -60,9 +60,9 @@
             #sidebar, #mobile-menu-btn, .no-print, #notification-toast { display: none !important; }
             #main-content { margin-left: 0 !important; padding: 0 !important; width: 100% !important; overflow: visible !important; }
             .glass-panel { background: none !important; border: none !important; box-shadow: none !important; color: black !important; backdrop-filter: none !important; }
-            .glass-panel * { color: black !important; border-color: #ccc !important; }
+            .glass-panel * { color: black !important; }
             table { border-collapse: collapse; width: 100%; }
-            th, td { border: 1px solid #666 !important; padding: 4px !important; text-align: center; }
+            th, td { border: 1px solid black !important; padding: 4px !important; text-align: center; color: black !important; border-color: black !important; }
             #printable-report { display: block !important; box-shadow: none !important; padding: 0 !important; }
             .page-break-inside-avoid { page-break-inside: avoid; }
         }
@@ -1182,13 +1182,13 @@
                 const daysInMonth = new Date(parseInt(year), parseInt(month), 0).getDate();
                 const endDate = `${year}-${month}-${daysInMonth}`;
 
-                // Header
+                // Header แบบเป็นทางการ
                 let logoHTML = classroomSettings.logo_url ? `<img src="${classroomSettings.logo_url}" alt="Logo" class="h-20 w-20 object-contain mx-auto mb-3">` : '';
                 headerDiv.innerHTML = `
                     ${logoHTML}
-                    <h2 class="text-xl font-bold mb-1">${classroomSettings.school_name || 'ชื่อโรงเรียน'}</h2>
-                    <h3 class="text-lg font-medium mb-1">${typeName} ประจำเดือน ${getThaiMonthYear(monthStr)}</h3>
-                    <p class="text-sm text-gray-600">ชั้นเรียน: ${classroomSettings.room_name || '-'} | ปีการศึกษา: ${classroomSettings.academic_year || '-'}</p>
+                    <h2 class="text-xl font-bold mb-1 text-black">${classroomSettings.school_name || 'ชื่อโรงเรียน'}</h2>
+                    <h3 class="text-lg font-bold mb-1 text-black">แบบรายงานผล${typeName}</h3>
+                    <p class="text-base text-black mb-4">ประจำเดือน ${getThaiMonthYear(monthStr)}<br>ชั้นเรียน: ${classroomSettings.room_name || '-'} | ปีการศึกษา: ${classroomSettings.academic_year || '-'}</p>
                 `;
 
                 let tableHTML = '';
@@ -1197,20 +1197,20 @@
                 if (type === 'health') {
                     const { data: healthData } = await supabaseClient.from('health_records').select('*').gte('record_date', startDate).lte('record_date', endDate);
                     
-                    tableHTML = `<table class="w-full text-sm border-collapse border border-gray-400 mb-6">
-                        <thead class="bg-gray-100">
+                    tableHTML = `<table class="w-full text-sm border-collapse border border-black mb-6 text-black">
+                        <thead>
                             <tr>
-                                <th rowspan="2" class="border border-gray-400 p-2 w-16 align-middle">เลขที่</th>
-                                <th rowspan="2" class="border border-gray-400 p-2 text-left align-middle">ชื่อ-สกุล</th>
-                                <th colspan="6" class="border border-gray-400 p-2 text-center bg-red-50 text-red-700">สรุปจำนวนครั้งที่ <u class="font-bold">"ไม่ผ่าน"</u> ในเดือนนี้ (ครั้ง)</th>
+                                <th rowspan="2" class="border border-black p-2 w-16 align-middle font-bold">เลขที่</th>
+                                <th rowspan="2" class="border border-black p-2 text-left align-middle font-bold">ชื่อ - สกุล</th>
+                                <th colspan="6" class="border border-black p-2 text-center font-bold">จำนวนครั้งที่ไม่ผ่านการประเมินสุขอนามัยในเดือนนี้ (ครั้ง)</th>
                             </tr>
                             <tr>
-                                <th class="border border-gray-400 p-1 w-20 leading-tight align-top pt-2">ผมและศีรษะ<br><span class="text-[9px] font-normal text-gray-600 block mt-1">(ไม่มีเหา,รังแค,ผมเหนียวสกปรก)</span></th>
-                                <th class="border border-gray-400 p-1 w-20 leading-tight align-top pt-2">ใบหูและซอกหู<br><span class="text-[9px] font-normal text-gray-600 block mt-1">(ไม่มีคราบสกปรก,ขี้ไคลหรือขี้หู)</span></th>
-                                <th class="border border-gray-400 p-1 w-20 leading-tight align-top pt-2">ฟัน<br><span class="text-[9px] font-normal text-gray-600 block mt-1">(ไม่มีเศษอาหารหรือขี้ฟัน)</span></th>
-                                <th class="border border-gray-400 p-1 w-20 leading-tight align-top pt-2">ใบหน้าและผิวหนัง<br><span class="text-[9px] font-normal text-gray-600 block mt-1">(ไม่มีคราบสกปรกหรือขี้ไคล)</span></th>
-                                <th class="border border-gray-400 p-1 w-20 leading-tight align-top pt-2">เสื้อผ้า<br><span class="text-[9px] font-normal text-gray-600 block mt-1">(สะอาดไม่มีกลิ่นเหม็น)</span></th>
-                                <th class="border border-gray-400 p-1 w-20 leading-tight align-top pt-2">ถุงเท้า/รองเท้า<br><span class="text-[9px] font-normal text-gray-600 block mt-1">(สะอาดไม่มีกลิ่นเหม็น)</span></th>
+                                <th class="border border-black p-1 w-20 leading-tight align-top pt-2">ผมและศีรษะ<br><span class="text-[10px] font-normal block mt-1">(ไม่มีเหา,ไข่เหา,<br>รังแค,ผมเหนียวสกปรก)</span></th>
+                                <th class="border border-black p-1 w-20 leading-tight align-top pt-2">ใบหูและซอกหู<br><span class="text-[10px] font-normal block mt-1">(ไม่มีคราบสกปรก,<br>ขี้ไคลหรือขี้หู)</span></th>
+                                <th class="border border-black p-1 w-20 leading-tight align-top pt-2">ฟัน<br><span class="text-[10px] font-normal block mt-1">(ไม่มีเศษอาหาร<br>หรือขี้ฟัน)</span></th>
+                                <th class="border border-black p-1 w-20 leading-tight align-top pt-2">ใบหน้าและผิวหนัง<br><span class="text-[10px] font-normal block mt-1">(ไม่มีคราบสกปรก<br>หรือขี้ไคล)</span></th>
+                                <th class="border border-black p-1 w-20 leading-tight align-top pt-2">เสื้อผ้า<br><span class="text-[10px] font-normal block mt-1">(สะอาด<br>ไม่มีกลิ่นเหม็น)</span></th>
+                                <th class="border border-black p-1 w-20 leading-tight align-top pt-2">ถุงเท้าและรองเท้า<br><span class="text-[10px] font-normal block mt-1">(สะอาด<br>ไม่มีกลิ่นเหม็น)</span></th>
                             </tr>
                         </thead><tbody>`;
 
@@ -1230,19 +1230,19 @@
                         }
 
                         const getFailHtml = (count) => {
-                            if (count > 0) return `<span class="text-red-600 font-bold">${count}</span>`;
-                            return `<span class="text-gray-300">-</span>`;
+                            if (count > 0) return `<span class="font-bold text-black">${count}</span>`;
+                            return `<span class="text-black">-</span>`;
                         };
 
                         tableHTML += `<tr>
-                            <td class="border border-gray-400 p-1.5 text-center">${student.code}</td>
-                            <td class="border border-gray-400 p-1.5 text-left">${student.name}</td>
-                            <td class="border border-gray-400 p-1.5 text-center ${failCounts.hair > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.hair)}</td>
-                            <td class="border border-gray-400 p-1.5 text-center ${failCounts.ears > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.ears)}</td>
-                            <td class="border border-gray-400 p-1.5 text-center ${failCounts.teeth > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.teeth)}</td>
-                            <td class="border border-gray-400 p-1.5 text-center ${failCounts.skin > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.skin)}</td>
-                            <td class="border border-gray-400 p-1.5 text-center ${failCounts.uniform > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.uniform)}</td>
-                            <td class="border border-gray-400 p-1.5 text-center ${failCounts.shoes > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.shoes)}</td>
+                            <td class="border border-black p-1.5 text-center">${student.code}</td>
+                            <td class="border border-black p-1.5 text-left">${student.name}</td>
+                            <td class="border border-black p-1.5 text-center">${getFailHtml(failCounts.hair)}</td>
+                            <td class="border border-black p-1.5 text-center">${getFailHtml(failCounts.ears)}</td>
+                            <td class="border border-black p-1.5 text-center">${getFailHtml(failCounts.teeth)}</td>
+                            <td class="border border-black p-1.5 text-center">${getFailHtml(failCounts.skin)}</td>
+                            <td class="border border-black p-1.5 text-center">${getFailHtml(failCounts.uniform)}</td>
+                            <td class="border border-black p-1.5 text-center">${getFailHtml(failCounts.shoes)}</td>
                         </tr>`;
                     });
                     tableHTML += `</tbody></table>`;
@@ -1252,15 +1252,15 @@
                     const { data: nutritionData } = await supabaseClient.from('nutrition_records').select('*').eq('record_month', monthStr);
                     let stats = { total: 0, thin: 0, normal: 0, fat_1: 0, fat_2: 0, sumBMI: 0 };
 
-                    tableHTML = `<table class="w-full text-sm border-collapse border border-gray-400 mb-6">
-                        <thead class="bg-gray-100">
+                    tableHTML = `<table class="w-full text-sm border-collapse border border-black mb-6 text-black">
+                        <thead>
                             <tr>
-                                <th class="border border-gray-400 p-2 w-16">เลขที่</th>
-                                <th class="border border-gray-400 p-2 text-left">ชื่อ-สกุล</th>
-                                <th class="border border-gray-400 p-2 w-24">น้ำหนัก (กก.)</th>
-                                <th class="border border-gray-400 p-2 w-24">ส่วนสูง (ซม.)</th>
-                                <th class="border border-gray-400 p-2 w-24">BMI</th>
-                                <th class="border border-gray-400 p-2 w-32">แปลผล</th>
+                                <th class="border border-black p-2 w-16 font-bold">เลขที่</th>
+                                <th class="border border-black p-2 text-left font-bold">ชื่อ-สกุล</th>
+                                <th class="border border-black p-2 w-24 font-bold">น้ำหนัก (กก.)</th>
+                                <th class="border border-black p-2 w-24 font-bold">ส่วนสูง (ซม.)</th>
+                                <th class="border border-black p-2 w-24 font-bold">BMI</th>
+                                <th class="border border-black p-2 w-32 font-bold">แปลผล</th>
                             </tr>
                         </thead><tbody>`;
 
@@ -1280,32 +1280,26 @@
                             else if(res.text === 'อ้วน') stats.fat_2++;
                         }
 
-                        let bgPrintStyle = '';
-                        if(res.text === 'ผอม') bgPrintStyle = 'background-color: #3b82f6 !important; color: white !important;';
-                        else if(res.text === 'สมส่วน') bgPrintStyle = 'background-color: #22c55e !important; color: white !important;';
-                        else if(res.text === 'ท้วม') bgPrintStyle = 'background-color: #f97316 !important; color: white !important;';
-                        else if(res.text === 'อ้วน') bgPrintStyle = 'background-color: #ef4444 !important; color: white !important;';
-
                         tableHTML += `<tr>
-                            <td class="border border-gray-400 p-1.5 text-center">${student.code}</td>
-                            <td class="border border-gray-400 p-1.5 text-left">${student.name}</td>
-                            <td class="border border-gray-400 p-1.5 text-center">${w}</td>
-                            <td class="border border-gray-400 p-1.5 text-center">${h}</td>
-                            <td class="border border-gray-400 p-1.5 text-center font-bold">${bmi ? bmi.toFixed(2) : '-'}</td>
-                            <td class="border border-gray-400 p-1.5 text-center font-bold" style="${bgPrintStyle}">${res.text}</td>
+                            <td class="border border-black p-1.5 text-center">${student.code}</td>
+                            <td class="border border-black p-1.5 text-left">${student.name}</td>
+                            <td class="border border-black p-1.5 text-center">${w}</td>
+                            <td class="border border-black p-1.5 text-center">${h}</td>
+                            <td class="border border-black p-1.5 text-center font-bold">${bmi ? bmi.toFixed(2) : '-'}</td>
+                            <td class="border border-black p-1.5 text-center font-bold">${res.text}</td>
                         </tr>`;
                     });
                     
                     const avgBMI = stats.total > 0 ? (stats.sumBMI / stats.total).toFixed(2) : 0;
                     tableHTML += `</tbody></table>
-                    <div class="bg-gray-100 p-4 border border-gray-400 text-sm page-break-inside-avoid" style="background-color: #f3f4f6 !important;">
+                    <div class="p-4 border border-black text-sm page-break-inside-avoid text-black">
                         <h4 class="font-bold mb-2">สรุปภาพรวมโภชนาการ (จากผู้ที่มีข้อมูล ${stats.total} คน)</h4>
                         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
-                            <div><p class="text-gray-600">BMI เฉลี่ย</p><p class="text-lg font-bold">${avgBMI}</p></div>
-                            <div><p class="text-blue-600">ผอม</p><p class="text-lg font-bold">${stats.thin} คน</p></div>
-                            <div><p class="text-green-600">สมส่วน</p><p class="text-lg font-bold">${stats.normal} คน</p></div>
-                            <div><p class="text-orange-600">ท้วม</p><p class="text-lg font-bold">${stats.fat_1} คน</p></div>
-                            <div><p class="text-red-600">อ้วน</p><p class="text-lg font-bold">${stats.fat_2} คน</p></div>
+                            <div><p>BMI เฉลี่ย</p><p class="text-lg font-bold">${avgBMI}</p></div>
+                            <div><p>ผอม</p><p class="text-lg font-bold">${stats.thin} คน</p></div>
+                            <div><p>สมส่วน</p><p class="text-lg font-bold">${stats.normal} คน</p></div>
+                            <div><p>ท้วม</p><p class="text-lg font-bold">${stats.fat_1} คน</p></div>
+                            <div><p>อ้วน</p><p class="text-lg font-bold">${stats.fat_2} คน</p></div>
                         </div>
                     </div>`;
                 }
@@ -1314,17 +1308,17 @@
                     const { data } = await supabaseClient.from('daily_records').select('*').gte('record_date', startDate).lte('record_date', endDate);
                     let targetData = data || [];
 
-                    tableHTML = `<div class="overflow-x-auto"><table class="w-full text-[11px] md:text-xs border-collapse border border-gray-400">
-                        <thead class="bg-gray-100">
+                    tableHTML = `<div class="overflow-x-auto"><table class="w-full text-[11px] md:text-xs border-collapse border border-black text-black">
+                        <thead>
                             <tr>
-                                <th rowspan="2" class="border border-gray-400 p-1 w-8">ที่</th>
-                                <th rowspan="2" class="border border-gray-400 p-1 min-w-[100px] text-left">ชื่อ-สกุล</th>
-                                <th colspan="${daysInMonth}" class="border border-gray-400 p-1">วันที่</th>`;
+                                <th rowspan="2" class="border border-black p-1 w-8 font-bold">ที่</th>
+                                <th rowspan="2" class="border border-black p-1 min-w-[100px] text-left font-bold">ชื่อ-สกุล</th>
+                                <th colspan="${daysInMonth}" class="border border-black p-1 font-bold">วันที่</th>`;
                     
                     if(type === 'attendance') {
-                        tableHTML += `<th colspan="4" class="border border-gray-400 p-1 bg-blue-50">สรุป (วัน)</th><th rowspan="2" class="border border-gray-400 p-1 w-10 bg-gray-200">%</th>`;
+                        tableHTML += `<th colspan="4" class="border border-black p-1 font-bold">สรุป (วัน)</th><th rowspan="2" class="border border-black p-1 w-10 font-bold">%</th>`;
                     } else {
-                        tableHTML += `<th colspan="2" class="border border-gray-400 p-1 bg-blue-50">สรุป</th>`;
+                        tableHTML += `<th colspan="2" class="border border-black p-1 font-bold">สรุป</th>`;
                     }
                     tableHTML += `</tr><tr>`;
 
@@ -1336,15 +1330,15 @@
                         const isHoliday = holidaysData.some(h => h.holiday_date === dateKey);
                         
                         if(!isWeekend && !isHoliday) totalWorkingDays++;
-                        const bgClass = (isWeekend || isHoliday) ? 'bg-gray-300' : '';
-                        tableHTML += `<th class="border border-gray-400 p-0.5 w-5 ${bgClass}" ${bgClass ? 'style="background-color: #d1d5db !important;"' : ''}>${d}</th>`;
+                        const bgClass = (isWeekend || isHoliday) ? 'bg-gray-200' : '';
+                        tableHTML += `<th class="border border-black p-0.5 w-5 ${bgClass}">${d}</th>`;
                     }
                     if(totalWorkingDays === 0) totalWorkingDays = 1; 
 
                     if(type === 'attendance') {
-                        tableHTML += `<th class="border border-gray-400 p-0.5 w-6 bg-green-50">มา</th><th class="border border-gray-400 p-0.5 w-6 bg-orange-50">สาย</th><th class="border border-gray-400 p-0.5 w-6 bg-blue-50">ลา</th><th class="border border-gray-400 p-0.5 w-6 bg-red-50">ขาด</th>`;
+                        tableHTML += `<th class="border border-black p-0.5 w-6 font-normal">มา</th><th class="border border-black p-0.5 w-6 font-normal">สาย</th><th class="border border-black p-0.5 w-6 font-normal">ลา</th><th class="border border-black p-0.5 w-6 font-normal">ขาด</th>`;
                     } else {
-                        tableHTML += `<th class="border border-gray-400 p-0.5 w-8 bg-blue-50">รวม</th><th class="border border-gray-400 p-0.5 w-8 bg-gray-200">%</th>`;
+                        tableHTML += `<th class="border border-black p-0.5 w-8 font-normal">รวม</th><th class="border border-black p-0.5 w-8 font-normal">%</th>`;
                     }
                     tableHTML += `</tr></thead><tbody>`;
 
@@ -1352,15 +1346,15 @@
                         let present = 0, late = 0, leave = 0, absent = 0, actionCount = 0;
                         
                         tableHTML += `<tr>
-                            <td class="border border-gray-400 p-1 text-center">${student.code}</td>
-                            <td class="border border-gray-400 p-1 truncate max-w-[120px] text-left">${student.name}</td>`;
+                            <td class="border border-black p-1 text-center">${student.code}</td>
+                            <td class="border border-black p-1 truncate max-w-[120px] text-left">${student.name}</td>`;
                         
                         for(let d = 1; d <= daysInMonth; d++) {
                             const dateKey = `${year}-${month.padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                             const dObj = new Date(parseInt(year), parseInt(month) - 1, d);
                             const isWeekend = dObj.getDay() === 0 || dObj.getDay() === 6;
                             const isHoliday = holidaysData.some(h => h.holiday_date === dateKey);
-                            const bgClass = (isWeekend || isHoliday) ? 'bg-gray-300' : '';
+                            const bgClass = (isWeekend || isHoliday) ? 'bg-gray-200' : '';
                             
                             let cellContent = '';
                             const rec = targetData.find(r => r.student_id === student.id && r.record_date === dateKey);
@@ -1377,29 +1371,22 @@
                                 }
                             }
 
-                            let textStyle = bgClass ? 'background-color: #d1d5db !important;' : '';
-                            if(cellContent === 'ส') textStyle += 'color: #f97316;'; 
-                            else if(cellContent === 'ล') textStyle += 'color: #3b82f6;';
-                            else if(cellContent === 'ข') textStyle += 'color: #ef4444;';
-                            else if(cellContent === '/') textStyle += 'color: #22c55e;';
-                            else if(cellContent === '✓') textStyle += 'color: #22c55e; font-weight: bold;';
-
-                            tableHTML += `<td class="border border-gray-400 p-0 text-center font-bold text-[10px] ${bgClass}" style="${textStyle}">${cellContent}</td>`;
+                            tableHTML += `<td class="border border-black p-0 text-center font-bold text-[10px] ${bgClass}">${cellContent}</td>`;
                         }
 
                         if(type === 'attendance') {
                             const totalPresent = present + late;
                             const percent = ((totalPresent / totalWorkingDays) * 100).toFixed(1);
                             tableHTML += `
-                                <td class="border border-gray-400 p-1 text-center bg-green-50">${present}</td>
-                                <td class="border border-gray-400 p-1 text-center bg-orange-50">${late}</td>
-                                <td class="border border-gray-400 p-1 text-center bg-blue-50">${leave}</td>
-                                <td class="border border-gray-400 p-1 text-center bg-red-50">${absent}</td>
-                                <td class="border border-gray-400 p-1 text-center font-bold bg-gray-100">${percent}%</td>
+                                <td class="border border-black p-1 text-center">${present}</td>
+                                <td class="border border-black p-1 text-center">${late}</td>
+                                <td class="border border-black p-1 text-center">${leave}</td>
+                                <td class="border border-black p-1 text-center">${absent}</td>
+                                <td class="border border-black p-1 text-center font-bold">${percent}%</td>
                             `;
                         } else {
                             const percent = ((actionCount / totalWorkingDays) * 100).toFixed(1);
-                            tableHTML += `<td class="border border-gray-400 p-1 text-center bg-blue-50">${actionCount}</td><td class="border border-gray-400 p-1 text-center font-bold bg-gray-100">${percent}%</td>`;
+                            tableHTML += `<td class="border border-black p-1 text-center">${actionCount}</td><td class="border border-black p-1 text-center font-bold">${percent}%</td>`;
                         }
                         tableHTML += `</tr>`;
                     });
@@ -1410,20 +1397,20 @@
 
                 // Signatures
                 signDiv.innerHTML = `
-                    <div class="text-center">
+                    <div class="text-center text-black">
                         <p class="mb-10 text-sm">ลงชื่อ.......................................................</p>
                         <p class="text-sm">( ${classroomSettings.teacher_1 || '........................................'} )</p>
-                        <p class="text-xs text-gray-600 mt-1">ครูประจำชั้นคนที่ 1</p>
+                        <p class="text-xs mt-1">ครูประจำชั้นคนที่ 1</p>
                     </div>
-                    <div class="text-center">
+                    <div class="text-center text-black">
                         <p class="mb-10 text-sm">ลงชื่อ.......................................................</p>
                         <p class="text-sm">( ${classroomSettings.teacher_2 || '........................................'} )</p>
-                        <p class="text-xs text-gray-600 mt-1">ครูประจำชั้นคนที่ 2</p>
+                        <p class="text-xs mt-1">ครูประจำชั้นคนที่ 2</p>
                     </div>
-                    <div class="text-center">
+                    <div class="text-center text-black">
                         <p class="mb-10 text-sm">ลงชื่อ.......................................................</p>
                         <p class="text-sm">( ${classroomSettings.director || '........................................'} )</p>
-                        <p class="text-xs text-gray-600 mt-1">ผู้อำนวยการ</p>
+                        <p class="text-xs mt-1">ผู้อำนวยการ</p>
                     </div>
                 `;
 
