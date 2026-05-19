@@ -538,8 +538,7 @@
             if(b < 18.5) return { text: 'ผอม', color: 'text-blue-500', bgPrint: 'background-color: #3b82f6 !important; color: white !important;' };
             if(b < 23.0) return { text: 'สมส่วน', color: 'text-green-500', bgPrint: 'background-color: #22c55e !important; color: white !important;' };
             if(b < 25.0) return { text: 'ท้วม', color: 'text-orange-500', bgPrint: 'background-color: #f97316 !important; color: white !important;' };
-            if(b < 30.0) return { text: 'อ้วน', color: 'text-red-500', bgPrint: 'background-color: #ef4444 !important; color: white !important;' };
-            return { text: 'อ้วนมาก', color: 'text-red-700', bgPrint: 'background-color: #b91c1c !important; color: white !important;' };
+            return { text: 'อ้วน', color: 'text-red-500', bgPrint: 'background-color: #ef4444 !important; color: white !important;' };
         }
 
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
@@ -1301,7 +1300,7 @@
                             if(res.text === 'ผอม') stats.thin++;
                             else if(res.text === 'สมส่วน') stats.normal++;
                             else if(res.text === 'ท้วม') stats.fat_1++;
-                            else if(res.text === 'อ้วน' || res.text === 'อ้วนมาก') stats.fat_2++;
+                            else if(res.text === 'อ้วน') stats.fat_2++;
                         }
 
                         tableHTML += `<tr>
@@ -1323,7 +1322,7 @@
                             <div><p>ผอม</p><p class="text-lg font-bold">${stats.thin} คน</p></div>
                             <div><p>สมส่วน</p><p class="text-lg font-bold">${stats.normal} คน</p></div>
                             <div><p>ท้วม</p><p class="text-lg font-bold">${stats.fat_1} คน</p></div>
-                            <div><p>อ้วน/อ้วนมาก</p><p class="text-lg font-bold">${stats.fat_2} คน</p></div>
+                            <div><p>อ้วน</p><p class="text-lg font-bold">${stats.fat_2} คน</p></div>
                         </div>
                     </div>`;
                 }
