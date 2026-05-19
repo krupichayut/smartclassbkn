@@ -130,6 +130,35 @@
                 padding: 1px !important;
             }
 
+            /* คลาสเฉพาะสำหรับกล่องสรุปผลโภชนาการให้อยู่ในบรรทัดเดียวกัน */
+            .summary-box {
+                border: 1px solid black !important;
+                padding: 6px 10px !important;
+                margin-top: 8px !important;
+                margin-bottom: 0 !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            .summary-box h4 {
+                font-size: 11px !important;
+                font-weight: bold !important;
+                margin-bottom: 8px !important;
+                text-align: left !important;
+            }
+            .summary-box .summary-grid {
+                display: grid !important;
+                grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+                width: 100% !important;
+            }
+            .summary-box .summary-label {
+                font-size: 10px !important;
+                margin-bottom: 2px !important;
+            }
+            .summary-box .summary-value {
+                font-size: 12px !important;
+                font-weight: bold !important;
+            }
+
             /* ลายเซ็นด้านล่าง ดันไปติดขอบล่าง */
             #report-signatures {
                 margin-top: auto !important;
@@ -1381,12 +1410,27 @@
                     tableHTML += `</tbody></table>
                     <div class="summary-box border border-black text-sm page-break-inside-avoid text-black mt-2">
                         <h4 class="font-bold mb-2 print:mb-1">สรุปภาพรวมโภชนาการ (จากผู้ที่มีข้อมูล ${stats.total} คน)</h4>
-                        <div class="flex justify-around items-center text-center w-full">
-                            <div><p class="print:mb-0">BMI เฉลี่ย</p><p class="text-base font-bold">${avgBMI}</p></div>
-                            <div><p class="print:mb-0">ผอม</p><p class="text-base font-bold">${stats.thin} คน</p></div>
-                            <div><p class="print:mb-0">สมส่วน</p><p class="text-base font-bold">${stats.normal} คน</p></div>
-                            <div><p class="print:mb-0">ท้วม</p><p class="text-base font-bold">${stats.fat_1} คน</p></div>
-                            <div><p class="print:mb-0">อ้วน</p><p class="text-base font-bold">${stats.fat_2} คน</p></div>
+                        <div class="summary-grid grid grid-cols-5 w-full">
+                            <div class="text-center">
+                                <div class="summary-label text-gray-600 print:text-black">BMI เฉลี่ย</div>
+                                <div class="summary-value text-lg font-bold">${avgBMI}</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="summary-label text-blue-600 print:text-black">ผอม</div>
+                                <div class="summary-value text-lg font-bold">${stats.thin} คน</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="summary-label text-green-600 print:text-black">สมส่วน</div>
+                                <div class="summary-value text-lg font-bold">${stats.normal} คน</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="summary-label text-orange-600 print:text-black">ท้วม</div>
+                                <div class="summary-value text-lg font-bold">${stats.fat_1} คน</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="summary-label text-red-600 print:text-black">อ้วน</div>
+                                <div class="summary-value text-lg font-bold">${stats.fat_2} คน</div>
+                            </div>
                         </div>
                     </div>`;
                 }
