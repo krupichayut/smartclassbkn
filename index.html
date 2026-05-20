@@ -24,7 +24,7 @@
             color: #f8fafc;
         }
 
-        /* Glassmorphism Styles */
+        /* Glassmorphism Styles สำหรับการแสดงผลบนหน้าจอปกติ */
         .glass-panel {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(12px);
@@ -53,48 +53,56 @@
         .fade-in { animation: fadeIn 0.4s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Print Styles - สัดส่วน A4 แนวนอน พอดี 1 หน้าเป๊ะ */
+        /* Print Styles - รูปแบบสำหรับการพิมพ์ A4 แนวนอน */
         @media print {
             @page { 
                 size: A4 landscape; 
-                margin: 10mm; /* ระยะขอบกระดาษมาตรฐาน */
+                margin: 10mm; /* ระยะขอบกระดาษ 1 เซนติเมตร พอดีสวยงาม */
             }
             body, html { 
-                background: white !important; 
-                color: black !important; 
+                background-color: #ffffff !important; /* บังคับพื้นหลังสีขาว */
+                background-image: none !important; /* ลบพื้นหลัง Gradient ที่ทำให้เกิดเงาดำด้านล่าง */
+                color: #000000 !important; 
                 -webkit-print-color-adjust: exact; 
                 print-color-adjust: exact; 
                 height: 100% !important;
                 margin: 0 !important;
                 padding: 0 !important;
             }
+            
+            /* ลบเงาและกรอบตกแต่งทั้งหมดทิ้ง */
+            * {
+                box-shadow: none !important;
+                text-shadow: none !important;
+            }
+
+            /* ซ่อนเมนูและส่วนที่ไม่ต้องการพิมพ์ */
             #sidebar, #mobile-menu-btn, .no-print, #notification-toast { 
                 display: none !important; 
             }
+
             #main-content { 
                 margin: 0 !important; 
                 padding: 0 !important; 
                 width: 100% !important; 
                 max-width: 100% !important;
                 overflow: visible !important;
+                background: white !important;
             }
+
             .overflow-x-auto, .overflow-hidden, .overflow-y-auto {
                 overflow: visible !important;
             }
-            .glass-panel { 
-                background: none !important; 
-                border: none !important; 
-                box-shadow: none !important; 
-            }
             
-            /* บังคับโครงสร้างหลักเป็น Flexbox สูง 95vh ให้เต็มแผ่นพอดี */
+            /* บังคับโครงสร้างหลักเป็น Flexbox ให้ความสูงขั้นต่ำเต็มแผ่น */
             #printable-report { 
                 display: flex !important; 
                 flex-direction: column !important;
-                height: 95vh !important; 
+                min-height: 95vh !important; 
                 box-sizing: border-box !important; 
                 padding: 0 !important; 
                 width: 100% !important;
+                background: white !important;
             }
             
             /* ส่วนหัวกระดาษจัดกลาง */
@@ -129,7 +137,7 @@
             }
             th { font-weight: bold !important; }
             
-            /* ช่องวันที่ในรายงานเช็คชื่อ ปรับให้เล็กลง */
+            /* ช่องวันที่ในรายงานเช็คชื่อ ปรับให้เล็กลง (1-31) */
             th.w-5, td.w-5 {
                 padding: 2px 1px !important;
                 font-size: 9px !important;
@@ -140,7 +148,7 @@
                 padding: 2px !important;
             }
 
-            /* กล่องสรุปผล */
+            /* กล่องสรุปผลโภชนาการ */
             .summary-box {
                 border: 1px solid black !important;
                 padding: 8px 12px !important;
@@ -148,6 +156,7 @@
                 margin-bottom: 0 !important;
                 width: 100% !important;
                 box-sizing: border-box !important;
+                background: white !important;
             }
             .summary-box h4 {
                 font-size: 12px !important;
@@ -156,8 +165,8 @@
                 text-align: left !important;
             }
             .summary-box .summary-grid {
-                display: grid !important;
-                grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+                display: flex !important; /* บังคับให้เรียงต่อกันแนวนอนเสมอ */
+                justify-content: space-around !important;
                 width: 100% !important;
             }
             .summary-box .summary-label {
@@ -174,10 +183,11 @@
                 margin-top: auto !important; 
                 padding-top: 20px !important;
                 padding-bottom: 5px !important;
-                display: grid !important;
-                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+                display: flex !important;
+                justify-content: space-around !important;
                 text-align: center !important;
                 page-break-inside: avoid;
+                width: 100% !important;
             }
             #report-signatures p {
                 font-size: 12px !important;
@@ -318,14 +328,6 @@
                         </button>
                     </div>
                 </header>
-
-                <div id="health-holiday-banner" class="hidden mb-6 bg-red-500/20 border border-red-500/50 text-red-200 p-4 rounded-xl flex items-center gap-3">
-                    <i class="fas fa-bullhorn text-2xl text-red-400"></i>
-                    <div>
-                        <h4 class="font-bold text-lg">วันนี้เป็นวันหยุด!</h4>
-                        <p id="health-holiday-reason" class="text-sm">ปิดการบันทึกข้อมูลสำหรับวันนี้</p>
-                    </div>
-                </div>
 
                 <div class="glass-panel rounded-2xl overflow-hidden mb-20">
                     <div class="overflow-x-auto">
@@ -830,7 +832,7 @@
                 studentsData.sort((a,b) => a.code - b.code);
                 renderStudents();
                 closeStudentModal();
-                showNotification('บันทึกข้อมูลนักเรียนสำเร็จ');
+                showNotification('บันึกข้อมูลนักเรียนสำเร็จ');
             } else {
                 console.error(error);
                 alert("เกิดข้อผิดพลาด กรุณาตรวจสอบว่าได้สร้างคอลัมน์ parent_name และ parent_phone ในฐานข้อมูลแล้วหรือยัง");
