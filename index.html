@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบธุรการชั้นเรียนอัจฉริยะ</title>
+    <title>SmartClass - ระบบธุรการชั้นเรียน</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -18,400 +18,598 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        body {
-            font-family: 'Noto Sans Thai', sans-serif;
-            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #0f172a 100%);
-            color: #f8fafc;
+        :root {
+            --bento-bg: #F5F7FA;
+            --bento-surface: rgba(255, 255, 255, 0.85);
+            --bento-border: rgba(255, 255, 255, 0.5);
+            --bento-shadow: 0 10px 40px -10px rgba(0,0,0,0.08);
+            
+            --text-primary: #1E293B;
+            --text-secondary: #64748B;
+            --accent: #0F172A;
+            --accent-hover: #334155;
+            
+            --color-present: #10B981;
+            --color-late: #F59E0B;
+            --color-absent: #EF4444;
+            --color-leave: #8B5CF6;
         }
 
-        /* Glassmorphism Styles สำหรับการแสดงผลบนหน้าจอปกติ */
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bento-bg);
+            color: var(--text-primary); 
+            position: relative;
+        }
+        
+        h1, h2, h3, h4, h5, h6, .font-heading {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            letter-spacing: -0.02em;
+        }
+
+        /* Ambient Mesh Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -10%; left: -10%;
+            width: 50vw; height: 50vw;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, rgba(255,255,255,0) 70%);
+            z-index: -1;
+            pointer-events: none;
+            filter: blur(60px);
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -10%; right: -10%;
+            width: 60vw; height: 60vw;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, rgba(255,255,255,0) 70%);
+            z-index: -1;
+            pointer-events: none;
+            filter: blur(60px);
+        }
+
+        /* Bento Box Core */
+        .bento-box {
+            background: var(--bento-surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid var(--bento-border);
+            box-shadow: var(--bento-shadow);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .glass-panel { /* Legacy override for smooth transition */
+            background: var(--bento-surface);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid var(--bento-border);
+            box-shadow: var(--bento-shadow);
         }
         
         .glass-input {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.5);
+            border-radius: 12px;
+            border: 1px solid rgba(0,0,0,0.05);
+            color: var(--text-primary);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 10px 14px;
+            font-size: 0.95rem;
+            width: 100%;
         }
         .glass-input:focus {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: #fbbf24;
+            background: #fff;
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
             outline: none;
         }
-        .glass-input option { background-color: #1e1b4b; color: white; }
+        .glass-input option { background-color: #ffffff; color: var(--text-primary); }
+        .glass-input:disabled { opacity: 0.6; background-color: rgba(0,0,0,0.02); cursor: not-allowed; }
 
+        /* Bento specific buttons */
+        .exec-btn {
+            background: var(--accent);
+            color: #ffffff;
+            border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            border: none;
+            padding: 10px 20px;
+            font-weight: 500;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .exec-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(15, 23, 42, 0.3);
+        }
+        .exec-btn:active {
+            transform: translateY(0);
+        }
+        
+        .exec-btn-outline {
+            background: rgba(255,255,255,0.5);
+            color: var(--text-primary);
+            border-radius: 14px;
+            border: 1px solid rgba(0,0,0,0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            padding: 10px 20px;
+            font-weight: 500;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .exec-btn-outline:hover {
+            background: #ffffff;
+            border-color: rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        /* Custom Checkbox/Radio */
+        .modern-checkbox {
+            appearance: none;
+            width: 1.25rem;
+            height: 1.25rem;
+            background: #ffffff;
+            border: 2px solid rgba(21, 145, 155, 0.4);
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .modern-checkbox:checked {
+            background-color: var(--ux-cyan);
+            border-color: var(--ux-cyan);
+        }
+        .modern-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 6px;
+            width: 6px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        .fade-in { animation: fadeIn 0.4s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Animations */
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Print Styles - รูปแบบสำหรับการพิมพ์ A4 แนวนอน */
+        /* Virtual Classroom Flip Cards */
+        .classroom-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem 0;
+        }
+        @media (min-width: 1024px) {
+            .classroom-grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            }
+        }
+        
+        .desk-card {
+            background-color: transparent;
+            width: 100%;
+            height: 220px;
+            perspective: 1000px;
+        }
+        
+        .desk-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px -5px rgba(21, 145, 155, 0.15);
+            cursor: pointer;
+        }
+        
+        .desk-card.flipped .desk-inner {
+            transform: rotateY(180deg);
+        }
+        
+        .desk-front, .desk-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 2px solid transparent;
+        }
+        
+        .desk-front {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: linear-gradient(180deg, #ffffff 0%, var(--ux-bg) 100%);
+            border: 1px solid rgba(21, 145, 155, 0.2);
+        }
+        
+        .desk-back {
+            transform: rotateY(180deg);
+            padding: 1.25rem 1rem;
+            background: var(--ux-navy);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .avatar-ring {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            font-weight: bold;
+            margin-bottom: 0.75rem;
+            border: 3px solid #e2e8f0;
+            background: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Status modifiers */
+        .status-มา .avatar-ring { border-color: var(--ux-mint); color: var(--ux-dark-cyan); box-shadow: 0 0 20px rgba(128, 238, 152, 0.6); }
+        .status-ขาด .avatar-ring { border-color: #f43f5e; color: #f43f5e; box-shadow: 0 0 20px rgba(244, 63, 94, 0.4); }
+        .status-ลา .avatar-ring { border-color: #fbbf24; color: #fbbf24; box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
+        
+        .desk-card:hover .avatar-ring {
+            transform: scale(1.1);
+        }
+        
+        /* Custom select for Dark back card */
+        .dark-select {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            padding: 4px 8px;
+            font-size: 0.875rem;
+            width: 100%;
+            outline: none;
+        }
+        .dark-select option {
+            background: var(--ux-navy);
+            color: white;
+        }
+
+        /* Mobile Responsive Table (Card View) */
+        @media (max-width: 768px) {
+            .mobile-table, .mobile-table thead, .mobile-table tbody, .mobile-table th, .mobile-table td, .mobile-table tr {
+                display: block;
+            }
+            .mobile-table thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            .mobile-table tr {
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                margin-bottom: 1rem;
+                background: #ffffff;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                padding: 0.5rem;
+            }
+            .mobile-table td {
+                border: none;
+                border-bottom: 1px solid #f1f5f9;
+                position: relative;
+                padding-left: 45% !important;
+                text-align: right !important;
+                min-height: 48px;
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+            }
+            .mobile-table td:last-child {
+                border-bottom: 0;
+            }
+            .mobile-table td:before {
+                content: attr(data-label);
+                position: absolute;
+                left: 12px;
+                width: 40%;
+                text-align: left;
+                font-weight: 600;
+                color: #64748b;
+                white-space: nowrap;
+                display: flex;
+                align-items: center;
+            }
+            /* Adjust inputs inside mobile table to not be too wide */
+            .mobile-table td select, .mobile-table td input[type="checkbox"] {
+                max-width: 150px;
+                margin-left: auto;
+            }
+        }
+
+        /* Print Styles */
         @media print {
-            @page { 
-                size: A4 landscape; 
-                margin: 10mm; /* ระยะขอบกระดาษ 1 เซนติเมตร พอดีสวยงาม */
-            }
-            body, html { 
-                background-color: #ffffff !important; /* บังคับพื้นหลังสีขาว */
-                background-image: none !important; /* ลบพื้นหลัง Gradient ที่ทำให้เกิดเงาดำด้านล่าง */
-                color: #000000 !important; 
-                -webkit-print-color-adjust: exact; 
-                print-color-adjust: exact; 
-                height: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-            
-            /* ลบเงาและกรอบตกแต่งทั้งหมดทิ้ง */
-            * {
-                box-shadow: none !important;
-                text-shadow: none !important;
-            }
-
-            /* ซ่อนเมนูและส่วนที่ไม่ต้องการพิมพ์ */
-            #sidebar, #mobile-menu-btn, .no-print, #notification-toast { 
-                display: none !important; 
-            }
-
-            #main-content { 
-                margin: 0 !important; 
-                padding: 0 !important; 
-                width: 100% !important; 
-                max-width: 100% !important;
-                overflow: visible !important;
-                background: white !important;
-            }
-
-            .overflow-x-auto, .overflow-hidden, .overflow-y-auto {
-                overflow: visible !important;
-            }
-            
-            /* บังคับโครงสร้างหลักเป็น Flexbox ให้ความสูงขั้นต่ำเต็มแผ่น */
-            #printable-report { 
-                display: flex !important; 
-                flex-direction: column !important;
-                min-height: 95vh !important; 
-                box-sizing: border-box !important; 
-                padding: 0 !important; 
-                width: 100% !important;
-                background: white !important;
-            }
-            
-            /* ส่วนหัวกระดาษจัดกลาง */
-            #report-header { 
-                flex-shrink: 0 !important; 
-                margin-bottom: 10px !important; 
-                text-align: center !important;
-            }
-            #report-header img { height: 50px !important; width: auto !important; margin-bottom: 4px !important; display: inline-block; }
-            #report-header h2 { font-size: 16px !important; margin-bottom: 2px !important; margin-top: 0 !important; font-weight: bold; }
-            #report-header h3 { font-size: 14px !important; margin-bottom: 2px !important; margin-top: 0 !important; font-weight: bold; }
-            #report-header p { font-size: 12px !important; margin-bottom: 0 !important; margin-top: 0 !important; }
-            
-            /* พื้นที่ตาราง ให้ยืดหยุ่นพอดี */
-            #report-content { 
-                flex-grow: 0 !important; 
-                margin-bottom: 0 !important; 
-            }
-            table { 
-                border-collapse: collapse; 
-                width: 100% !important; 
-                max-width: 100% !important;
-                table-layout: auto !important;
-            }
-            th, td { 
-                border: 1px solid black !important; 
-                padding: 6px 4px !important; /* ระยะห่างในตาราง */
-                text-align: center; 
-                color: black !important; 
-                font-size: 12px !important; /* ขนาดฟอนต์ตาราง */
-                line-height: 1.2 !important;
-            }
-            th { font-weight: bold !important; }
-            
-            /* ช่องวันที่ในรายงานเช็คชื่อ ปรับให้เล็กลง (1-31) */
-            th.w-5, td.w-5 {
-                padding: 2px 1px !important;
-                font-size: 9px !important;
-                width: 16px !important;
-            }
-            th.w-8, td.w-8, th.w-10, td.w-10, th.w-12, td.w-12, th.w-16, td.w-16 {
-                font-size: 11px !important;
-                padding: 2px !important;
-            }
-
-            /* กล่องสรุปผลโภชนาการ */
-            .summary-box {
-                border: 1px solid black !important;
-                padding: 8px 12px !important;
-                margin-top: 10px !important;
-                margin-bottom: 0 !important;
-                width: 100% !important;
-                box-sizing: border-box !important;
-                background: white !important;
-            }
-            .summary-box h4 {
-                font-size: 12px !important;
-                font-weight: bold !important;
-                margin-bottom: 8px !important;
-                text-align: left !important;
-            }
-            .summary-box .summary-grid {
-                display: flex !important; /* บังคับให้เรียงต่อกันแนวนอนเสมอ */
-                justify-content: space-around !important;
-                width: 100% !important;
-            }
-            .summary-box .summary-label {
-                font-size: 11px !important;
-                margin-bottom: 4px !important;
-            }
-            .summary-box .summary-value {
-                font-size: 14px !important;
-                font-weight: bold !important;
-            }
-
-            /* ส่วนลายเซ็น ใช้ margin-top: auto เพื่อดันไปติดขอบกระดาษด้านล่างสุดเสมอ */
-            #report-signatures {
-                margin-top: auto !important; 
-                padding-top: 20px !important;
-                padding-bottom: 5px !important;
-                display: flex !important;
-                justify-content: space-around !important;
-                text-align: center !important;
-                page-break-inside: avoid;
-                width: 100% !important;
-            }
-            #report-signatures p {
-                font-size: 12px !important;
-                margin-bottom: 0 !important;
-            }
-            #report-signatures .mb-10 {
-                margin-bottom: 30px !important; /* ช่องว่างให้เซ็นชื่อ */
-            }
-            
+            @page { size: A4 landscape; margin: 10mm; }
+            body { background: white !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            #sidebar, #mobile-menu-btn, .no-print { display: none !important; }
+            #main-content { margin: 0 !important; padding: 0 !important; width: 100% !important; overflow: visible !important; }
+            .glass-panel { background: none !important; border: none !important; box-shadow: none !important; color: black !important; }
+            table { border-collapse: collapse; width: 100%; page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            th, td { border: 1px solid #666 !important; padding: 4px !important; text-align: center; }
+            #printable-report { display: block !important; box-shadow: none !important; padding: 0 !important; }
+            .print-break { page-break-before: always; }
             .page-break-inside-avoid { page-break-inside: avoid; }
         }
     </style>
 </head>
-<body class="flex overflow-hidden h-screen text-sm md:text-base">
-
-    <!-- Mobile Menu Button -->
-    <button id="mobile-menu-btn" class="md:hidden fixed top-4 left-4 z-50 text-white p-2 rounded-lg glass-panel no-print" onclick="toggleSidebar()">
-        <i class="fas fa-bars"></i>
-    </button>
-
-    <!-- Sidebar Navigation -->
-    <aside id="sidebar" class="w-64 glass-panel border-r border-white/10 flex-shrink-0 absolute md:relative z-40 h-full transition-transform duration-300 transform -translate-x-full md:translate-x-0 no-print">
-        <div class="p-6 text-center border-b border-white/10">
-            <div id="sidebar-logo-container" class="w-16 h-16 mx-auto bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg mb-3 overflow-hidden border border-white/20">
-                <i class="fas fa-graduation-cap text-2xl text-yellow-400" id="sidebar-default-icon"></i>
-                <img id="sidebar-logo-img" src="" alt="School Logo" class="w-full h-full object-cover hidden bg-white">
-            </div>
-            <h1 class="text-xl font-bold text-yellow-400 tracking-wide">SmartClass</h1>
-            <p class="text-xs text-indigo-200 mt-1" id="sidebar-school-name">กำลังโหลดข้อมูล...</p>
-            
-            <div id="db-status" class="mt-2 text-[10px] bg-black/30 rounded-full px-3 py-1 inline-block border border-white/10">
-                <i class="fas fa-circle-notch fa-spin text-yellow-400"></i> กำลังเชื่อมต่อ...
-            </div>
-        </div>
+<body class="flex overflow-hidden h-screen text-sm md:text-base text-[#213A58] bg-white">
+    <!-- Desktop/Mobile Bento Dock Navigation -->
+    <nav id="floating-dock" class="bento-box fixed z-50 flex md:flex-col items-center gap-2 
+        bottom-4 left-4 right-4 p-3 overflow-x-auto rounded-[2rem] shadow-2xl
+        md:bottom-auto md:left-6 md:top-1/2 md:-translate-y-1/2 md:right-auto md:w-20 md:py-6 md:px-3 md:rounded-[2.5rem]">
         
-        <nav class="p-4 space-y-2 mt-2 overflow-y-auto max-h-[calc(100vh-220px)]">
-            <button onclick="switchTab('attendance')" id="nav-attendance" class="nav-btn w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-white/10 transition-colors text-left bg-white/10 border border-white/20 text-yellow-400">
-                <i class="fas fa-calendar-check w-5 text-center"></i> <span>บันทึกรายวัน</span>
-            </button>
-            <button onclick="switchTab('health')" id="nav-health" class="nav-btn w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-white/10 transition-colors text-left text-gray-300">
-                <i class="fas fa-notes-medical w-5 text-center"></i> <span>ตรวจสุขภาพ</span>
-            </button>
-            <button onclick="switchTab('students')" id="nav-students" class="nav-btn w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-white/10 transition-colors text-left text-gray-300">
-                <i class="fas fa-user-graduate w-5 text-center"></i> <span>ข้อมูลนักเรียน</span>
-            </button>
-            <button onclick="switchTab('nutrition')" id="nav-nutrition" class="nav-btn w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-white/10 transition-colors text-left text-gray-300">
-                <i class="fas fa-apple-whole w-5 text-center"></i> <span>ภาวะโภชนาการ</span>
-            </button>
-            <button onclick="switchTab('holidays')" id="nav-holidays" class="nav-btn w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-white/10 transition-colors text-left text-gray-300">
-                <i class="fas fa-umbrella-beach w-5 text-center"></i> <span>ตั้งค่าว้นหยุด</span>
-            </button>
-            <button onclick="switchTab('reports')" id="nav-reports" class="nav-btn w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-white/10 transition-colors text-left text-gray-300">
-                <i class="fas fa-chart-pie w-5 text-center"></i> <span>ออกรายงาน</span>
-            </button>
-            <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-white/10 transition-colors text-left text-gray-300">
-                <i class="fas fa-cogs w-5 text-center"></i> <span>ตั้งค่าระบบ</span>
-            </button>
-        </nav>
-    </aside>
+        <!-- Logo Icon -->
+        <div class="hidden md:flex w-12 h-12 rounded-2xl items-center justify-center mb-4 bg-gradient-to-br from-indigo-500 to-emerald-400 shadow-inner">
+            <i class="fas fa-graduation-cap text-xl text-white"></i>
+        </div>
+
+        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 bg-white shadow-sm text-indigo-600">
+            <i class="fas fa-chart-line text-lg"></i>
+            <span class="absolute left-full ml-4 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg opacity-0 md:group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">ภาพรวม</span>
+        </button>
+        
+        <button onclick="switchTab('attendance')" id="nav-attendance" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 hover:bg-white/60 text-slate-500 hover:text-slate-800">
+            <i class="fas fa-calendar-check text-lg"></i>
+            <span class="absolute left-full ml-4 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg opacity-0 md:group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">บันทึกรายวัน</span>
+        </button>
+        
+        <button onclick="switchTab('health')" id="nav-health" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 hover:bg-white/60 text-slate-500 hover:text-slate-800">
+            <i class="fas fa-notes-medical text-lg"></i>
+            <span class="absolute left-full ml-4 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg opacity-0 md:group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">ตรวจสุขภาพ</span>
+        </button>
+        
+        <button onclick="switchTab('students')" id="nav-students" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 hover:bg-white/60 text-slate-500 hover:text-slate-800">
+            <i class="fas fa-user-graduate text-lg"></i>
+            <span class="absolute left-full ml-4 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg opacity-0 md:group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">ข้อมูลนักเรียน</span>
+        </button>
+        
+        <button onclick="switchTab('nutrition')" id="nav-nutrition" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 hover:bg-white/60 text-slate-500 hover:text-slate-800">
+            <i class="fas fa-apple-whole text-lg"></i>
+            <span class="absolute left-full ml-4 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg opacity-0 md:group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">โภชนาการ</span>
+        </button>
+        
+        <button onclick="switchTab('holidays')" id="nav-holidays" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 hover:bg-white/60 text-slate-500 hover:text-slate-800">
+            <i class="fas fa-umbrella-beach text-lg"></i>
+            <span class="absolute left-full ml-4 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg opacity-0 md:group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">ตั้งคู่วันหยุด</span>
+        </button>
+        
+        <button onclick="switchTab('reports')" id="nav-reports" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 hover:bg-white/60 text-slate-500 hover:text-slate-800">
+            <i class="fas fa-file-pdf text-lg"></i>
+            <span class="absolute left-full ml-4 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg opacity-0 md:group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">ออกรายงาน</span>
+        </button>
+        
+        <div class="hidden md:block w-8 border-t border-slate-300/30 my-2"></div>
+        
+        <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 hover:bg-white/60 text-slate-500 hover:text-slate-800">
+            <i class="fas fa-cog text-lg"></i>
+            <span class="absolute left-full ml-4 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg opacity-0 md:group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">ตั้งค่า</span>
+        </button>
+    </nav>
 
     <!-- Main Content -->
-    <main id="main-content" class="flex-1 overflow-y-auto p-4 md:p-8 relative">
-        <div class="max-w-7xl mx-auto">
+    <main id="main-content" class="flex-1 overflow-y-auto pb-24 md:pb-8 md:pl-32 p-4 md:p-8 relative">
+        <div class="max-w-6xl mx-auto">
             
-            <!-- System Notifications (Toast) -->
-            <div id="notification-toast" class="fixed top-4 right-4 z-[100] transform transition-transform duration-300 translate-y-[-150%] bg-green-500 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 no-print">
-                <i class="fas fa-check-circle text-xl"></i>
-                <span id="toast-message" class="font-medium">บันทึกข้อมูลเรียบร้อยแล้ว</span>
+            <!-- Bento Header Area -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold font-heading text-slate-800 tracking-tight">SmartClass</h1>
+                    <p class="text-slate-500 font-medium" id="sidebar-school-name">โรงเรียนตัวอย่าง</p>
+                </div>
+                <!-- Database Status Badge -->
+                <div id="db-status" class="text-sm rounded-xl px-4 py-2 font-medium bento-box text-slate-600 border border-white/50 inline-flex items-center gap-2">
+                    <i class="fas fa-circle-notch fa-spin text-indigo-500"></i> กำลังเชื่อมต่อ...
+                </div>
             </div>
-
+            
             <!-- Custom Confirm Dialog -->
-            <div id="confirm-dialog" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-black/50 backdrop-blur-sm no-print">
-                <div class="glass-panel p-6 rounded-2xl max-w-sm w-full mx-4 shadow-2xl border-yellow-500/30 border fade-in">
-                    <div class="text-yellow-400 text-3xl mb-4 text-center"><i class="fas fa-exclamation-triangle"></i></div>
+            <div id="confirm-dialog" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-slate-900/50 backdrop-blur-sm">
+                <div class="glass-panel p-6 max-w-sm w-full mx-4 fade-in">
+                    <div class="text-[#15919B] text-3xl mb-4 text-center"><i class="fas fa-exclamation-circle"></i></div>
                     <h3 id="confirm-title" class="text-xl font-bold text-center mb-2">ยืนยันการทำรายการ</h3>
-                    <p id="confirm-message" class="text-gray-300 text-center mb-6">คุณแน่ใจหรือไม่ที่จะดำเนินการนี้?</p>
+                    <p id="confirm-message" class="text-gray-500 text-center mb-6">คุณแน่ใจหรือไม่ที่จะดำเนินการนี้?</p>
                     <div class="flex space-x-3 justify-center">
-                        <button id="confirm-cancel" class="px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-500 transition-colors">ยกเลิก</button>
-                        <button id="confirm-ok" class="px-4 py-2 rounded-lg bg-yellow-500 text-indigo-950 font-bold hover:bg-yellow-400 transition-colors">ยืนยัน</button>
+                        <button id="confirm-cancel" class="exec-btn-outline">ยกเลิก</button>
+                        <button id="confirm-ok" class="exec-btn">ยืนยัน</button>
                     </div>
                 </div>
             </div>
 
-            <!-- ================= TAB: DAILY ATTENDANCE ================= -->
+            <!-- Tab: Dashboard -->
+            <section id="tab-dashboard" class="tab-content fade-in hidden">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                    <!-- Hero Bento Card -->
+                    <div class="bento-box p-8 md:col-span-2 bg-gradient-to-br from-indigo-500 to-emerald-400 text-white relative overflow-hidden group">
+                        <div class="absolute -right-20 -top-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+                        <h2 class="text-3xl font-bold font-heading mb-2 relative z-10">ภาพรวมห้องเรียน</h2>
+                        <p class="text-indigo-50 font-medium relative z-10" id="dashboard-date-display">ข้อมูลประจำวันที่ ...</p>
+                        
+                        <div class="mt-8 relative z-10">
+                            <p class="text-sm text-indigo-100 font-medium mb-1">นักเรียนทั้งหมด</p>
+                            <h3 class="text-5xl font-bold font-heading" id="dash-total-students">0</h3>
+                        </div>
+                    </div>
+                    
+                    <!-- Present Card -->
+                    <div class="bento-box p-6 md:col-span-1 flex flex-col justify-between">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl mb-4 shadow-inner">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-slate-500 mb-1">มาเรียนวันนี้</p>
+                            <div class="flex items-end space-x-2">
+                                <h3 class="text-4xl font-bold font-heading text-slate-800" id="dash-present-students">0</h3>
+                                <span class="text-sm text-emerald-500 font-bold mb-1.5" id="dash-present-percent">(0%)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Absent Card -->
+                    <div class="bento-box p-6 md:col-span-1 flex flex-col justify-between">
+                        <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-500 flex items-center justify-center text-xl mb-4 shadow-inner">
+                            <i class="fas fa-user-minus"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-slate-500 mb-1">ขาด/ลา วันนี้</p>
+                            <h3 class="text-4xl font-bold font-heading text-slate-800" id="dash-absent-students">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Quick Actions -->
+                    <div class="bento-box p-6 lg:col-span-1 flex flex-col space-y-4">
+                        <h3 class="text-lg font-bold font-heading text-slate-800">ทางลัด (Quick Actions)</h3>
+                        <button onclick="switchTab('attendance')" class="flex-1 bg-white hover:bg-slate-50 border border-slate-100 rounded-2xl p-4 flex items-center gap-4 transition-all duration-300 group shadow-sm">
+                            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-500 flex items-center justify-center group-hover:scale-110 transition-transform"><i class="fas fa-calendar-check text-xl"></i></div>
+                            <div class="text-left"><h4 class="font-bold text-slate-800">เช็คชื่อวันนี้</h4><p class="text-xs text-slate-500">บันทึกการมาเรียน</p></div>
+                        </button>
+                        <button onclick="switchTab('health')" class="flex-1 bg-white hover:bg-slate-50 border border-slate-100 rounded-2xl p-4 flex items-center gap-4 transition-all duration-300 group shadow-sm">
+                            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform"><i class="fas fa-notes-medical text-xl"></i></div>
+                            <div class="text-left"><h4 class="font-bold text-slate-800">ตรวจสุขภาพ</h4><p class="text-xs text-slate-500">บันทึกข้อมูลสุขภาพ</p></div>
+                        </button>
+                    </div>
+
+                    <!-- Absent List -->
+                    <div class="bento-box p-6 lg:col-span-2 flex flex-col">
+                        <h3 class="text-lg font-bold font-heading text-slate-800 mb-4">รายชื่อผู้ขาด/ลา (วันนี้)</h3>
+                        <ul id="dash-absent-list" class="space-y-3 flex-1 overflow-y-auto pr-2">
+                            <!-- JS injected -->
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab: Daily Records (Attendance) -->
             <section id="tab-attendance" class="tab-content fade-in hidden">
                 <header class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 mt-8 md:mt-0">
                     <div>
-                        <h2 class="text-2xl font-bold text-yellow-400"><i class="fas fa-calendar-check mr-2"></i> บันทึกรายวัน</h2>
-                        <p class="text-indigo-200">เช็คชื่อ ดื่มนม และแปรงฟัน (กดปุ่มบันทึกเมื่อกรอกเสร็จ)</p>
+                        <h2 class="text-2xl font-bold text-[#15919B]"><i class="fas fa-calendar-check mr-2"></i> บันทึกรายวัน</h2>
+                        <p class="text-[#213A58]">เช็คชื่อ ดื่มนม และแปรงฟัน</p>
                     </div>
-                    <div class="flex items-center space-x-2 w-full md:w-auto">
-                        <label class="text-gray-300 hidden md:block">เลือกวันที่:</label>
-                        <input type="date" id="daily-date" class="glass-input px-3 py-2 rounded-lg flex-1 md:flex-none" onchange="loadDaily()">
-                        <button id="btn-save-daily" onclick="submitDaily()" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg transition-colors shadow-lg whitespace-nowrap">
-                            <i class="fas fa-save mr-1"></i> บันทึก
-                        </button>
+                    <div class="flex items-center space-x-2">
+                        <label class="text-[#213A58] font-medium">เลือกวันที่:</label>
+                        <input type="date" id="daily-date" class="glass-input px-3 py-2 rounded-lg" onchange="renderDaily()">
                     </div>
                 </header>
 
-                <div id="attendance-holiday-banner" class="hidden mb-6 bg-red-500/20 border border-red-500/50 text-red-200 p-4 rounded-xl flex items-center gap-3">
-                    <i class="fas fa-bullhorn text-2xl text-red-400"></i>
+                <div id="attendance-holiday-banner" class="hidden mb-6 bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl flex items-center gap-3 shadow-sm">
+                    <i class="fas fa-bullhorn text-2xl text-red-500"></i>
                     <div>
                         <h4 class="font-bold text-lg">วันนี้เป็นวันหยุด!</h4>
                         <p id="attendance-holiday-reason" class="text-sm">ปิดการบันทึกข้อมูลสำหรับวันนี้</p>
                     </div>
                 </div>
 
-                <div class="glass-panel rounded-2xl overflow-hidden mb-20">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left whitespace-nowrap">
-                            <thead class="bg-indigo-900/50 border-b border-white/10">
-                                <tr>
-                                    <th class="p-4 text-center w-16">เลขที่</th>
-                                    <th class="p-4">ชื่อ - นามสกุล</th>
-                                    <th class="p-4 text-center">สถานะ</th>
-                                    <th class="p-4 text-center">ดื่มนม</th>
-                                    <th class="p-4 text-center">แปรงฟัน</th>
-                                </tr>
-                            </thead>
-                            <tbody id="daily-tbody" class="divide-y divide-white/10"></tbody>
-                        </table>
-                    </div>
+                <div id="zen-daily-container" class="w-full">
+                    <!-- JS injected Zen list -->
                 </div>
             </section>
 
-            <!-- ================= TAB: HEALTH CHECK ================= -->
+            <!-- Tab: Health Check -->
             <section id="tab-health" class="tab-content hidden fade-in">
                 <header class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 mt-8 md:mt-0">
                     <div>
-                        <h2 class="text-2xl font-bold text-yellow-400"><i class="fas fa-notes-medical mr-2"></i> บันทึกสุขภาพ</h2>
-                        <p class="text-indigo-200">ประเมินสุขอนามัยประจำเดือน (กดปุ่มบันทึกเมื่อกรอกเสร็จ)</p>
+                        <h2 class="text-2xl font-bold text-[#15919B]"><i class="fas fa-notes-medical mr-2"></i> บันทึกสุขภาพ</h2>
+                        <p class="text-[#213A58]">ประเมินสุขอนามัยประจำวัน (ตั้งค่าเริ่มต้นเป็น "ผ่าน" ทั้งหมด)</p>
                     </div>
-                    <div class="flex items-center space-x-2 w-full md:w-auto">
-                        <label class="text-gray-300 hidden md:block">ประจำเดือน:</label>
-                        <input type="month" id="health-month" class="glass-input px-3 py-2 rounded-lg flex-1 md:flex-none" onchange="loadHealth()">
-                        <button id="btn-save-health" onclick="submitHealth()" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg transition-colors shadow-lg whitespace-nowrap">
-                            <i class="fas fa-save mr-1"></i> บันทึก
-                        </button>
+                    <div class="flex items-center space-x-2">
+                        <label class="text-[#213A58] font-medium">เลือกวันที่:</label>
+                        <input type="date" id="health-date" class="glass-input px-3 py-2 rounded-lg" onchange="renderHealth()">
                     </div>
                 </header>
 
-                <div class="glass-panel rounded-2xl overflow-hidden mb-20">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left whitespace-nowrap">
-                            <thead class="bg-indigo-900/50 border-b border-white/10 text-sm">
-                                <tr>
-                                    <th class="p-3 text-center w-12 align-top">เลขที่</th>
-                                    <th class="p-3 min-w-[150px] align-top">ชื่อ - นามสกุล</th>
-                                    <th class="p-2 text-center w-28 align-top leading-snug">ผมและศีรษะ<br><span class="text-[10px] text-gray-400 font-normal mt-1 block whitespace-normal">ไม่มีเหา,ไข่เหา,รังแค</span></th>
-                                    <th class="p-2 text-center w-28 align-top leading-snug">ใบหูและซอกหู<br><span class="text-[10px] text-gray-400 font-normal mt-1 block whitespace-normal">ไม่มีคราบ,ขี้หู</span></th>
-                                    <th class="p-2 text-center w-28 align-top leading-snug">ฟัน<br><span class="text-[10px] text-gray-400 font-normal mt-1 block whitespace-normal">ไม่มีเศษอาหาร,ขี้ฟัน</span></th>
-                                    <th class="p-2 text-center w-28 align-top leading-snug">ใบหน้า/ผิวหนัง<br><span class="text-[10px] text-gray-400 font-normal mt-1 block whitespace-normal">ไม่มีคราบ,ขี้ไคล</span></th>
-                                    <th class="p-2 text-center w-28 align-top leading-snug">เสื้อผ้า<br><span class="text-[10px] text-gray-400 font-normal mt-1 block whitespace-normal">สะอาด,ไม่มีกลิ่น</span></th>
-                                    <th class="p-2 text-center w-28 align-top leading-snug">ถุงเท้า/รองเท้า<br><span class="text-[10px] text-gray-400 font-normal mt-1 block whitespace-normal">สะอาด,ไม่มีกลิ่น</span></th>
-                                </tr>
-                            </thead>
-                            <tbody id="health-tbody" class="divide-y divide-white/10"></tbody>
-                        </table>
+                <div id="health-holiday-banner" class="hidden mb-6 bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl flex items-center gap-3 shadow-sm">
+                    <i class="fas fa-bullhorn text-2xl text-red-500"></i>
+                    <div>
+                        <h4 class="font-bold text-lg">วันนี้เป็นวันหยุด!</h4>
+                        <p id="health-holiday-reason" class="text-sm">ปิดการบันทึกข้อมูลสำหรับวันนี้</p>
                     </div>
+                </div>
+
+                <div id="health-list-container" class="w-full">
+                    <!-- JS injected Health list -->
                 </div>
             </section>
 
-            <!-- ================= TAB: STUDENTS ================= -->
+            <!-- Tab: Students -->
             <section id="tab-students" class="tab-content hidden fade-in">
                 <header class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 mt-8 md:mt-0">
                     <div>
-                        <h2 class="text-2xl font-bold text-yellow-400"><i class="fas fa-user-graduate mr-2"></i> ข้อมูลนักเรียน</h2>
-                        <p class="text-indigo-200">จัดการรายชื่อนักเรียนและข้อมูลผู้ปกครองในห้อง</p>
+                        <h2 class="text-2xl font-bold text-[#15919B]"><i class="fas fa-user-graduate mr-2"></i> ข้อมูลนักเรียน</h2>
+                        <p class="text-[#213A58]">จัดการข้อมูลและประวัติสุขภาพ</p>
                     </div>
-                    <button onclick="openStudentModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg transition-colors shadow-lg">
+                    <button onclick="openStudentModal()" class="exec-btn px-4 py-2">
                         <i class="fas fa-plus mr-1"></i> เพิ่มนักเรียน
                     </button>
                 </header>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-10" id="students-grid"></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="students-grid"></div>
 
                 <!-- Student Modal -->
-                <div id="student-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/50 backdrop-blur-sm overflow-y-auto py-10">
-                    <div class="glass-panel p-6 rounded-2xl w-full max-w-md mx-4 relative fade-in my-auto">
-                        <button onclick="closeStudentModal()" type="button" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-                        <h3 class="text-xl font-bold text-yellow-400 mb-4" id="student-modal-title">เพิ่มนักเรียน</h3>
+                <div id="student-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/50 backdrop-blur-sm">
+                    <div class="glass-panel p-6 rounded-2xl w-full max-w-md mx-4 relative fade-in">
+                        <button onclick="closeStudentModal()" class="absolute top-4 right-4 text-slate-400 hover:text-[#213A58]"><i class="fas fa-times text-xl"></i></button>
+                        <h3 class="text-xl font-bold text-[#15919B] mb-4" id="student-modal-title">เพิ่มนักเรียน</h3>
                         <form id="student-form" onsubmit="saveStudent(event)">
                             <input type="hidden" id="student-id">
                             <div class="space-y-4">
-                                <div class="border-b border-white/10 pb-4">
-                                    <h4 class="text-indigo-300 font-semibold mb-3">ข้อมูลนักเรียน</h4>
-                                    <div class="space-y-3">
-                                        <div>
-                                            <label class="block text-sm mb-1 text-gray-300">เลขที่</label>
-                                            <input type="number" id="student-code" required class="glass-input w-full p-2 rounded-lg">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm mb-1 text-gray-300">ชื่อ - นามสกุล</label>
-                                            <input type="text" id="student-name" required class="glass-input w-full p-2 rounded-lg">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm mb-1 text-gray-300">เพศ</label>
-                                            <select id="student-gender" class="glass-input w-full p-2 rounded-lg">
-                                                <option value="ชาย">ชาย</option>
-                                                <option value="หญิง">หญิง</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm mb-1 text-gray-300">ข้อมูลสุขภาพ (แพ้นม, โรคประจำตัว)</label>
-                                            <input type="text" id="student-health-info" placeholder="เช่น แพ้นมวัว, หอบหืด (เว้นว่างได้)" class="glass-input w-full p-2 rounded-lg">
-                                        </div>
-                                    </div>
-                                </div>
-                                
                                 <div>
-                                    <h4 class="text-indigo-300 font-semibold mb-3">ข้อมูลผู้ปกครอง</h4>
-                                    <div class="space-y-3">
-                                        <div>
-                                            <label class="block text-sm mb-1 text-gray-300">ชื่อผู้ปกครอง</label>
-                                            <input type="text" id="student-parent-name" placeholder="ชื่อ-นามสกุล ผู้ปกครอง" class="glass-input w-full p-2 rounded-lg">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm mb-1 text-gray-300">เบอร์ติดต่อ</label>
-                                            <input type="tel" id="student-parent-phone" placeholder="เช่น 0812345678" class="glass-input w-full p-2 rounded-lg">
-                                        </div>
-                                    </div>
+                                    <label class="block text-sm mb-1 text-[#213A58] font-medium">เลขที่</label>
+                                    <input type="number" id="student-code" required class="glass-input w-full p-2 rounded-lg">
                                 </div>
-
-                                <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-400 text-indigo-900 font-bold py-2 rounded-lg transition-colors mt-4 shadow-lg">
+                                <div>
+                                    <label class="block text-sm mb-1 text-[#213A58] font-medium">ชื่อ - นามสกุล</label>
+                                    <input type="text" id="student-name" required class="glass-input w-full p-2 rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-sm mb-1 text-[#213A58] font-medium">เพศ</label>
+                                    <select id="student-gender" class="glass-input w-full p-2 rounded-lg">
+                                        <option value="ชาย">ชาย</option>
+                                        <option value="หญิง">หญิง</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm mb-1 text-[#213A58] font-medium">ข้อมูลสุขภาพ (แพ้นม, โรคประจำตัว)</label>
+                                    <input type="text" id="student-health-info" placeholder="เช่น แพ้นมวัว, หอบหืด (เว้นว่างได้)" class="glass-input w-full p-2 rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-sm mb-1 text-[#213A58] font-medium">ชื่อผู้ปกครอง</label>
+                                    <input type="text" id="student-parent-name" placeholder="ชื่อ - นามสกุล (เว้นว่างได้)" class="glass-input w-full p-2 rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-sm mb-1 text-[#213A58] font-medium">เบอร์โทรศัพท์ผู้ปกครอง</label>
+                                    <input type="tel" id="student-parent-phone" placeholder="08X-XXX-XXXX (เว้นว่างได้)" class="glass-input w-full p-2 rounded-lg">
+                                </div>
+                                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition-colors mt-4 shadow-sm">
                                     บันทึกข้อมูล
                                 </button>
                             </div>
@@ -420,92 +618,68 @@
                 </div>
             </section>
 
-            <!-- ================= TAB: NUTRITION ================= -->
+            <!-- Tab: Nutrition -->
             <section id="tab-nutrition" class="tab-content hidden fade-in">
                 <header class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 mt-8 md:mt-0">
                     <div>
-                        <h2 class="text-2xl font-bold text-yellow-400"><i class="fas fa-apple-whole mr-2"></i> ภาวะโภชนาการ</h2>
-                        <p class="text-indigo-200">บันทึกน้ำหนัก-ส่วนสูง และคำนวณ BMI (กดปุ่มบันทึกเมื่อกรอกเสร็จ)</p>
+                        <h2 class="text-2xl font-bold text-[#15919B]"><i class="fas fa-apple-whole mr-2"></i> ภาวะโภชนาการ</h2>
+                        <p class="text-[#213A58]">บันทึกและคำนวณ BMI อัตโนมัติ</p>
                     </div>
-                    <div class="flex items-center space-x-2 w-full md:w-auto">
-                        <label class="text-gray-300 hidden md:block">ประจำเดือน:</label>
-                        <input type="month" id="nutrition-month" class="glass-input px-3 py-2 rounded-lg flex-1 md:flex-none" onchange="loadNutrition()">
-                        <button id="btn-save-nutrition" onclick="submitNutrition()" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg transition-colors shadow-lg whitespace-nowrap">
-                            <i class="fas fa-save mr-1"></i> บันทึก
-                        </button>
+                    <div class="flex items-center space-x-2">
+                        <label class="text-[#213A58] font-medium">ประจำเดือน:</label>
+                        <input type="month" id="nutrition-month" class="glass-input px-3 py-2 rounded-lg" onchange="renderNutrition()">
                     </div>
                 </header>
 
-                <div class="glass-panel rounded-2xl overflow-hidden mb-20">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left whitespace-nowrap">
-                            <thead class="bg-indigo-900/50 border-b border-white/10">
-                                <tr>
-                                    <th class="p-4 text-center w-16">เลขที่</th>
-                                    <th class="p-4">ชื่อ - นามสกุล</th>
-                                    <th class="p-4 w-32">น้ำหนัก (กก.)</th>
-                                    <th class="p-4 w-32">ส่วนสูง (ซม.)</th>
-                                    <th class="p-4 text-center w-24">BMI</th>
-                                    <th class="p-4 text-center w-32">แปลผล</th>
-                                </tr>
-                            </thead>
-                            <tbody id="nutrition-tbody" class="divide-y divide-white/10"></tbody>
-                        </table>
-                    </div>
+                <div id="nutrition-list-container" class="w-full">
+                    <!-- JS injected Nutrition list -->
                 </div>
             </section>
 
-            <!-- ================= TAB: HOLIDAYS ================= -->
+            <!-- Tab: Holidays -->
             <section id="tab-holidays" class="tab-content hidden fade-in">
                 <header class="mb-6 mt-8 md:mt-0">
-                    <h2 class="text-2xl font-bold text-yellow-400"><i class="fas fa-umbrella-beach mr-2"></i> ตั้งค่าว้นหยุดพิเศษ</h2>
-                    <p class="text-indigo-200">ระบบจะปิดการเช็คชื่อในวันหยุดที่กำหนด</p>
+                    <h2 class="text-2xl font-bold text-[#15919B]"><i class="fas fa-umbrella-beach mr-2"></i> ตั้งค่าว้นหยุดพิเศษ</h2>
+                    <p class="text-[#213A58]">ระบบจะปิดการเช็คชื่อในวันหยุดที่กำหนด</p>
                 </header>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-10">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="glass-panel p-6 rounded-2xl lg:col-span-1 h-fit">
-                        <h3 class="font-bold mb-4 text-lg text-yellow-400">เพิ่มวันหยุด</h3>
+                        <h3 class="font-bold mb-4 text-lg text-[#15919B]">เพิ่มวันหยุด</h3>
                         <form id="holiday-form" onsubmit="addHoliday(event)" class="space-y-4">
                             <div>
-                                <label class="block text-sm mb-1 text-gray-300">วันที่</label>
+                                <label class="block text-sm mb-1 text-[#213A58] font-medium">วันที่</label>
                                 <input type="date" id="holiday-date-input" required class="glass-input w-full p-2 rounded-lg">
                             </div>
                             <div>
-                                <label class="block text-sm mb-1 text-gray-300">ชื่อวันหยุด / เหตุผล</label>
+                                <label class="block text-sm mb-1 text-[#213A58] font-medium">ชื่อวันหยุด / เหตุผล</label>
                                 <input type="text" id="holiday-name" required placeholder="เช่น วันแม่แห่งชาติ, กีฬาสี" class="glass-input w-full p-2 rounded-lg">
                             </div>
-                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2 rounded-lg transition-colors shadow-lg">
+                            <button type="submit" class="w-full exec-btn">
                                 บันทึกวันหยุด
                             </button>
                         </form>
                     </div>
                     
                     <div class="glass-panel rounded-2xl overflow-hidden lg:col-span-2">
-                        <table class="w-full text-left">
-                            <thead class="bg-indigo-900/50 border-b border-white/10">
-                                <tr>
-                                    <th class="p-4">วันที่</th>
-                                    <th class="p-4">ชื่อวันหยุด</th>
-                                    <th class="p-4 text-center w-24">จัดการ</th>
-                                </tr>
-                            </thead>
-                            <tbody id="holidays-tbody" class="divide-y divide-white/10"></tbody>
-                        </table>
+                        <div class="overflow-x-auto p-4 md:p-6" id="holidays-list-container">
+                            <!-- JS injected Holiday list -->
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- ================= TAB: REPORTS ================= -->
+            <!-- Tab: Reports -->
             <section id="tab-reports" class="tab-content hidden fade-in">
                 <header class="mb-6 mt-8 md:mt-0 no-print">
-                    <h2 class="text-2xl font-bold text-yellow-400"><i class="fas fa-chart-pie mr-2"></i> ออกรายงาน</h2>
-                    <p class="text-indigo-200">สร้างรายงานเพื่อสั่งพิมพ์ (หน้ากระดาษ A4 แนวนอน)</p>
+                    <h2 class="text-2xl font-bold text-[#15919B]"><i class="fas fa-chart-pie mr-2"></i> ออกรายงาน</h2>
+                    <p class="text-[#213A58]">สร้างรายงานเพื่อสั่งพิมพ์ (A4 แนวนอน)</p>
                 </header>
 
                 <div class="glass-panel p-6 rounded-2xl mb-6 no-print">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                         <div>
-                            <label class="block text-sm mb-1 text-gray-300">ประเภทรายงาน</label>
+                            <label class="block text-sm mb-1 text-[#213A58] font-medium">ประเภทรายงาน</label>
                             <select id="report-type" class="glass-input w-full p-2 rounded-lg">
                                 <option value="attendance">แบบบันทึกการมาเรียน</option>
                                 <option value="milk">แบบบันทึกการดื่มนม</option>
@@ -515,16 +689,16 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm mb-1 text-gray-300">ประจำเดือน</label>
-                            <input type="month" id="report-month-input" class="glass-input w-full p-2 rounded-lg">
+                            <label class="block text-sm mb-1 text-[#213A58] font-medium">ประจำเดือน</label>
+                            <input type="month" id="report-month" class="glass-input w-full p-2 rounded-lg">
                         </div>
                         <div>
-                            <button onclick="generateReport()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-indigo-900 font-bold py-2 rounded-lg transition-colors shadow-lg">
-                                <i class="fas fa-search mr-1"></i> ดึงข้อมูล
+                            <button onclick="generateReport()" class="w-full exec-btn">
+                                <i class="fas fa-search mr-1"></i> สร้างรายงาน
                             </button>
                         </div>
                         <div>
-                            <button onclick="window.print()" id="btn-print" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-lg transition-colors shadow-lg hidden">
+                            <button onclick="window.print()" id="btn-print" class="w-full exec-btn-outline text-emerald-600 hidden">
                                 <i class="fas fa-print mr-1"></i> พิมพ์ / PDF
                             </button>
                         </div>
@@ -532,78 +706,77 @@
                 </div>
 
                 <!-- Printable Area -->
-                <div id="printable-report" class="bg-white text-black p-4 md:p-8 rounded-xl shadow-2xl min-h-[500px] hidden relative pb-10">
-                    <div id="report-loading" class="absolute inset-0 bg-white/80 z-10 flex items-center justify-center hidden">
-                        <div class="text-indigo-600 text-xl font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>กำลังรวบรวมข้อมูล...</div>
-                    </div>
+                <div id="printable-report" class="bg-white text-slate-800 p-4 md:p-8 rounded-xl shadow-lg border border-gray-300/30 min-h-[500px] hidden relative">
                     <div id="report-header" class="text-center mb-4"></div>
                     <div id="report-content" class="mb-8"></div>
                     <div id="report-signatures" class="grid grid-cols-3 gap-4 mt-8 pt-8 page-break-inside-avoid px-2"></div>
                 </div>
             </section>
 
-            <!-- ================= TAB: SETTINGS ================= -->
+            <!-- Tab: Settings -->
             <section id="tab-settings" class="tab-content hidden fade-in">
                 <header class="mb-6 mt-8 md:mt-0">
-                    <h2 class="text-2xl font-bold text-yellow-400"><i class="fas fa-cogs mr-2"></i> ตั้งค่าระบบ</h2>
-                    <p class="text-indigo-200">ข้อมูลพื้นฐาน โลโก้ และรายชื่อผู้ลงนาม</p>
+                    <h2 class="text-2xl font-bold text-[#15919B]"><i class="fas fa-cogs mr-2"></i> ตั้งค่าระบบ</h2>
+                    <p class="text-[#213A58]">ข้อมูลพื้นฐาน โลโก้ และรายชื่อผู้ลงนาม</p>
                 </header>
 
-                <div class="glass-panel p-6 rounded-2xl max-w-2xl mb-10">
+                <div class="glass-panel p-6 rounded-2xl max-w-2xl">
                     <form id="settings-form" onsubmit="saveSettings(event)">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="md:col-span-2">
-                                <label class="block text-sm mb-1 text-gray-300">ชื่อสถานศึกษา</label>
+                                <label class="block text-sm mb-1 text-[#213A58] font-medium">ชื่อสถานศึกษา</label>
                                 <input type="text" id="set-school" required class="glass-input w-full p-2 rounded-lg">
                             </div>
                             <div>
-                                <label class="block text-sm mb-1 text-gray-300">ชั้นเรียน</label>
-                                <input type="text" id="set-room" required class="glass-input w-full p-2 rounded-lg">
+                                <label class="block text-sm mb-1 text-[#213A58] font-medium">ชั้นเรียน</label>
+                                <input type="text" id="set-room" required placeholder="เช่น ป.1/1" class="glass-input w-full p-2 rounded-lg">
                             </div>
                             <div>
-                                <label class="block text-sm mb-1 text-gray-300">ปีการศึกษา</label>
-                                <input type="text" id="set-year" required class="glass-input w-full p-2 rounded-lg">
+                                <label class="block text-sm mb-1 text-[#213A58] font-medium">ปีการศึกษา</label>
+                                <input type="text" id="set-year" required placeholder="เช่น 2569" class="glass-input w-full p-2 rounded-lg">
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 pt-6 border-t border-white/10">
-                            <div>
-                                <label class="block text-sm mb-1 text-gray-300">วันเปิดภาคเรียน</label>
-                                <input type="date" id="set-term-start" class="glass-input w-full p-2 rounded-lg">
-                            </div>
-                            <div>
-                                <label class="block text-sm mb-1 text-gray-300">วันปิดภาคเรียน</label>
-                                <input type="date" id="set-term-end" class="glass-input w-full p-2 rounded-lg">
-                            </div>
-                            <p class="text-xs text-gray-400 md:col-span-2">* ระบุเพื่อใช้เป็นเกณฑ์ในการคำนวณวันมาเรียนในหน้ารายงานผลให้ถูกต้องแม่นยำ</p>
-                        </div>
-
-                        <div class="pt-6 mt-6 border-t border-white/10">
-                            <h3 class="font-bold text-yellow-400 mb-4 text-lg">โลโก้โรงเรียน (Supabase Storage)</h3>
+                        <!-- Logo Upload Section -->
+                        <div class="pt-6 mt-6 border-t border-gray-300/30">
+                            <h3 class="font-bold text-slate-800 mb-4 text-lg">สัญลักษณ์โรงเรียน / โลโก้</h3>
                             <div class="flex items-center space-x-4">
-                                <div class="w-20 h-20 bg-white rounded-xl flex items-center justify-center overflow-hidden border border-gray-300">
+                                <div class="w-20 h-20 bg-transparent rounded-xl border border-gray-300/30 flex items-center justify-center overflow-hidden">
+                                    <i class="fas fa-image text-2xl text-slate-400" id="setting-logo-icon"></i>
                                     <img id="setting-logo-preview" src="" alt="Preview" class="w-full h-full object-contain hidden">
-                                    <i class="fas fa-image text-2xl text-gray-400" id="setting-logo-icon"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <input type="file" id="set-logo-input" accept="image/*" class="hidden" onchange="uploadLogo(event)">
-                                    <button type="button" onclick="document.getElementById('set-logo-input').click()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg transition-colors text-sm shadow-lg">
+                                    <input type="file" id="set-logo-input" accept="image/*" class="hidden" onchange="handleLogoUpload(event)">
+                                    <button type="button" onclick="document.getElementById('set-logo-input').click()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors text-sm mb-2 shadow-sm">
                                         <i class="fas fa-upload mr-1"></i> อัปโหลดรูปภาพ
                                     </button>
+                                    <button type="button" onclick="removeLogo()" class="bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 font-medium px-3 py-2 rounded-lg transition-colors text-sm shadow-sm ml-2">
+                                        <i class="fas fa-trash mr-1"></i> ลบรูป
+                                    </button>
+                                    <p class="text-xs text-[#213A58] mt-2">ระบบจะย่อขนาดให้อัตโนมัติเพื่อป้องกันข้อมูลเต็ม (แนะนำภาพสี่เหลี่ยมจัตุรัส)</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="pt-6 mt-6 border-t border-white/10">
-                            <h3 class="font-bold text-yellow-400 mb-4 text-lg">รายนามผู้ลงนาม (สำหรับออกรายงาน)</h3>
+                        <div class="pt-6 mt-6 border-t border-gray-300/30">
+                            <h3 class="font-bold text-slate-800 mb-4 text-lg">รายนามผู้ลงนามในรายงาน</h3>
                             <div class="space-y-4">
-                                <div><label class="block text-sm mb-1 text-gray-300">ครูประจำชั้นคนที่ 1</label><input type="text" id="set-sign1" class="glass-input w-full p-2 rounded-lg"></div>
-                                <div><label class="block text-sm mb-1 text-gray-300">ครูประจำชั้นคนที่ 2</label><input type="text" id="set-sign2" class="glass-input w-full p-2 rounded-lg"></div>
-                                <div><label class="block text-sm mb-1 text-gray-300">ผู้อำนวยการ</label><input type="text" id="set-sign3" class="glass-input w-full p-2 rounded-lg"></div>
+                                <div>
+                                    <label class="block text-sm mb-1 text-[#213A58] font-medium">ครูประจำชั้นคนที่ 1</label>
+                                    <input type="text" id="set-sign1" class="glass-input w-full p-2 rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-sm mb-1 text-[#213A58] font-medium">ครูประจำชั้นคนที่ 2</label>
+                                    <input type="text" id="set-sign2" class="glass-input w-full p-2 rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-sm mb-1 text-[#213A58] font-medium">ผู้อำนวยการโรงเรียน</label>
+                                    <input type="text" id="set-sign3" class="glass-input w-full p-2 rounded-lg">
+                                </div>
                             </div>
                         </div>
 
-                        <button type="submit" id="save-settings-btn" class="w-full bg-yellow-500 hover:bg-yellow-400 text-indigo-900 font-bold py-3 rounded-lg transition-colors shadow-lg text-lg mt-8">
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors shadow-sm text-lg mt-8">
                             บันทึกการตั้งค่า
                         </button>
                     </form>
@@ -614,173 +787,539 @@
     </main>
 
     <script>
-        // ============================================================================
-        // 1. SUPABASE INITIALIZATION
-        // ============================================================================
+        // --- 1. Supabase Setup (Robust Initialization) ---
         const SUPABASE_URL = 'https://nnxfkprivlvwturbybhf.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ueGZrcHJpdmx2d3R1cmJ5YmhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NTAwNzUsImV4cCI6MjA5NDMyNjA3NX0.1VJgA5v7roJAGxUdUu052pwlrRH0y2SVs8elhka5Ofk';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // ============================================================================
-        // 2. GLOBAL STATE & CACHE
-        // ============================================================================
-        const CLASSROOM_ID = 1; 
-        let studentsData = [];
-        let holidaysData = [];
-        let classroomSettings = {};
         
-        let currentDailyRecords = {}; 
-        let currentHealthRecords = {};
-        let currentNutritionRecords = {};
-
-        // ============================================================================
-        // 3. UTILITIES & UI HELPERS
-        // ============================================================================
-        function showNotification(msg) {
-            const toast = document.getElementById('notification-toast');
-            document.getElementById('toast-message').innerText = msg;
-            toast.classList.remove('translate-y-[-150%]');
-            setTimeout(() => toast.classList.add('translate-y-[-150%]'), 3000);
+        let supabaseClient = null;
+        try {
+            if (typeof supabase !== 'undefined') {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            }
+        } catch(e) {
+            console.error("Supabase Init Error:", e);
         }
 
-        function showConfirm(title, message, callback) {
+        // --- 2. State Management ---
+        const MOCK_DATA = {
+            students: [],
+            dailyRecords: {}, 
+            healthRecords: {},
+            nutritionRecords: {}, 
+            holidays: [],
+            settings: {
+                schoolName: 'โรงเรียนตัวอย่าง', room: 'ชั้น 1', year: '2569', logo: '',
+                signers: ['', '', '']
+            }
+        };
+
+        // Deep copy mock data as default
+        let appData = JSON.parse(JSON.stringify(MOCK_DATA)); 
+        let tempLogoData = '';
+
+        // Fetch Data from Supabase safely
+        const LOCAL_STORAGE_KEY = 'smartclass_data';
+
+        async function initData() {
+            const statusEl = document.getElementById('db-status');
+            
+            // Try to load from LocalStorage first to have immediate/fallback data
+            try {
+                const localDataRaw = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (localDataRaw) {
+                    const parsed = JSON.parse(localDataRaw);
+                    appData = { ...appData, ...parsed };
+                }
+            } catch (e) {
+                console.error("Local Storage parse error", e);
+            }
+
+            try {
+                if (!supabaseClient) throw new Error("Supabase Client ไม่ทำงาน");
+
+                const { data, error } = await supabaseClient
+                    .from('classroom_data')
+                    .select('data')
+                    .eq('id', 1)
+                    .single();
+
+                if (error) throw error;
+
+                // Load Data
+                if (data && data.data) {
+                    appData = data.data;
+                    // Sync loaded data to LocalStorage
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appData));
+                }
+                
+                statusEl.innerHTML = '<span class="text-green-400"><i class="fas fa-cloud"></i> ออนไลน์</span>';
+                
+            } catch (error) {
+                console.error("Data Fetch Failed:", error);
+                statusEl.innerHTML = '<span class="text-orange-400" title="ใช้งานผ่าน Local Storage (ออฟไลน์)"><i class="fas fa-exclamation-triangle"></i> ออฟไลน์ (ข้อมูลในเครื่อง)</span>';
+            } finally {
+                // FORCE: Guarantee structure exists to prevent 'undefined' crashes
+                appData.students = appData.students || [];
+                
+                // --- DATA RECOVERY SCRIPT (Auto-restores missing parent info) ---
+                const recoveryParents = {
+                    "1": { parentName: "ปาลิอัส ชูเมือง", parentPhone: "0936937439" },
+                    "2": { parentName: "วิลัยลักษณ์ แก้วเจริญ", parentPhone: "0806905879" },
+                    "3": { parentName: "สีดา พม่า", parentPhone: "0993107751" },
+                    "4": { parentName: "สุดารัตน์ สุรภา", parentPhone: "0980309903" },
+                    "5": { parentName: "กนิษฐา พัฒนศิลป์", parentPhone: "0804844968" },
+                    "6": { parentName: "วรินทิพย์ สันทวงศ์", parentPhone: "0650957839" },
+                    "7": { parentName: "เจ๊ พม่า", parentPhone: "0824688416" }
+                };
+                let recovered = false;
+                appData.students.forEach(s => {
+                    if (recoveryParents[s.code] && !s.parentName) {
+                        s.parentName = recoveryParents[s.code].parentName;
+                        s.parentPhone = recoveryParents[s.code].parentPhone;
+                        recovered = true;
+                    }
+                });
+                if (recovered) {
+                    saveData(); // Save the recovered data immediately
+                }
+                // --- END DATA RECOVERY ---
+
+                appData.dailyRecords = appData.dailyRecords || {};
+                appData.healthRecords = appData.healthRecords || {};
+                appData.nutritionRecords = appData.nutritionRecords || {};
+                appData.holidays = appData.holidays || [];
+                appData.settings = appData.settings || JSON.parse(JSON.stringify(MOCK_DATA.settings));
+                
+                tempLogoData = appData.settings.logo || '';
+
+                // Initialize App View
+                const reportMonthEl = document.getElementById('report-month');
+                if(reportMonthEl) reportMonthEl.value = getMonthString();
+                
+                loadSettings();
+                switchTab('dashboard');
+            }
+        }
+
+        // Save Data to Supabase and LocalStorage
+        async function saveData() {
+            // 1. Always save to LocalStorage as a reliable backup
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appData));
+            } catch(e) {
+                console.error('Failed to save to LocalStorage:', e);
+            }
+
+            // 2. Try saving to Supabase if client exists
+            if (!supabaseClient) return;
+            try {
+                // Upsert ensures row is created if missing, updated if exists
+                const { error } = await supabaseClient
+                    .from('classroom_data')
+                    .upsert({ id: 1, data: appData });
+
+                if (error) throw error;
+                console.log('✅ Auto-saved to Supabase');
+                
+                const statusEl = document.getElementById('db-status');
+                if(statusEl && statusEl.innerHTML.includes('ออฟไลน์')) {
+                     statusEl.innerHTML = '<span class="text-green-400"><i class="fas fa-cloud"></i> ออนไลน์</span>';
+                }
+            } catch (error) {
+                console.error('❌ Failed to save to Supabase:', error);
+                const statusEl = document.getElementById('db-status');
+                if(statusEl) {
+                     statusEl.innerHTML = '<span class="text-orange-400" title="ใช้งานผ่าน Local Storage (ออฟไลน์)"><i class="fas fa-exclamation-triangle"></i> ออฟไลน์ (ข้อมูลในเครื่อง)</span>';
+                }
+            }
+        }
+
+        // --- Utils & Helpers ---
+        function getTodayString() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+
+        function getMonthString() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        }
+
+        function getThaiMonthYear(dateStr) { 
+            if(!dateStr) return '';
+            const [year, month] = dateStr.split('-');
+            const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+            const thaiYear = parseInt(year) + 543;
+            return `${thaiMonths[parseInt(month) - 1]} ${thaiYear}`;
+        }
+
+        function getThaiDate(dateStr) { 
+            if(!dateStr) return '';
+            const [year, month, day] = dateStr.split('-');
+            return `${parseInt(day)} ${getThaiMonthYear(`${year}-${month}`)}`;
+        }
+
+        // --- Custom Confirm Dialog ---
+        function showConfirm(title, message, onConfirmCallback) {
             const dialog = document.getElementById('confirm-dialog');
             document.getElementById('confirm-title').innerText = title;
             document.getElementById('confirm-message').innerText = message;
             dialog.classList.remove('hidden');
 
-            document.getElementById('confirm-cancel').onclick = () => dialog.classList.add('hidden');
-            document.getElementById('confirm-ok').onclick = () => {
-                dialog.classList.add('hidden');
-                if(callback) callback();
+            const btnOk = document.getElementById('confirm-ok');
+            const btnCancel = document.getElementById('confirm-cancel');
+
+            const closeModal = () => { dialog.classList.add('hidden'); };
+
+            btnCancel.onclick = closeModal;
+            btnOk.onclick = () => {
+                closeModal();
+                if(onConfirmCallback) onConfirmCallback();
             };
         }
 
-        // ฟังก์ชันประมวลผล BMI กลาง (ให้หน้า UI และหน้ารายงานใช้ตัวเดียวกัน 100%)
-        function getBMIResult(bmi) {
-            if(!bmi || isNaN(bmi)) return { text: '-', color: 'text-gray-400', bgPrint: '' };
-            const b = parseFloat(bmi);
-            if(b < 18.5) return { text: 'ผอม', color: 'text-blue-500', bgPrint: 'background-color: #3b82f6 !important; color: white !important;' };
-            if(b < 23.0) return { text: 'สมส่วน', color: 'text-green-500', bgPrint: 'background-color: #22c55e !important; color: white !important;' };
-            if(b < 25.0) return { text: 'ท้วม', color: 'text-orange-500', bgPrint: 'background-color: #f97316 !important; color: white !important;' };
-            return { text: 'อ้วน', color: 'text-red-500', bgPrint: 'background-color: #ef4444 !important; color: white !important;' };
+        // --- Navigation ---
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
         }
-
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const tabEl = document.getElementById(`tab-${tabId}`);
+            if (tabEl) tabEl.classList.remove('hidden');
             
+            // Reset all buttons
             document.querySelectorAll('.nav-btn').forEach(el => {
-                el.classList.remove('bg-white/10', 'border', 'border-white/20', 'text-yellow-400');
-                el.classList.add('text-gray-300');
+                el.classList.remove('bg-white', 'shadow-sm', 'text-indigo-600');
+                el.classList.add('hover:bg-white/60', 'text-slate-500', 'hover:text-slate-800');
             });
-            const activeNav = document.getElementById(`nav-${tabId}`);
-            if(activeNav) activeNav.classList.add('bg-white/10', 'border', 'border-white/20', 'text-yellow-400');
-            
-            if(window.innerWidth < 768) toggleSidebar();
 
-            if(tabId === 'attendance') loadDaily();
-            if(tabId === 'health') loadHealth();
+            // Activate selected button
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if(activeBtn) {
+                activeBtn.classList.remove('hover:bg-white/60', 'text-slate-500', 'hover:text-slate-800');
+                activeBtn.classList.add('bg-white', 'shadow-sm', 'text-indigo-600');
+            }
+
+            if(tabId === 'dashboard') renderDashboard();
+            if(tabId === 'attendance') renderDaily();
+            if(tabId === 'health') renderHealth();
             if(tabId === 'students') renderStudents();
-            if(tabId === 'nutrition') loadNutrition();
+            if(tabId === 'nutrition') renderNutrition();
             if(tabId === 'holidays') renderHolidays();
-            if(tabId === 'settings') renderSettings();
+            if(tabId === 'settings') loadSettings();
         }
 
-        const getTodayString = () => {
-            const d = new Date();
-            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        };
-        const getMonthString = () => {
-            const d = new Date();
-            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        };
-        const getThaiMonthYear = (dateStr) => { 
-            if(!dateStr) return '';
-            const [year, month] = dateStr.split('-');
-            const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-            return `${thaiMonths[parseInt(month) - 1]} ${parseInt(year) + 543}`;
-        };
-
-        // ตรวจสอบว่าวันนั้นอยู่ในช่วงเปิดเทอมหรือไม่
-        const isWithinTerm = (dateStr, startStr, endStr) => {
-            if (!startStr && !endStr) return true;
-            if (startStr && !endStr) return dateStr >= startStr;
-            if (!startStr && endStr) return dateStr <= endStr;
-            return dateStr >= startStr && dateStr <= endStr;
-        };
-
-        // ============================================================================
-        // 4. APP INITIALIZATION
-        // ============================================================================
-        async function initApp() {
-            const statusEl = document.getElementById('db-status');
-            try {
-                const { data: cData, error: cErr } = await supabaseClient.from('classrooms').select('*').eq('id', CLASSROOM_ID).single();
-                if(cErr) throw cErr;
-                classroomSettings = cData;
-
-                const { data: sData } = await supabaseClient.from('students').select('*').eq('classroom_id', CLASSROOM_ID).order('code');
-                studentsData = sData || [];
-
-                const { data: hData } = await supabaseClient.from('holidays').select('*').eq('classroom_id', CLASSROOM_ID).order('holiday_date');
-                holidaysData = hData || [];
-
-                statusEl.innerHTML = '<span class="text-green-400"><i class="fas fa-cloud"></i> ออนไลน์</span>';
-                
-                document.getElementById('sidebar-school-name').innerText = classroomSettings.school_name || 'โรงเรียนตัวอย่าง';
-                if(classroomSettings.logo_url) {
-                    document.getElementById('sidebar-logo-img').src = classroomSettings.logo_url;
-                    document.getElementById('sidebar-logo-img').classList.remove('hidden');
-                    document.getElementById('sidebar-default-icon').classList.add('hidden');
-                }
-
-                document.getElementById('daily-date').value = getTodayString();
-                document.getElementById('health-month').value = getMonthString();
-                document.getElementById('nutrition-month').value = getMonthString();
-                document.getElementById('report-month-input').value = getMonthString();
-
-                switchTab('attendance');
-            } catch (err) {
-                console.error("Init Error:", err);
-                statusEl.innerHTML = '<span class="text-red-400">เกิดข้อผิดพลาดในการเชื่อมต่อ</span>';
+        // --- Module 0: Dashboard ---
+        function renderDashboard() {
+            const today = getTodayString();
+            document.getElementById('dashboard-date-display').innerText = `ข้อมูลประจำวันที่ ${getThaiDate(today)}`;
+            
+            const totalStudents = appData.students.length;
+            document.getElementById('dash-total-students').innerText = totalStudents;
+            
+            let presentCount = 0;
+            let absentCount = 0;
+            const absentList = document.getElementById('dash-absent-list');
+            absentList.innerHTML = '';
+            
+            if (appData.dailyRecords && appData.dailyRecords[today]) {
+                const records = appData.dailyRecords[today];
+                appData.students.forEach(student => {
+                    const rec = records[student.id];
+                    if (rec) {
+                        if (rec.status === 'มา' || rec.status === 'สาย') {
+                            presentCount++;
+                        } else if (rec.status === 'ลา' || rec.status === 'ขาด') {
+                            absentCount++;
+                            const statusColor = rec.status === 'ลา' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-rose-50 text-rose-600 border-rose-100';
+                            absentList.innerHTML += `
+                                <li class="flex items-center justify-between p-3 bg-white rounded-2xl border border-slate-100 shadow-sm transition-all hover:shadow-md">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-xs font-bold text-slate-500">${student.code}</div>
+                                        <span class="text-sm font-bold text-slate-800">${student.name}</span>
+                                    </div>
+                                    <span class="text-xs font-bold px-3 py-1.5 rounded-lg border ${statusColor}">${rec.status}</span>
+                                </li>
+                            `;
+                        }
+                    }
+                });
+            } else {
+                absentList.innerHTML = `<li class="text-sm text-slate-500 italic p-4 text-center">ยังไม่มีการบันทึกข้อมูลในวันนี้</li>`;
+            }
+            
+            document.getElementById('dash-present-students').innerText = presentCount;
+            document.getElementById('dash-absent-students').innerText = absentCount;
+            
+            const percent = totalStudents > 0 ? Math.round((presentCount / totalStudents) * 100) : 0;
+            document.getElementById('dash-present-percent').innerText = `(${percent}%)`;
+            
+            if(absentCount === 0 && appData.dailyRecords && appData.dailyRecords[today]) {
+                absentList.innerHTML = `<li class="text-sm text-emerald-600 font-bold p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center justify-center gap-2"><i class="fas fa-check-circle"></i> วันนี้นักเรียนมาครบทุกคน</li>`;
             }
         }
 
-        // ============================================================================
-        // 5. MODULE: STUDENTS
-        // ============================================================================
+        // --- Module 1: Daily Attendance ---
+        function renderDaily() {
+            const dateInput = document.getElementById('daily-date');
+            if(!dateInput.value) dateInput.value = getTodayString();
+            const selectedDate = dateInput.value;
+
+            const holidayBanner = document.getElementById('attendance-holiday-banner');
+            const reasonEl = document.getElementById('attendance-holiday-reason');
+            const isHoliday = appData.holidays.find(h => h.date === selectedDate);
+            
+            const grid = document.getElementById('zen-daily-container');
+            grid.innerHTML = '<div class="space-y-2 pb-10" id="zen-daily-list"></div>';
+            const listContainer = document.getElementById('zen-daily-list');
+
+            if(isHoliday) {
+                holidayBanner.classList.remove('hidden');
+                reasonEl.textContent = `เหตุผล/ชื่อวันหยุด: ${isHoliday.name}`;
+            } else {
+                holidayBanner.classList.add('hidden');
+            }
+
+            if (!appData.dailyRecords[selectedDate]) {
+                appData.dailyRecords[selectedDate] = {};
+                let hasChanges = false;
+                appData.students.forEach(s => {
+                    appData.dailyRecords[selectedDate][s.id] = { status: 'มา', milk: false, brush: false };
+                    hasChanges = true;
+                });
+                if(hasChanges) saveData();
+            }
+
+            const records = appData.dailyRecords[selectedDate];
+            const students = [...appData.students].sort((a, b) => parseInt(a.code) - parseInt(b.code));
+
+            // Column Headers for Bento
+            listContainer.innerHTML += `
+                <div class="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest px-6 mb-4">
+                    <div class="w-12 text-center">No.</div>
+                    <div class="flex-1">Student</div>
+                    <div class="w-32 text-center">Status</div>
+                    <div class="w-24 text-center">Milk</div>
+                    <div class="w-24 text-center">Brush</div>
+                </div>
+            `;
+
+            students.forEach(student => {
+                const rec = records[student.id] || { status: 'มา', milk: false, brush: false };
+                const isAbsent = rec.status === 'ขาด' || rec.status === 'ลา';
+                const disabledHTML = isAbsent || isHoliday ? 'disabled opacity-40 cursor-not-allowed' : '';
+                
+                let healthBadge = '';
+                if(student.healthInfo) {
+                    healthBadge = `<span class="ml-3 text-[10px] text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full font-bold border border-rose-100" title="ข้อมูลสุขภาพ"><i class="fas fa-heartbeat"></i> ${student.healthInfo}</span>`;
+                }
+
+                // Determine dot color for status
+                let statusColor = 'bg-slate-300';
+                if(rec.status === 'มา') statusColor = 'bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.4)]';
+                if(rec.status === 'สาย') statusColor = 'bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.4)]';
+                if(rec.status === 'ลา') statusColor = 'bg-indigo-400 shadow-[0_0_12px_rgba(129,140,248,0.4)]';
+                if(rec.status === 'ขาด') statusColor = 'bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.4)]';
+
+                // Initial Avatar generator
+                const initAvatar = student.name.charAt(0);
+                const avatarColors = ['from-indigo-400 to-purple-400', 'from-emerald-400 to-teal-400', 'from-rose-400 to-orange-400', 'from-blue-400 to-cyan-400'];
+                const avatarBg = avatarColors[parseInt(student.code) % avatarColors.length];
+
+                const row = document.createElement('div');
+                row.className = `flex items-center py-4 px-6 mb-3 bg-white rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-200 cursor-pointer group`;
+                row.innerHTML = `
+                    <div class="w-12 text-center font-bold text-slate-300 group-hover:text-slate-500 transition-colors text-lg">${student.code.padStart(2, '0')}</div>
+                    <div class="flex-1 flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${avatarBg} text-white flex items-center justify-center font-bold text-lg shadow-inner">${initAvatar}</div>
+                        <div class="flex flex-col">
+                            <div class="flex items-center">
+                                <span class="font-bold text-slate-800 text-[1.05rem] tracking-tight">${student.name}</span>
+                                ${healthBadge}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-32 flex justify-center items-center">
+                        <div class="relative flex items-center">
+                            <div id="status-dot-${student.id}" class="absolute left-3 w-2.5 h-2.5 rounded-full ${statusColor} z-10 transition-colors duration-300"></div>
+                            <select class="appearance-none bg-slate-50 border border-slate-200 font-bold text-sm text-slate-700 outline-none cursor-pointer w-full py-2 pl-8 pr-4 rounded-xl transition-colors hover:bg-slate-100 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100" 
+                                onchange="updateDailyRecord('${selectedDate}', '${student.id}', 'status', this.value);" ${isHoliday ? 'disabled' : ''}>
+                                <option value="มา" ${rec.status==='มา'?'selected':''}>มาเรียน</option>
+                                <option value="สาย" ${rec.status==='สาย'?'selected':''}>มาสาย</option>
+                                <option value="ลา" ${rec.status==='ลา'?'selected':''}>ลาหยุด</option>
+                                <option value="ขาด" ${rec.status==='ขาด'?'selected':''}>ขาดเรียน</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="w-24 flex justify-center">
+                        <input type="checkbox" class="modern-checkbox w-6 h-6 rounded-lg border-slate-300 checked:bg-indigo-500 checked:border-indigo-500 transition-all cursor-pointer" 
+                            onchange="updateDailyRecord('${selectedDate}', '${student.id}', 'milk', this.checked)" 
+                            ${rec.milk ? 'checked' : ''} ${disabledHTML}>
+                    </div>
+                    <div class="w-24 flex justify-center">
+                        <input type="checkbox" class="modern-checkbox w-6 h-6 rounded-lg border-slate-300 checked:bg-indigo-500 checked:border-indigo-500 transition-all cursor-pointer" 
+                            onchange="updateDailyRecord('${selectedDate}', '${student.id}', 'brush', this.checked)" 
+                            ${rec.brush ? 'checked' : ''} ${disabledHTML}>
+                    </div>
+                `;
+                listContainer.appendChild(row);
+            });
+        }
+
+        function updateDailyRecord(date, studentId, field, value) {
+            if(!appData.dailyRecords[date]) appData.dailyRecords[date] = {};
+            if(!appData.dailyRecords[date][studentId]) {
+                appData.dailyRecords[date][studentId] = { status: 'มา', milk: false, brush: false };
+            }
+            
+            appData.dailyRecords[date][studentId][field] = value;
+
+            if(field === 'status' && (value === 'ขาด' || value === 'ลา')) {
+                appData.dailyRecords[date][studentId].milk = false;
+                appData.dailyRecords[date][studentId].brush = false;
+                renderDaily(); // Re-render to uncheck boxes and disable them
+            } else if (field === 'status') {
+                // Just update color dot without full re-render
+                const dot = document.getElementById(`status-dot-${studentId}`);
+                if(dot) {
+                    let statusColor = 'bg-slate-300';
+                    if(value === 'มา') statusColor = 'bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.4)]';
+                    if(value === 'สาย') statusColor = 'bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.4)]';
+                    dot.className = `absolute left-3 w-2.5 h-2.5 rounded-full ${statusColor} z-10 transition-colors duration-300`;
+                }
+            }
+
+            saveData();
+        }
+
+        // --- Module 1.5: Health Check ---
+        function renderHealth() {
+            const dateInput = document.getElementById('health-date');
+            if(!dateInput.value) dateInput.value = getTodayString();
+            const selectedDate = dateInput.value;
+
+            const holidayBanner = document.getElementById('health-holiday-banner');
+            const reasonEl = document.getElementById('health-holiday-reason');
+            const isHoliday = appData.holidays.find(h => h.date === selectedDate);
+            
+            const listContainer = document.getElementById('health-list-container');
+            listContainer.innerHTML = `
+                <div class="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest px-6 mb-4">
+                    <div class="w-12 text-center">No.</div>
+                    <div class="flex-1 min-w-[120px]">Student</div>
+                    <div class="w-24 text-center">Uniform</div>
+                    <div class="w-24 text-center">Hair</div>
+                    <div class="w-24 text-center">Ears</div>
+                    <div class="w-24 text-center">Skin</div>
+                    <div class="w-24 text-center">Teeth</div>
+                </div>
+            `;
+
+            students.forEach(student => {
+                const rec = records[student.id] || { uniform: true, hair: true, ears: true, skin: true, teeth: true };
+                const disabledHTML = isHoliday ? 'disabled opacity-40 cursor-not-allowed' : '';
+                
+                const genSelect = (field, isPass) => `
+                    <select id="health-${student.id}-${field}" class="appearance-none font-bold text-sm outline-none cursor-pointer w-full py-2 px-3 rounded-xl transition-all shadow-sm ${isPass ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 hover:border-emerald-300 focus:ring-2 focus:ring-emerald-200' : 'bg-rose-50 text-rose-600 border border-rose-100 hover:border-rose-300 focus:ring-2 focus:ring-rose-200'}" 
+                        onchange="updateHealthRecord('${selectedDate}', '${student.id}', '${field}', this.value === 'true', this)" ${disabledHTML}>
+                        <option value="true" ${isPass ? 'selected' : ''}>ผ่าน</option>
+                        <option value="false" ${!isPass ? 'selected' : ''}>ไม่ผ่าน</option>
+                    </select>
+                `;
+
+                const initAvatar = student.name.charAt(0);
+                const avatarColors = ['from-indigo-400 to-purple-400', 'from-emerald-400 to-teal-400', 'from-rose-400 to-orange-400', 'from-blue-400 to-cyan-400'];
+                const avatarBg = avatarColors[parseInt(student.code) % avatarColors.length];
+
+                const row = document.createElement('div');
+                row.className = `flex items-center py-4 px-6 mb-3 bg-white rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-200`;
+                row.innerHTML = `
+                    <div class="w-12 text-center font-bold text-slate-300 text-lg">${student.code.padStart(2, '0')}</div>
+                    <div class="flex-1 min-w-[120px] flex items-center gap-4">
+                        <div class="hidden sm:flex w-10 h-10 rounded-xl bg-gradient-to-br ${avatarBg} text-white items-center justify-center font-bold text-lg shadow-inner">${initAvatar}</div>
+                        <span class="font-bold text-slate-800 text-[1.05rem] tracking-tight truncate">${student.name}</span>
+                    </div>
+                    <div class="w-24 px-1">${genSelect('uniform', rec.uniform)}</div>
+                    <div class="w-24 px-1">${genSelect('hair', rec.hair)}</div>
+                    <div class="w-24 px-1">${genSelect('ears', rec.ears)}</div>
+                    <div class="w-24 px-1">${genSelect('skin', rec.skin)}</div>
+                    <div class="w-24 px-1">${genSelect('teeth', rec.teeth)}</div>
+                `;
+                listContainer.appendChild(row);
+            });
+        }
+
+        function updateHealthRecord(date, studentId, field, isPass, selectElement) {
+            if(!appData.healthRecords[date]) appData.healthRecords[date] = {};
+            if(!appData.healthRecords[date][studentId]) {
+                appData.healthRecords[date][studentId] = { uniform: true, hair: true, ears: true, skin: true, teeth: true };
+            }
+            
+            appData.healthRecords[date][studentId][field] = isPass;
+            saveData();
+            
+            if(selectElement) {
+                if(isPass) {
+                    selectElement.className = "appearance-none font-bold text-sm outline-none cursor-pointer w-full py-2 px-3 rounded-xl transition-all shadow-sm bg-emerald-50 text-emerald-600 border border-emerald-100 hover:border-emerald-300 focus:ring-2 focus:ring-emerald-200";
+                } else {
+                    selectElement.className = "appearance-none font-bold text-sm outline-none cursor-pointer w-full py-2 px-3 rounded-xl transition-all shadow-sm bg-rose-50 text-rose-600 border border-rose-100 hover:border-rose-300 focus:ring-2 focus:ring-rose-200";
+                }
+            }
+        }
+
+        // --- Module 2: Students Data ---
         function renderStudents() {
             const grid = document.getElementById('students-grid');
             grid.innerHTML = '';
             
-            studentsData.forEach(student => {
-                let healthHTML = student.health_info ? `<div class="mt-2 text-xs bg-red-500/20 text-red-200 border border-red-500/50 p-2 rounded-lg"><i class="fas fa-notes-medical mr-1"></i> ${student.health_info}</div>` : '';
-                
-                let parentHTML = '';
-                if(student.parent_name || student.parent_phone) {
-                    parentHTML = `
-                        <div class="mt-3 pt-3 border-t border-white/10 text-xs text-indigo-200 space-y-1">
-                            ${student.parent_name ? `<p><i class="fas fa-user-tie text-indigo-400 w-4"></i> ${student.parent_name}</p>` : ''}
-                            ${student.parent_phone ? `<p><i class="fas fa-phone text-indigo-400 w-4"></i> <a href="tel:${student.parent_phone}" class="hover:text-yellow-400 transition-colors">${student.parent_phone}</a></p>` : ''}
-                        </div>
-                    `;
+            const students = [...appData.students].sort((a, b) => parseInt(a.code) - parseInt(b.code));
+
+            students.forEach(student => {
+                let healthHTML = '';
+                if(student.healthInfo) {
+                    healthHTML = `<div class="mt-4 text-xs bg-rose-50 text-rose-600 border border-rose-100 p-3 rounded-xl font-medium flex items-center shadow-sm"><i class="fas fa-heartbeat mr-2 text-rose-500"></i> ${student.healthInfo}</div>`;
                 }
 
+                const initAvatar = student.name.charAt(0);
+                const avatarColors = ['from-indigo-400 to-purple-400', 'from-emerald-400 to-teal-400', 'from-rose-400 to-orange-400', 'from-blue-400 to-cyan-400'];
+                const avatarBg = avatarColors[parseInt(student.code) % avatarColors.length];
+
                 grid.innerHTML += `
-                    <div class="glass-panel p-5 rounded-2xl relative group flex flex-col h-full">
-                        <div class="absolute top-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onclick="editStudent('${student.id}')" class="text-blue-400 hover:text-blue-300"><i class="fas fa-edit"></i></button>
-                            <button onclick="deleteStudent('${student.id}')" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
+                    <div class="bento-box p-6 relative group overflow-hidden">
+                        <div class="absolute top-0 right-0 p-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 z-10">
+                            <button onclick="editStudent('${student.id}')" class="w-8 h-8 rounded-full bg-white/80 backdrop-blur shadow-sm text-indigo-500 hover:text-indigo-600 hover:bg-white flex items-center justify-center transition-all hover:scale-110"><i class="fas fa-edit"></i></button>
+                            <button onclick="confirmDeleteStudent('${student.id}')" class="w-8 h-8 rounded-full bg-white/80 backdrop-blur shadow-sm text-rose-500 hover:text-rose-600 hover:bg-white flex items-center justify-center transition-all hover:scale-110"><i class="fas fa-trash"></i></button>
                         </div>
-                        <div class="w-12 h-12 bg-indigo-800 rounded-full flex items-center justify-center text-xl font-bold text-yellow-400 mb-3">${student.code}</div>
-                        <h4 class="font-bold text-lg text-white">${student.name}</h4>
-                        <p class="text-sm text-gray-400 mb-1">เพศ: ${student.gender || '-'}</p>
+                        
+                        <div class="flex items-center gap-4 mb-4 relative z-0">
+                            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br ${avatarBg} shadow-inner flex items-center justify-center text-2xl font-bold text-white relative">
+                                ${initAvatar}
+                                <div class="absolute -bottom-2 -right-2 w-7 h-7 bg-white rounded-lg shadow-sm border border-slate-100 flex items-center justify-center text-xs font-bold text-slate-600">
+                                    ${student.code.padStart(2, '0')}
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-lg text-slate-800 leading-tight">${student.name}</h4>
+                                <p class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wider">${student.gender}</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 mt-4 border-t border-slate-100/50 pt-4 relative z-0">
+                            ${student.parentName ? `
+                                <div class="flex items-center text-sm text-slate-600">
+                                    <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center mr-3"><i class="fas fa-user-friends"></i></div>
+                                    <span class="font-medium">${student.parentName}</span>
+                                </div>
+                            ` : ''}
+                            ${student.parentPhone ? `
+                                <div class="flex items-center text-sm text-slate-600">
+                                    <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center mr-3"><i class="fas fa-phone"></i></div>
+                                    <a href="tel:${student.parentPhone}" class="text-indigo-600 hover:text-indigo-700 hover:underline font-bold">${student.parentPhone}</a>
+                                </div>
+                            ` : ''}
+                        </div>
                         ${healthHTML}
-                        <div class="flex-grow"></div>
-                        ${parentHTML}
                     </div>
                 `;
             });
@@ -789,796 +1328,660 @@
         function openStudentModal() {
             document.getElementById('student-id').value = '';
             document.getElementById('student-form').reset();
-            document.getElementById('student-modal-title').innerText = 'เพิ่มนักเรียนใหม่';
+            document.getElementById('student-parent-name').value = '';
+            document.getElementById('student-parent-phone').value = '';
+            document.getElementById('student-modal-title').innerText = 'เพิ่มนักเรียน';
             document.getElementById('student-modal').classList.remove('hidden');
         }
-        function closeStudentModal() { document.getElementById('student-modal').classList.add('hidden'); }
+
+        function closeStudentModal() {
+            document.getElementById('student-modal').classList.add('hidden');
+        }
 
         function editStudent(id) {
-            const student = studentsData.find(s => s.id === id);
+            const student = appData.students.find(s => s.id === id);
+            if(!student) return;
             document.getElementById('student-id').value = student.id;
             document.getElementById('student-code').value = student.code;
             document.getElementById('student-name').value = student.name;
             document.getElementById('student-gender').value = student.gender;
-            document.getElementById('student-health-info').value = student.health_info || '';
-            document.getElementById('student-parent-name').value = student.parent_name || '';
-            document.getElementById('student-parent-phone').value = student.parent_phone || '';
-
+            document.getElementById('student-health-info').value = student.healthInfo || '';
+            document.getElementById('student-parent-name').value = student.parentName || '';
+            document.getElementById('student-parent-phone').value = student.parentPhone || '';
+            
             document.getElementById('student-modal-title').innerText = 'แก้ไขข้อมูลนักเรียน';
             document.getElementById('student-modal').classList.remove('hidden');
         }
 
-        async function saveStudent(e) {
+        function saveStudent(e) {
             e.preventDefault();
             const id = document.getElementById('student-id').value;
-            const payload = {
-                classroom_id: CLASSROOM_ID,
-                code: parseInt(document.getElementById('student-code').value),
+            const newStudent = {
+                id: id || Date.now().toString(),
+                code: document.getElementById('student-code').value,
                 name: document.getElementById('student-name').value,
                 gender: document.getElementById('student-gender').value,
-                health_info: document.getElementById('student-health-info').value,
-                parent_name: document.getElementById('student-parent-name').value,
-                parent_phone: document.getElementById('student-parent-phone').value
+                healthInfo: document.getElementById('student-health-info').value,
+                parentName: document.getElementById('student-parent-name').value,
+                parentPhone: document.getElementById('student-parent-phone').value
             };
-            if(id) payload.id = id;
 
-            const { data, error } = await supabaseClient.from('students').upsert(payload).select();
-            if(!error && data) {
-                if(!id) studentsData.push(data[0]);
-                else {
-                    const idx = studentsData.findIndex(s => s.id === id);
-                    studentsData[idx] = data[0];
-                }
-                studentsData.sort((a,b) => a.code - b.code);
+            if(id) {
+                const index = appData.students.findIndex(s => s.id === id);
+                appData.students[index] = newStudent;
+            } else {
+                appData.students.push(newStudent);
+            }
+
+            saveData();
+            closeStudentModal();
+            renderStudents();
+        }
+
+        function confirmDeleteStudent(id) {
+            showConfirm('ลบข้อมูลนักเรียน', 'คุณแน่ใจหรือไม่ที่จะลบนักเรียนคนนี้? ข้อมูลการเช็คชื่อจะยังคงอยู่แต่ชื่อจะไม่แสดง', () => {
+                appData.students = appData.students.filter(s => s.id !== id);
+                saveData();
                 renderStudents();
-                closeStudentModal();
-                showNotification('บันึกข้อมูลนักเรียนสำเร็จ');
-            } else {
-                console.error(error);
-                alert("เกิดข้อผิดพลาด กรุณาตรวจสอบว่าได้สร้างคอลัมน์ parent_name และ parent_phone ในฐานข้อมูลแล้วหรือยัง");
-            }
-        }
-
-        function deleteStudent(id) {
-            showConfirm('ลบนักเรียน', 'ยืนยันการลบนักเรียน? (ข้อมูลประวัติของเด็กจะถูกลบไปด้วย)', async () => {
-                const { error } = await supabaseClient.from('students').delete().eq('id', id);
-                if(!error) {
-                    studentsData = studentsData.filter(s => s.id !== id);
-                    renderStudents();
-                    showNotification('ลบข้อมูลนักเรียนแล้ว');
-                }
             });
         }
 
-        // ============================================================================
-        // 6. MODULE: DAILY ATTENDANCE
-        // ============================================================================
-        async function loadDaily() {
-            const dateStr = document.getElementById('daily-date').value;
-            const tbody = document.getElementById('daily-tbody');
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4">กำลังโหลดข้อมูล...</td></tr>';
-
-            const { data: records } = await supabaseClient.from('daily_records').select('*').eq('record_date', dateStr);
-            currentDailyRecords = {};
-            if(records) records.forEach(r => currentDailyRecords[r.student_id] = r);
-
-            renderDailyUI();
+        // --- Module 3: Nutrition ---
+        function getBMIResult(bmi) {
+            if(!bmi) return { text: '-', color: 'text-[#213A58]', bg: 'bg-slate-100' };
+            if(bmi < 18.5) return { text: 'ผอม', color: 'text-[#15919B]', bg: 'bg-blue-100' };
+            if(bmi >= 18.5 && bmi <= 22.9) return { text: 'สมส่วน', color: 'text-emerald-700', bg: 'bg-emerald-100' };
+            if(bmi >= 23.0 && bmi <= 24.9) return { text: 'ท้วม', color: 'text-orange-700', bg: 'bg-orange-100' };
+            return { text: 'อ้วน', color: 'text-red-700', bg: 'bg-red-100' };
         }
 
-        function renderDailyUI() {
-            const dateStr = document.getElementById('daily-date').value;
-            const tbody = document.getElementById('daily-tbody');
+        function renderNutrition() {
+            const monthInput = document.getElementById('nutrition-month');
+            if(!monthInput.value) monthInput.value = getMonthString();
+            const selectedMonth = monthInput.value;
 
-            const isHoliday = holidaysData.find(h => h.holiday_date === dateStr);
-            if(isHoliday) {
-                document.getElementById('attendance-holiday-banner').classList.remove('hidden');
-                document.getElementById('attendance-holiday-reason').innerText = `วันหยุด: ${isHoliday.name}`;
-            } else {
-                document.getElementById('attendance-holiday-banner').classList.add('hidden');
-            }
+            const listContainer = document.getElementById('nutrition-list-container');
+            listContainer.innerHTML = `
+                <div class="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest px-6 mb-4">
+                    <div class="w-12 text-center">No.</div>
+                    <div class="flex-1 min-w-[120px]">Student</div>
+                    <div class="w-28 text-center">Weight (kg)</div>
+                    <div class="w-28 text-center">Height (cm)</div>
+                    <div class="w-24 text-center">BMI</div>
+                    <div class="w-28 text-center">Result</div>
+                </div>
+            `;
 
-            tbody.innerHTML = '';
-            studentsData.forEach(student => {
-                const rec = currentDailyRecords[student.id] || { status: 'มา', drink_milk: false, brush_teeth: false };
-                const disabled = isHoliday ? 'disabled opacity-50 cursor-not-allowed' : '';
-                
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="p-4 text-center text-gray-400">${student.code}</td>
-                        <td class="p-4">${student.name}</td>
-                        <td class="p-4 text-center">
-                            <select class="glass-input p-1.5 rounded-lg text-sm w-full" 
-                                onchange="updateLocalDaily('${student.id}', '${dateStr}', 'status', this.value)" ${disabled}>
-                                <option value="มา" ${rec.status==='มา'?'selected':''}>มา</option>
-                                <option value="สาย" ${rec.status==='สาย'?'selected':''}>สาย</option>
-                                <option value="ลา" ${rec.status==='ลา'?'selected':''}>ลา</option>
-                                <option value="ขาด" ${rec.status==='ขาด'?'selected':''}>ขาด</option>
-                            </select>
-                        </td>
-                        <td class="p-4 text-center">
-                            <input type="checkbox" class="w-5 h-5 accent-yellow-500 rounded" 
-                                onchange="updateLocalDaily('${student.id}', '${dateStr}', 'drink_milk', this.checked)" ${rec.drink_milk?'checked':''} ${disabled}>
-                        </td>
-                        <td class="p-4 text-center">
-                            <input type="checkbox" class="w-5 h-5 accent-yellow-500 rounded" 
-                                onchange="updateLocalDaily('${student.id}', '${dateStr}', 'brush_teeth', this.checked)" ${rec.brush_teeth?'checked':''} ${disabled}>
-                        </td>
-                    </tr>
+            students.forEach(student => {
+                const rec = records[student.id] || { w: '', h: '', bmi: 0 };
+                const bmiRes = getBMIResult(rec.bmi);
+
+                const initAvatar = student.name.charAt(0);
+                const avatarColors = ['from-indigo-400 to-purple-400', 'from-emerald-400 to-teal-400', 'from-rose-400 to-orange-400', 'from-blue-400 to-cyan-400'];
+                const avatarBg = avatarColors[parseInt(student.code) % avatarColors.length];
+
+                const row = document.createElement('div');
+                row.className = `flex items-center py-4 px-6 mb-3 bg-white rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-200`;
+                row.innerHTML = `
+                    <div class="w-12 text-center font-bold text-slate-300 text-lg">${student.code.padStart(2, '0')}</div>
+                    <div class="flex-1 min-w-[120px] flex items-center gap-4">
+                        <div class="hidden sm:flex w-10 h-10 rounded-xl bg-gradient-to-br ${avatarBg} text-white items-center justify-center font-bold text-lg shadow-inner">${initAvatar}</div>
+                        <span class="font-bold text-slate-800 text-[1.05rem] tracking-tight truncate">${student.name}</span>
+                    </div>
+                    <div class="w-28 px-2">
+                        <input type="number" step="0.1" class="w-full bg-slate-50 border border-slate-200 text-slate-700 font-bold p-2 rounded-xl text-center focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300 transition-all outline-none" 
+                            value="${rec.w}" placeholder="0.0" onchange="updateNutrition('${selectedMonth}', '${student.id}', 'w', this.value)">
+                    </div>
+                    <div class="w-28 px-2">
+                        <input type="number" step="0.1" class="w-full bg-slate-50 border border-slate-200 text-slate-700 font-bold p-2 rounded-xl text-center focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300 transition-all outline-none" 
+                            value="${rec.h}" placeholder="0.0" onchange="updateNutrition('${selectedMonth}', '${student.id}', 'h', this.value)">
+                    </div>
+                    <div class="w-24 text-center font-bold text-indigo-500 text-lg" id="bmi-val-${student.id}">${rec.bmi ? rec.bmi.toFixed(1) : '-'}</div>
+                    <div class="w-28 text-center flex justify-center font-bold ${bmiRes.color}" id="bmi-res-td-${student.id}">
+                        <span id="bmi-res-${student.id}" class="${bmiRes.bg || 'bg-slate-100'} px-3 py-1.5 rounded-lg text-xs shadow-sm">${bmiRes.text}</span>
+                    </div>
                 `;
+                listContainer.appendChild(row);
             });
         }
 
-        function updateLocalDaily(studentId, date, field, value) {
-            let payload = currentDailyRecords[studentId] || { student_id: studentId, record_date: date, status: 'มา', drink_milk: false, brush_teeth: false };
-            payload.student_id = studentId;
-            payload.record_date = date;
-            payload[field] = value;
-            
-            if(field === 'status' && (value === 'ขาด' || value === 'ลา')) {
-                payload.drink_milk = false;
-                payload.brush_teeth = false;
-                currentDailyRecords[studentId] = payload;
-                renderDailyUI(); 
-            } else {
-                currentDailyRecords[studentId] = payload;
-            }
-        }
-
-        async function submitDaily() {
-            const dateStr = document.getElementById('daily-date').value;
-            const isHoliday = holidaysData.find(h => h.holiday_date === dateStr);
-            if(isHoliday) return showNotification('วันนี้เป็นวันหยุด ไม่สามารถบันทึกได้');
-
-            const btn = document.getElementById('btn-save-daily');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> กำลังบันทึก...';
-            btn.disabled = true;
-
-            let payload = [];
-            studentsData.forEach(student => {
-                let rec = currentDailyRecords[student.id] || { student_id: student.id, record_date: dateStr, status: 'มา', drink_milk: false, brush_teeth: false };
-                payload.push({
-                    student_id: rec.student_id,
-                    record_date: rec.record_date,
-                    status: rec.status,
-                    drink_milk: rec.drink_milk,
-                    brush_teeth: rec.brush_teeth
-                });
-            });
-
-            const { data, error } = await supabaseClient.from('daily_records').upsert(payload, { onConflict: 'student_id, record_date' }).select();
-            
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-
-            if(!error && data) {
-                data.forEach(r => currentDailyRecords[r.student_id] = r);
-                showNotification('บันทึกข้อมูลรายวันครบถ้วนแล้ว');
-            } else {
-                console.error(error);
-                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
-            }
-        }
-
-        // ============================================================================
-        // 7. MODULE: HEALTH
-        // ============================================================================
-        async function loadHealth() {
-            const monthStr = document.getElementById('health-month').value;
-            const tbody = document.getElementById('health-tbody');
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center p-4">กำลังโหลดข้อมูล...</td></tr>';
-
-            const { data: records } = await supabaseClient.from('health_records').select('*').eq('record_month', monthStr);
-            currentHealthRecords = {};
-            if(records) records.forEach(r => currentHealthRecords[r.student_id] = r);
-
-            renderHealthUI();
-        }
-
-        function renderHealthUI() {
-            const monthStr = document.getElementById('health-month').value;
-            const tbody = document.getElementById('health-tbody');
-
-            tbody.innerHTML = '';
-            studentsData.forEach(student => {
-                const rec = currentHealthRecords[student.id] || {};
-                const isHairPass = rec.hair_pass !== false;
-                const isEarsPass = rec.ears_pass !== false;
-                const isTeethPass = rec.teeth_pass !== false;
-                const isSkinPass = rec.skin_pass !== false;
-                const isUniformPass = rec.uniform_pass !== false;
-                const isShoesPass = rec.shoes_pass !== false;
-                
-                const genSelect = (field, isPass) => `
-                    <select class="glass-input p-1 rounded-lg text-xs w-full ${isPass ? 'text-green-400' : 'text-red-400 border-red-500'}" 
-                        onchange="updateLocalHealth('${student.id}', '${monthStr}', '${field}', this.value === 'true')">
-                        <option value="true" ${isPass ? 'selected' : ''} class="text-green-400">ผ่าน</option>
-                        <option value="false" ${!isPass ? 'selected' : ''} class="text-red-400">ไม่ผ่าน</option>
-                    </select>
-                `;
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="p-3 text-center text-gray-400">${student.code}</td>
-                        <td class="p-3">${student.name}</td>
-                        <td class="p-2 text-center">${genSelect('hair_pass', isHairPass)}</td>
-                        <td class="p-2 text-center">${genSelect('ears_pass', isEarsPass)}</td>
-                        <td class="p-2 text-center">${genSelect('teeth_pass', isTeethPass)}</td>
-                        <td class="p-2 text-center">${genSelect('skin_pass', isSkinPass)}</td>
-                        <td class="p-2 text-center">${genSelect('uniform_pass', isUniformPass)}</td>
-                        <td class="p-2 text-center">${genSelect('shoes_pass', isShoesPass)}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        function updateLocalHealth(studentId, month, field, value) {
-            let payload = currentHealthRecords[studentId] || { 
-                student_id: studentId, record_month: month, 
-                hair_pass: true, ears_pass: true, teeth_pass: true, 
-                skin_pass: true, uniform_pass: true, shoes_pass: true 
-            };
-            payload.student_id = studentId;
-            payload.record_month = month;
-            payload[field] = value;
-            currentHealthRecords[studentId] = payload;
-            renderHealthUI();
-        }
-
-        async function submitHealth() {
-            const monthStr = document.getElementById('health-month').value;
-
-            const btn = document.getElementById('btn-save-health');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> กำลังบันทึก...';
-            btn.disabled = true;
-
-            let payload = [];
-            studentsData.forEach(student => {
-                let rec = currentHealthRecords[student.id] || {};
-                payload.push({
-                    student_id: student.id,
-                    record_month: monthStr,
-                    hair_pass: rec.hair_pass !== false,
-                    ears_pass: rec.ears_pass !== false,
-                    teeth_pass: rec.teeth_pass !== false,
-                    skin_pass: rec.skin_pass !== false,
-                    uniform_pass: rec.uniform_pass !== false,
-                    shoes_pass: rec.shoes_pass !== false
-                });
-            });
-
-            const { data, error } = await supabaseClient.from('health_records').upsert(payload, { onConflict: 'student_id, record_month' }).select();
-            
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-
-            if(!error && data) {
-                data.forEach(r => currentHealthRecords[r.student_id] = r);
-                showNotification('บันทึกข้อมูลสุขภาพครบถ้วนแล้ว');
-            } else {
-                console.error(error);
-                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาเช็คฐานข้อมูลให้เรียบร้อย');
-            }
-        }
-
-        // ============================================================================
-        // 8. MODULE: NUTRITION
-        // ============================================================================
-        async function loadNutrition() {
-            const monthStr = document.getElementById('nutrition-month').value;
-            const tbody = document.getElementById('nutrition-tbody');
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4">กำลังโหลดข้อมูล...</td></tr>';
-
-            const { data: records } = await supabaseClient.from('nutrition_records').select('*').eq('record_month', monthStr);
-            currentNutritionRecords = {};
-            if(records) records.forEach(r => currentNutritionRecords[r.student_id] = r);
-
-            renderNutritionUI();
-        }
-
-        function renderNutritionUI() {
-            const monthStr = document.getElementById('nutrition-month').value;
-            const tbody = document.getElementById('nutrition-tbody');
-            tbody.innerHTML = '';
-
-            studentsData.forEach(student => {
-                const rec = currentNutritionRecords[student.id] || { weight: null, height: null, bmi: null };
-                const res = getBMIResult(rec.bmi);
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="p-4 text-center text-gray-400">${student.code}</td>
-                        <td class="p-4">${student.name}</td>
-                        <td class="p-4">
-                            <input type="number" step="0.1" class="glass-input w-full p-1.5 rounded-lg text-center" 
-                                value="${rec.weight !== null && rec.weight !== undefined ? rec.weight : ''}" onchange="updateLocalNutrition('${student.id}', '${monthStr}', 'weight', this.value)">
-                        </td>
-                        <td class="p-4">
-                            <input type="number" step="0.1" class="glass-input w-full p-1.5 rounded-lg text-center" 
-                                value="${rec.height !== null && rec.height !== undefined ? rec.height : ''}" onchange="updateLocalNutrition('${student.id}', '${monthStr}', 'height', this.value)">
-                        </td>
-                        <td class="p-4 text-center font-bold text-yellow-400">${rec.bmi ? rec.bmi : '-'}</td>
-                        <td class="p-4 text-center font-bold ${res.color}">
-                            <span class="bg-black/20 px-3 py-1 rounded-full">${res.text}</span>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        function updateLocalNutrition(studentId, month, field, value) {
-            let payload = currentNutritionRecords[studentId] || { student_id: studentId, record_month: month, weight: null, height: null, bmi: null };
-            payload.student_id = studentId;
-            payload.record_month = month;
-            
-            if (value === '' || value === null || value === undefined) {
-                payload[field] = null;
-            } else {
-                payload[field] = parseFloat(value);
+        function updateNutrition(month, studentId, field, value) {
+            if(!appData.nutritionRecords[month]) appData.nutritionRecords[month] = {};
+            if(!appData.nutritionRecords[month][studentId]) {
+                appData.nutritionRecords[month][studentId] = { w: '', h: '', bmi: 0 };
             }
             
-            if(payload.weight && payload.height && payload.height > 0) {
-                const h_m = payload.height / 100;
-                payload.bmi = parseFloat((payload.weight / (h_m * h_m)).toFixed(2));
+            appData.nutritionRecords[month][studentId][field] = value;
+            
+            const w = parseFloat(appData.nutritionRecords[month][studentId].w);
+            const h_cm = parseFloat(appData.nutritionRecords[month][studentId].h);
+            
+            let newBmi = 0;
+            if(w && h_cm) {
+                const h_m = h_cm / 100;
+                newBmi = w / (h_m * h_m);
+                appData.nutritionRecords[month][studentId].bmi = newBmi;
             } else {
-                payload.bmi = null;
+                appData.nutritionRecords[month][studentId].bmi = 0;
             }
 
-            currentNutritionRecords[studentId] = payload;
-            renderNutritionUI();
-        }
-
-        async function submitNutrition() {
-            const monthStr = document.getElementById('nutrition-month').value;
-            const btn = document.getElementById('btn-save-nutrition');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> กำลังบันทึก...';
-            btn.disabled = true;
-
-            let payload = [];
-            studentsData.forEach(student => {
-                if(currentNutritionRecords[student.id]) {
-                    let rec = currentNutritionRecords[student.id];
-                    payload.push({
-                        student_id: rec.student_id,
-                        record_month: rec.record_month,
-                        weight: rec.weight,
-                        height: rec.height,
-                        bmi: rec.bmi
-                    });
-                }
-            });
-
-            if(payload.length > 0) {
-                const { data, error } = await supabaseClient.from('nutrition_records').upsert(payload, { onConflict: 'student_id, record_month' }).select();
-                if(!error && data) {
-                    data.forEach(r => currentNutritionRecords[r.student_id] = r);
-                    showNotification('บันทึกข้อมูลโภชนาการครบถ้วนแล้ว');
+            saveData();
+            
+            // Update BMI UI without full re-render
+            const bmiValEl = document.getElementById(`bmi-val-${studentId}`);
+            const bmiResSpan = document.getElementById(`bmi-res-${studentId}`);
+            const bmiResTd = document.getElementById(`bmi-res-td-${studentId}`);
+            
+            if(bmiValEl && bmiResSpan && bmiResTd) {
+                if(newBmi > 0) {
+                    bmiValEl.innerText = newBmi.toFixed(1);
+                    const res = getBMIResult(newBmi);
+                    bmiResSpan.innerText = res.text;
+                    bmiResSpan.className = `${res.bg} px-3 py-1.5 rounded-lg text-xs shadow-sm`;
+                    bmiResTd.className = `w-28 text-center flex justify-center font-bold ${res.color}`;
                 } else {
-                    console.error(error);
-                    alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+                    bmiValEl.innerText = '-';
+                    bmiResSpan.innerText = '-';
+                    bmiResSpan.className = 'bg-slate-100 px-3 py-1.5 rounded-lg text-xs shadow-sm';
+                    bmiResTd.className = 'w-28 text-center flex justify-center font-bold text-[#213A58]';
                 }
-            } else {
-                showNotification('ไม่มีข้อมูลให้บันทึก');
             }
-
-            btn.innerHTML = originalText;
-            btn.disabled = false;
         }
 
-        // ============================================================================
-        // 9. MODULE: HOLIDAYS
-        // ============================================================================
+        // --- Module 4: Holidays ---
         function renderHolidays() {
-            const tbody = document.getElementById('holidays-tbody');
-            tbody.innerHTML = '';
-            holidaysData.forEach(h => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="p-4">${h.holiday_date}</td>
-                        <td class="p-4 text-yellow-400">${h.name}</td>
-                        <td class="p-4 text-center">
-                            <button onclick="deleteHoliday('${h.id}')" class="text-red-400 hover:text-red-300 bg-red-400/10 px-3 py-1 rounded-lg">
-                                <i class="fas fa-trash"></i> ลบ
-                            </button>
-                        </td>
-                    </tr>
+            const listContainer = document.getElementById('holidays-list-container');
+            listContainer.innerHTML = '';
+            
+            if(appData.holidays.length === 0) {
+                listContainer.innerHTML = `<div class="text-center p-8 text-slate-400 italic font-medium">ยังไม่มีข้อมูลวันหยุดพิเศษ</div>`;
+                return;
+            }
+
+            appData.holidays.sort((a, b) => a.date.localeCompare(b.date)).forEach(h => {
+                const row = document.createElement('div');
+                row.className = `flex items-center justify-between py-4 px-6 mb-3 bg-white rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-200`;
+                row.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center text-xl shadow-inner"><i class="fas fa-calendar-day"></i></div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-[1.1rem]">${h.name}</h4>
+                            <p class="text-sm font-bold text-slate-500 mt-1">${getThaiDate(h.date)}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <button onclick="confirmDeleteHoliday('${h.id}')" class="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors shadow-sm">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 `;
+                listContainer.appendChild(row);
             });
         }
 
-        async function addHoliday(e) {
+        function addHoliday(e) {
             e.preventDefault();
             const date = document.getElementById('holiday-date-input').value;
             const name = document.getElementById('holiday-name').value;
             
-            const { data, error } = await supabaseClient.from('holidays').insert({ classroom_id: CLASSROOM_ID, holiday_date: date, name: name }).select();
-            if(!error && data) {
-                holidaysData.push(data[0]);
-                holidaysData.sort((a,b) => a.holiday_date.localeCompare(b.holiday_date));
-                document.getElementById('holiday-form').reset();
-                renderHolidays();
-                showNotification('เพิ่มวันหยุดแล้ว');
-            } else {
-                showConfirm('ผิดพลาด', 'อาจมีวันหยุดซ้ำในวันนี้อยู่แล้ว', null);
-            }
-        }
-
-        async function deleteHoliday(id) {
-            showConfirm('ลบวันหยุด', 'ต้องการลบวันหยุดนี้หรือไม่?', async () => {
-                await supabaseClient.from('holidays').delete().eq('id', id);
-                holidaysData = holidaysData.filter(h => h.id !== id);
-                renderHolidays();
-                showNotification('ลบวันหยุดเรียบร้อยแล้ว');
-            });
-        }
-
-        // ============================================================================
-        // 10. MODULE: SETTINGS & LOGO
-        // ============================================================================
-        function renderSettings() {
-            document.getElementById('set-school').value = classroomSettings.school_name || '';
-            document.getElementById('set-room').value = classroomSettings.room_name || '';
-            document.getElementById('set-year').value = classroomSettings.academic_year || '';
-            
-            document.getElementById('set-term-start').value = classroomSettings.term_start || '';
-            document.getElementById('set-term-end').value = classroomSettings.term_end || '';
-
-            document.getElementById('set-sign1').value = classroomSettings.teacher_1 || '';
-            document.getElementById('set-sign2').value = classroomSettings.teacher_2 || '';
-            document.getElementById('set-sign3').value = classroomSettings.director || '';
-            
-            if(classroomSettings.logo_url) {
-                document.getElementById('setting-logo-preview').src = classroomSettings.logo_url;
-                document.getElementById('setting-logo-preview').classList.remove('hidden');
-                document.getElementById('setting-logo-icon').classList.add('hidden');
-            }
-        }
-
-        async function uploadLogo(event) {
-            const file = event.target.files[0];
-            if(!file) return;
-
-            showNotification('กำลังอัปโหลดรูปลงระบบ (Storage)...');
-            const fileExt = file.name.split('.').pop();
-            const fileName = `logo_${Date.now()}.${fileExt}`;
-            
-            const { data, error } = await supabaseClient.storage.from('logos').upload(fileName, file);
-            if(error) {
-                showConfirm('อัปโหลดล้มเหลว', 'โปรดตรวจสอบว่าสร้าง Bucket ชื่อ "logos" และตั้งเป็น Public หรือยัง', null);
+            if(appData.holidays.some(h => h.date === date)) {
+                showConfirm('ข้อมูลซ้ำ', 'มีวันหยุดในวันนี้บันทึกไว้แล้ว', null);
+                document.getElementById('confirm-cancel').classList.add('hidden');
                 return;
             }
 
-            const { data: publicData } = supabaseClient.storage.from('logos').getPublicUrl(fileName);
-            const logoUrl = publicData.publicUrl;
-
-            await supabaseClient.from('classrooms').update({ logo_url: logoUrl }).eq('id', CLASSROOM_ID);
-            classroomSettings.logo_url = logoUrl;
+            appData.holidays.push({ id: Date.now().toString(), date, name });
+            saveData();
             
-            renderSettings();
-            showNotification('อัปโหลดโลโก้สำเร็จ!');
-            
-            document.getElementById('sidebar-logo-img').src = logoUrl;
-            document.getElementById('sidebar-logo-img').classList.remove('hidden');
-            document.getElementById('sidebar-default-icon').classList.add('hidden');
+            document.getElementById('holiday-form').reset();
+            renderHolidays();
         }
 
-        async function saveSettings(e) {
-            e.preventDefault();
-            const btn = document.getElementById('save-settings-btn');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> กำลังบันทึก...';
-
-            const payload = {
-                school_name: document.getElementById('set-school').value,
-                room_name: document.getElementById('set-room').value,
-                academic_year: document.getElementById('set-year').value,
-                term_start: document.getElementById('set-term-start').value || null,
-                term_end: document.getElementById('set-term-end').value || null,
-                teacher_1: document.getElementById('set-sign1').value,
-                teacher_2: document.getElementById('set-sign2').value,
-                director: document.getElementById('set-sign3').value
-            };
-
-            const { error } = await supabaseClient.from('classrooms').update(payload).eq('id', CLASSROOM_ID);
-            if(!error) {
-                classroomSettings = { ...classroomSettings, ...payload };
-                document.getElementById('sidebar-school-name').innerText = payload.school_name;
-                showNotification('บันทึกการตั้งค่าระบบเรียบร้อย');
-            } else {
-                alert('เกิดข้อผิดพลาด กรุณาอัปเดต SQL เพื่อเพิ่มคอลัมน์ term_start และ term_end ก่อน');
-            }
-            btn.innerHTML = 'บันทึกการตั้งค่า';
+        function confirmDeleteHoliday(id) {
+            showConfirm('ลบวันหยุด', 'ยืนยันการลบวันหยุดนี้?', () => {
+                appData.holidays = appData.holidays.filter(h => h.id !== id);
+                saveData();
+                renderHolidays();
+            });
         }
 
-        // ============================================================================
-        // 11. MODULE: REPORTS GENERATION
-        // ============================================================================
-        async function generateReport() {
+        // --- Module 5: Reports ---
+        function generateReport() {
             const type = document.getElementById('report-type').value;
             const typeName = document.getElementById('report-type').options[document.getElementById('report-type').selectedIndex].text;
-            const monthStr = document.getElementById('report-month-input').value;
-            
-            if(!monthStr) return alert('กรุณาเลือกเดือน');
+            const monthInput = document.getElementById('report-month').value || getMonthString();
+            const monthStr = monthInput;
 
             const printArea = document.getElementById('printable-report');
             const headerDiv = document.getElementById('report-header');
             const contentDiv = document.getElementById('report-content');
             const signDiv = document.getElementById('report-signatures');
             const btnPrint = document.getElementById('btn-print');
-            const loader = document.getElementById('report-loading');
 
             printArea.classList.remove('hidden');
-            btnPrint.classList.add('hidden');
-            loader.classList.remove('hidden');
+            btnPrint.classList.remove('hidden');
 
-            try {
-                const [year, month] = monthStr.split('-');
-                const startDate = `${year}-${month}-01`;
-                const daysInMonth = new Date(parseInt(year), parseInt(month), 0).getDate();
-                const endDate = `${year}-${month}-${daysInMonth}`;
+            let logoHTML = '';
+            if (appData.settings.logo) {
+                logoHTML = `<img src="${appData.settings.logo}" alt="Logo" class="h-20 w-20 object-contain mx-auto mb-3">`;
+            }
 
-                // Header แบบเป็นทางการ
-                let logoHTML = classroomSettings.logo_url ? `<img src="${classroomSettings.logo_url}" alt="Logo" class="h-20 w-20 object-contain mx-auto mb-3">` : '';
-                headerDiv.innerHTML = `
-                    ${logoHTML}
-                    <h2 class="text-xl font-bold mb-1 text-black">${classroomSettings.school_name || 'ชื่อโรงเรียน'}</h2>
-                    <h3 class="text-lg font-bold mb-1 text-black">แบบรายงานผล${typeName}</h3>
-                    <p class="text-base text-black mb-4">ประจำเดือน ${getThaiMonthYear(monthStr)}<br>ชั้นเรียน: ${classroomSettings.room_name || '-'} | ปีการศึกษา: ${classroomSettings.academic_year || '-'}</p>
-                `;
+            headerDiv.innerHTML = `
+                ${logoHTML}
+                <h2 class="text-xl font-bold mb-1">${appData.settings.schoolName}</h2>
+                <h3 class="text-lg font-medium mb-1">${typeName} ประจำเดือน ${getThaiMonthYear(monthStr)}</h3>
+                <p class="text-sm text-gray-600">ชั้นเรียน: ${appData.settings.room} | ปีการศึกษา: ${appData.settings.year}</p>
+            `;
 
-                let tableHTML = '';
+            let tableHTML = '';
+            const students = [...appData.students].sort((a, b) => parseInt(a.code) - parseInt(b.code));
 
-                // ================== HEALTH REPORT ==================
-                if (type === 'health') {
-                    const { data: healthData } = await supabaseClient.from('health_records').select('*').eq('record_month', monthStr);
-                    
-                    tableHTML = `<table class="w-full text-sm border-collapse border border-black mb-3 text-black">
-                        <thead>
-                            <tr>
-                                <th rowspan="2" class="border border-black p-2 w-16 align-middle font-bold">เลขที่</th>
-                                <th rowspan="2" class="border border-black p-2 text-left align-middle font-bold">ชื่อ - สกุล</th>
-                                <th colspan="6" class="border border-black p-2 text-center font-bold">ผลการประเมินสุขอนามัยประจำเดือน</th>
-                            </tr>
-                            <tr>
-                                <th class="border border-black p-1 w-20 leading-tight align-top pt-2">ผมและศีรษะ<br><span class="text-[10px] font-normal block mt-1">(ไม่มีเหา,ไข่เหา,<br>รังแค,ผมเหนียวสกปรก)</span></th>
-                                <th class="border border-black p-1 w-20 leading-tight align-top pt-2">ใบหูและซอกหู<br><span class="text-[10px] font-normal block mt-1">(ไม่มีคราบสกปรก,<br>ขี้ไคลหรือขี้หู)</span></th>
-                                <th class="border border-black p-1 w-20 leading-tight align-top pt-2">ฟัน<br><span class="text-[10px] font-normal block mt-1">(ไม่มีเศษอาหาร<br>หรือขี้ฟัน)</span></th>
-                                <th class="border border-black p-1 w-20 leading-tight align-top pt-2">ใบหน้าและผิวหนัง<br><span class="text-[10px] font-normal block mt-1">(ไม่มีคราบสกปรก<br>หรือขี้ไคล)</span></th>
-                                <th class="border border-black p-1 w-20 leading-tight align-top pt-2">เสื้อผ้า<br><span class="text-[10px] font-normal block mt-1">(สะอาด<br>ไม่มีกลิ่นเหม็น)</span></th>
-                                <th class="border border-black p-1 w-20 leading-tight align-top pt-2">ถุงเท้าและรองเท้า<br><span class="text-[10px] font-normal block mt-1">(สะอาด<br>ไม่มีกลิ่นเหม็น)</span></th>
-                            </tr>
-                        </thead><tbody>`;
+            const [year, month] = monthStr.split('-');
+            const daysInMonth = new Date(parseInt(year), parseInt(month), 0).getDate();
 
-                    studentsData.forEach(student => {
-                        const rec = (healthData || []).find(r => r.student_id === student.id);
-
-                        const getPassHtml = (val) => {
-                            if (val === undefined || val === null) return `<span class="text-black">-</span>`;
-                            if (val === true) return `<span class="text-black">ผ่าน</span>`;
-                            return `<span class="font-bold text-black">ไม่ผ่าน</span>`;
-                        };
-
-                        tableHTML += `<tr>
-                            <td class="border border-black p-1.5 text-center">${student.code}</td>
-                            <td class="border border-black p-1.5 text-left">${student.name}</td>
-                            <td class="border border-black p-1.5 text-center">${getPassHtml(rec?.hair_pass)}</td>
-                            <td class="border border-black p-1.5 text-center">${getPassHtml(rec?.ears_pass)}</td>
-                            <td class="border border-black p-1.5 text-center">${getPassHtml(rec?.teeth_pass)}</td>
-                            <td class="border border-black p-1.5 text-center">${getPassHtml(rec?.skin_pass)}</td>
-                            <td class="border border-black p-1.5 text-center">${getPassHtml(rec?.uniform_pass)}</td>
-                            <td class="border border-black p-1.5 text-center">${getPassHtml(rec?.shoes_pass)}</td>
-                        </tr>`;
-                    });
-                    tableHTML += `</tbody></table>`;
-                } 
-                // ================== NUTRITION REPORT ==================
-                else if (type === 'nutrition') {
-                    const { data: nutritionData } = await supabaseClient.from('nutrition_records').select('*').eq('record_month', monthStr);
-                    let stats = { total: 0, thin: 0, normal: 0, fat_1: 0, fat_2: 0, sumBMI: 0 };
-
-                    tableHTML = `<table class="w-full text-sm border-collapse border border-black mb-3 text-black">
-                        <thead>
-                            <tr>
-                                <th class="border border-black p-2 w-16 font-bold">เลขที่</th>
-                                <th class="border border-black p-2 text-left font-bold">ชื่อ-สกุล</th>
-                                <th class="border border-black p-2 w-24 font-bold">น้ำหนัก (กก.)</th>
-                                <th class="border border-black p-2 w-24 font-bold">ส่วนสูง (ซม.)</th>
-                                <th class="border border-black p-2 w-24 font-bold">BMI</th>
-                                <th class="border border-black p-2 w-32 font-bold">แปลผล</th>
-                            </tr>
-                        </thead><tbody>`;
-
-                    studentsData.forEach(student => {
-                        const rec = (nutritionData || []).find(r => r.student_id === student.id);
-                        const w = rec && rec.weight ? rec.weight : '-';
-                        const h = rec && rec.height ? rec.height : '-';
-                        const bmi = rec && rec.bmi ? parseFloat(rec.bmi) : 0;
-                        const res = getBMIResult(bmi);
-
-                        if(bmi > 0) {
-                            stats.total++;
-                            stats.sumBMI += bmi;
-                            if(res.text === 'ผอม') stats.thin++;
-                            else if(res.text === 'สมส่วน') stats.normal++;
-                            else if(res.text === 'ท้วม') stats.fat_1++;
-                            else if(res.text === 'อ้วน' || res.text === 'อ้วนมาก') stats.fat_2++;
-                        }
-
-                        tableHTML += `<tr>
-                            <td class="border border-black p-1.5 text-center">${student.code}</td>
-                            <td class="border border-black p-1.5 text-left">${student.name}</td>
-                            <td class="border border-black p-1.5 text-center">${w}</td>
-                            <td class="border border-black p-1.5 text-center">${h}</td>
-                            <td class="border border-black p-1.5 text-center font-bold">${bmi ? bmi.toFixed(2) : '-'}</td>
-                            <td class="border border-black p-1.5 text-center font-bold">${res.text}</td>
-                        </tr>`;
-                    });
-                    
-                    const avgBMI = stats.total > 0 ? (stats.sumBMI / stats.total).toFixed(2) : 0;
-                    tableHTML += `</tbody></table>
-                    <div class="summary-box border border-black text-sm page-break-inside-avoid text-black mt-2">
-                        <h4 class="font-bold mb-2 print:mb-1">สรุปภาพรวมโภชนาการ (จากผู้ที่มีข้อมูล ${stats.total} คน)</h4>
-                        <div class="summary-grid grid grid-cols-5 w-full">
-                            <div class="text-center">
-                                <div class="summary-label text-gray-600 print:text-black">BMI เฉลี่ย</div>
-                                <div class="summary-value text-lg font-bold">${avgBMI}</div>
-                            </div>
-                            <div class="text-center">
-                                <div class="summary-label text-blue-600 print:text-black">ผอม</div>
-                                <div class="summary-value text-lg font-bold">${stats.thin} คน</div>
-                            </div>
-                            <div class="text-center">
-                                <div class="summary-label text-green-600 print:text-black">สมส่วน</div>
-                                <div class="summary-value text-lg font-bold">${stats.normal} คน</div>
-                            </div>
-                            <div class="text-center">
-                                <div class="summary-label text-orange-600 print:text-black">ท้วม</div>
-                                <div class="summary-value text-lg font-bold">${stats.fat_1} คน</div>
-                            </div>
-                            <div class="text-center">
-                                <div class="summary-label text-red-600 print:text-black">อ้วน</div>
-                                <div class="summary-value text-lg font-bold">${stats.fat_2} คน</div>
-                            </div>
-                        </div>
-                    </div>`;
+            if(type === 'attendance' || type === 'milk' || type === 'brush') {
+                
+                tableHTML = `<div class="overflow-x-auto"><table class="w-full text-[11px] md:text-xs border-collapse border border-gray-400">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th rowspan="2" class="border border-gray-400 p-1 w-8">ที่</th>
+                            <th rowspan="2" class="border border-gray-400 p-1 min-w-[100px] text-left">ชื่อ-สกุล</th>
+                            <th colspan="${daysInMonth}" class="border border-gray-400 p-1">วันที่</th>`;
+                
+                if(type === 'attendance') {
+                    tableHTML += `<th colspan="4" class="border border-gray-400 p-1 bg-blue-50">สรุป (วัน)</th><th rowspan="2" class="border border-gray-400 p-1 w-10 bg-gray-200">%</th>`;
+                } else {
+                    tableHTML += `<th colspan="2" class="border border-gray-400 p-1 bg-blue-50">สรุป</th>`;
                 }
-                // ================== ATTENDANCE / MILK / BRUSH REPORT ==================
-                else {
-                    const { data } = await supabaseClient.from('daily_records').select('*').gte('record_date', startDate).lte('record_date', endDate);
-                    let targetData = data || [];
+                tableHTML += `</tr><tr>`;
+                
+                let totalWorkingDays = 0;
 
-                    tableHTML = `<div class="overflow-x-auto"><table class="w-full text-[11px] md:text-xs border-collapse border border-black text-black">
-                        <thead>
-                            <tr>
-                                <th rowspan="2" class="border border-black p-1 w-8 font-bold">ที่</th>
-                                <th rowspan="2" class="border border-black p-1 min-w-[100px] text-left font-bold">ชื่อ-สกุล</th>
-                                <th colspan="${daysInMonth}" class="border border-black p-1 font-bold">วันที่</th>`;
+                for(let d = 1; d <= daysInMonth; d++) {
+                    const dateKey = `${year}-${month.padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    const dObj = new Date(parseInt(year), parseInt(month) - 1, d);
+                    const isWeekend = dObj.getDay() === 0 || dObj.getDay() === 6;
+                    const isHoliday = appData.holidays.some(h => h.date === dateKey);
                     
-                    if(type === 'attendance') {
-                        tableHTML += `<th colspan="4" class="border border-black p-1 font-bold">สรุป (วัน)</th><th rowspan="2" class="border border-black p-1 w-10 font-bold">%</th>`;
-                    } else {
-                        tableHTML += `<th colspan="2" class="border border-black p-1 font-bold">สรุป</th>`;
-                    }
-                    tableHTML += `</tr><tr>`;
+                    if(!isWeekend && !isHoliday) totalWorkingDays++;
 
-                    let totalWorkingDays = 0;
+                    const bgClass = (isWeekend || isHoliday) ? 'bg-gray-300' : '';
+                    tableHTML += `<th class="border border-gray-400 p-0.5 w-5 ${bgClass}" ${bgClass ? 'style="background-color: #d1d5db !important;"' : ''}>${d}</th>`;
+                }
+
+                if(totalWorkingDays === 0) totalWorkingDays = 1; 
+
+                if(type === 'attendance') {
+                    tableHTML += `
+                        <th class="border border-gray-400 p-0.5 w-6 bg-green-50">มา</th>
+                        <th class="border border-gray-400 p-0.5 w-6 bg-orange-50">สาย</th>
+                        <th class="border border-gray-400 p-0.5 w-6 bg-blue-50">ลา</th>
+                        <th class="border border-gray-400 p-0.5 w-6 bg-red-50">ขาด</th>
+                    `;
+                } else {
+                    tableHTML += `
+                        <th class="border border-gray-400 p-0.5 w-8 bg-blue-50">รวม</th>
+                        <th class="border border-gray-400 p-0.5 w-8 bg-gray-200">%</th>
+                    `;
+                }
+                tableHTML += `</tr></thead><tbody>`;
+
+                students.forEach(student => {
+                    let present = 0, late = 0, leave = 0, absent = 0, actionCount = 0;
+
+                    tableHTML += `<tr>
+                        <td class="border border-gray-400 p-1 text-center">${student.code}</td>
+                        <td class="border border-gray-400 p-1 truncate max-w-[120px] text-left">${student.name}</td>`;
+
                     for(let d = 1; d <= daysInMonth; d++) {
                         const dateKey = `${year}-${month.padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                         const dObj = new Date(parseInt(year), parseInt(month) - 1, d);
                         const isWeekend = dObj.getDay() === 0 || dObj.getDay() === 6;
-                        const isHoliday = holidaysData.some(h => h.holiday_date === dateKey);
-                        const inTerm = isWithinTerm(dateKey, classroomSettings.term_start, classroomSettings.term_end);
+                        const isHoliday = appData.holidays.some(h => h.date === dateKey);
+                        const bgClass = (isWeekend || isHoliday) ? 'bg-gray-300' : '';
                         
-                        // เป็นวันทำการก็ต่อเมื่อ ไม่ใช่วันหยุด ไม่ใช่ส.-อา. และ อยู่ในช่วงเปิดเทอม
-                        const isWorkingDay = !isWeekend && !isHoliday && inTerm;
+                        let cellContent = '';
+                        const rec = appData.dailyRecords[dateKey] ? appData.dailyRecords[dateKey][student.id] : null;
 
-                        if(isWorkingDay) totalWorkingDays++;
-                        
-                        // ระบายสีทึบถ้าไม่ใช่วันทำการ
-                        const bgClass = (!isWorkingDay) ? 'bg-gray-200' : '';
-                        tableHTML += `<th class="border border-black p-0.5 w-5 ${bgClass}">${d}</th>`;
+                        if (isHoliday || (isWeekend && !rec)) {
+                            // ปล่อยว่าง
+                        } else if (rec) {
+                            if(type === 'attendance') {
+                                if(rec.status === 'มา') { cellContent = '/'; present++; }
+                                else if(rec.status === 'สาย') { cellContent = 'ส'; late++; }
+                                else if(rec.status === 'ลา') { cellContent = 'ล'; leave++; }
+                                else if(rec.status === 'ขาด') { cellContent = 'ข'; absent++; }
+                            } else if (type === 'milk') {
+                                if(rec.milk) { cellContent = '✓'; actionCount++; }
+                            } else if (type === 'brush') {
+                                if(rec.brush) { cellContent = '✓'; actionCount++; }
+                            }
+                        }
+
+                        let textStyle = '';
+                        if(cellContent === 'ส') textStyle = 'color: #f97316;'; 
+                        else if(cellContent === 'ล') textStyle = 'color: #3b82f6;';
+                        else if(cellContent === 'ข') textStyle = 'color: #ef4444;';
+                        else if(cellContent === '/') textStyle = 'color: #22c55e;';
+                        else if(cellContent === '✓') textStyle = 'color: #22c55e; font-weight: bold;';
+
+                        if(bgClass) textStyle += ' background-color: #d1d5db !important;';
+
+                        tableHTML += `<td class="border border-gray-400 p-0 text-center font-bold text-[10px] ${bgClass}" style="${textStyle}">${cellContent}</td>`;
                     }
-                    if(totalWorkingDays === 0) totalWorkingDays = 1; 
 
                     if(type === 'attendance') {
-                        tableHTML += `<th class="border border-black p-0.5 w-6 font-normal">มา</th><th class="border border-black p-0.5 w-6 font-normal">สาย</th><th class="border border-black p-0.5 w-6 font-normal">ลา</th><th class="border border-black p-0.5 w-6 font-normal">ขาด</th>`;
+                        const totalPresent = present + late;
+                        const percent = ((totalPresent / totalWorkingDays) * 100).toFixed(1);
+                        tableHTML += `
+                            <td class="border border-gray-400 p-1 text-center bg-green-50">${present}</td>
+                            <td class="border border-gray-400 p-1 text-center bg-orange-50">${late}</td>
+                            <td class="border border-gray-400 p-1 text-center bg-blue-50">${leave}</td>
+                            <td class="border border-gray-400 p-1 text-center bg-red-50">${absent}</td>
+                            <td class="border border-gray-400 p-1 text-center font-bold bg-gray-100">${percent}%</td>
+                        `;
                     } else {
-                        tableHTML += `<th class="border border-black p-0.5 w-8 font-normal">รวม</th><th class="border border-black p-0.5 w-8 font-normal">%</th>`;
+                        const percent = ((actionCount / totalWorkingDays) * 100).toFixed(1);
+                        tableHTML += `
+                            <td class="border border-gray-400 p-1 text-center bg-blue-50">${actionCount}</td>
+                            <td class="border border-gray-400 p-1 text-center font-bold bg-gray-100">${percent}%</td>
+                        `;
                     }
-                    tableHTML += `</tr></thead><tbody>`;
-
-                    studentsData.forEach(student => {
-                        let present = 0, late = 0, leave = 0, absent = 0, actionCount = 0;
-                        
-                        tableHTML += `<tr>
-                            <td class="border border-black p-1 text-center">${student.code}</td>
-                            <td class="border border-black p-1 truncate max-w-[120px] text-left">${student.name}</td>`;
-                        
-                        for(let d = 1; d <= daysInMonth; d++) {
-                            const dateKey = `${year}-${month.padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                            const dObj = new Date(parseInt(year), parseInt(month) - 1, d);
-                            const isWeekend = dObj.getDay() === 0 || dObj.getDay() === 6;
-                            const isHoliday = holidaysData.some(h => h.holiday_date === dateKey);
-                            const inTerm = isWithinTerm(dateKey, classroomSettings.term_start, classroomSettings.term_end);
-                            
-                            const isWorkingDay = !isWeekend && !isHoliday && inTerm;
-                            const bgClass = (!isWorkingDay) ? 'bg-gray-200' : '';
-                            
-                            let cellContent = '';
-                            
-                            // แสดงข้อมูลเฉพาะวันทำการ (หรือถ้ามีการบังคับบันทึกในวันหยุด ก็จะแสดงออกมาด้วย)
-                            if (isWorkingDay) {
-                                const rec = targetData.find(r => r.student_id === student.id && r.record_date === dateKey);
-                                if(rec) {
-                                    if(type === 'attendance') {
-                                        // เปลี่ยนสัญลักษณ์ / เป็นเครื่องหมายถูก ✓
-                                        if(rec.status === 'มา') { cellContent = '✓'; present++; }
-                                        else if(rec.status === 'สาย') { cellContent = 'ส'; late++; }
-                                        else if(rec.status === 'ลา') { cellContent = 'ล'; leave++; }
-                                        else if(rec.status === 'ขาด') { cellContent = 'ข'; absent++; }
-                                    } else if (type === 'milk' && rec.drink_milk) { cellContent = '✓'; actionCount++; }
-                                      else if (type === 'brush' && rec.brush_teeth) { cellContent = '✓'; actionCount++; }
-                                }
-                            }
-
-                            tableHTML += `<td class="border border-black p-0 text-center font-bold text-[10px] ${bgClass}">${cellContent}</td>`;
-                        }
-
-                        if(type === 'attendance') {
-                            const totalPresent = present + late;
-                            const percent = ((totalPresent / totalWorkingDays) * 100).toFixed(1);
-                            tableHTML += `
-                                <td class="border border-black p-1 text-center">${present}</td>
-                                <td class="border border-black p-1 text-center">${late}</td>
-                                <td class="border border-black p-1 text-center">${leave}</td>
-                                <td class="border border-black p-1 text-center">${absent}</td>
-                                <td class="border border-black p-1 text-center font-bold">${percent}%</td>
-                            `;
-                        } else {
-                            const percent = ((actionCount / totalWorkingDays) * 100).toFixed(1);
-                            tableHTML += `<td class="border border-black p-1 text-center">${actionCount}</td><td class="border border-black p-1 text-center font-bold">${percent}%</td>`;
-                        }
-                        tableHTML += `</tr>`;
-                    });
-                    tableHTML += `</tbody></table></div>`;
+                    tableHTML += `</tr>`;
+                });
+                tableHTML += `</tbody></table></div>`;
+                
+                const monthHolidays = appData.holidays.filter(h => h.date.startsWith(`${year}-${month.padStart(2, '0')}`));
+                monthHolidays.sort((a,b) => a.date.localeCompare(b.date));
+                
+                let holidayText = '';
+                if(monthHolidays.length > 0) {
+                    const notes = monthHolidays.map(h => `วันที่ ${parseInt(h.date.split('-')[2])} (${h.name})`).join(', ');
+                    holidayText = `<div class="mt-2 text-[11px] text-gray-800 w-full text-left bg-gray-50 p-1.5 border border-gray-300 rounded">
+                        <strong>หมายเหตุวันหยุดพิเศษ:</strong> ${notes}
+                    </div>`;
                 }
 
-                contentDiv.innerHTML = tableHTML;
-
-                // Signatures
-                signDiv.innerHTML = `
-                    <div class="text-center text-black">
-                        <p class="mb-10 text-sm">ลงชื่อ.......................................................</p>
-                        <p class="text-sm">( ${classroomSettings.teacher_1 || '........................................'} )</p>
-                        <p class="text-xs mt-1">ครูประจำชั้นคนที่ 1</p>
-                    </div>
-                    <div class="text-center text-black">
-                        <p class="mb-10 text-sm">ลงชื่อ.......................................................</p>
-                        <p class="text-sm">( ${classroomSettings.teacher_2 || '........................................'} )</p>
-                        <p class="text-xs mt-1">ครูประจำชั้นคนที่ 2</p>
-                    </div>
-                    <div class="text-center text-black">
-                        <p class="mb-10 text-sm">ลงชื่อ.......................................................</p>
-                        <p class="text-sm">( ${classroomSettings.director || '........................................'} )</p>
-                        <p class="text-xs mt-1">ผู้อำนวยการโรงเรียนบ้านควนเนียง</p>
-                    </div>
-                `;
-
-                btnPrint.classList.remove('hidden');
+                if(type === 'attendance') {
+                    tableHTML += `<div class="mt-2 text-[11px] text-gray-700 flex flex-wrap gap-4 items-center">
+                        <span><strong>สัญลักษณ์:</strong></span>
+                        <span class="text-green-600 font-bold">/ = มาเรียน</span>
+                        <span class="text-orange-600 font-bold">ส = สาย</span>
+                        <span class="text-blue-600 font-bold">ล = ลา</span>
+                        <span class="text-red-600 font-bold">ข = ขาด</span>
+                        <span class="text-gray-800 bg-gray-300 px-2 py-0.5 rounded border border-gray-400" style="background-color:#d1d5db !important; -webkit-print-color-adjust: exact;">สีเทา = วันหยุด/ส.-อา.</span>
+                        <span class="ml-auto font-medium">*คิดเปอร์เซ็นต์จากวันทำการจริง (${totalWorkingDays} วัน)</span>
+                    </div>`;
+                } else {
+                    tableHTML += `<div class="mt-2 text-[11px] text-gray-700 flex justify-between items-center">
+                        <div>
+                            <span><strong class="text-green-600 text-sm">✓</strong> = ทำกิจกรรม</span>
+                            <span class="text-gray-800 bg-gray-300 px-2 py-0.5 rounded border border-gray-400 ml-4" style="background-color:#d1d5db !important; -webkit-print-color-adjust: exact;">สีเทา = วันหยุด/ส.-อา.</span>
+                        </div>
+                        <span class="font-medium">*คิดเปอร์เซ็นต์จากวันทำการจริง (${totalWorkingDays} วัน)</span>
+                    </div>`;
+                }
                 
-            } catch (err) {
-                console.error(err);
-                alert('เกิดข้อผิดพลาดในการสร้างรายงาน');
-            } finally {
-                loader.classList.add('hidden');
+                tableHTML += holidayText;
+
+            } 
+            else if (type === 'health') {
+                tableHTML = `<table class="w-full text-sm border-collapse border border-gray-400 mb-6">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th rowspan="2" class="border border-gray-400 p-2 w-16">เลขที่</th>
+                            <th rowspan="2" class="border border-gray-400 p-2 text-left">ชื่อ-สกุล</th>
+                            <th colspan="5" class="border border-gray-400 p-2 text-center bg-red-50 text-red-700">สรุปจำนวนครั้งที่ "ไม่ผ่าน" ในเดือนนี้ (ครั้ง)</th>
+                        </tr>
+                        <tr>
+                            <th class="border border-gray-400 p-2 w-24">เครื่องแต่งกาย</th>
+                            <th class="border border-gray-400 p-2 w-24">ผม/ศีรษะ</th>
+                            <th class="border border-gray-400 p-2 w-24">ใบหู/ซอกหู</th>
+                            <th class="border border-gray-400 p-2 w-24">ผิวหนัง</th>
+                            <th class="border border-gray-400 p-2 w-24">ฟัน/ช่องปาก</th>
+                        </tr>
+                    </thead><tbody>`;
+
+                students.forEach(student => {
+                    let failCounts = { uniform: 0, hair: 0, ears: 0, skin: 0, teeth: 0 };
+                    
+                    for(let d = 1; d <= daysInMonth; d++) {
+                        const dateKey = `${year}-${month.padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                        if (appData.healthRecords[dateKey] && appData.healthRecords[dateKey][student.id]) {
+                            const rec = appData.healthRecords[dateKey][student.id];
+                            if(!rec.uniform) failCounts.uniform++;
+                            if(!rec.hair) failCounts.hair++;
+                            if(!rec.ears) failCounts.ears++;
+                            if(!rec.skin) failCounts.skin++;
+                            if(!rec.teeth) failCounts.teeth++;
+                        }
+                    }
+
+                    const getFailHtml = (count) => {
+                        if (count > 0) return `<span class="text-red-600 font-bold">${count}</span>`;
+                        return `<span class="text-gray-300">-</span>`;
+                    };
+
+                    tableHTML += `<tr>
+                        <td class="border border-gray-400 p-1.5 text-center">${student.code}</td>
+                        <td class="border border-gray-400 p-1.5 text-left">${student.name}</td>
+                        <td class="border border-gray-400 p-1.5 text-center ${failCounts.uniform > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.uniform)}</td>
+                        <td class="border border-gray-400 p-1.5 text-center ${failCounts.hair > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.hair)}</td>
+                        <td class="border border-gray-400 p-1.5 text-center ${failCounts.ears > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.ears)}</td>
+                        <td class="border border-gray-400 p-1.5 text-center ${failCounts.skin > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.skin)}</td>
+                        <td class="border border-gray-400 p-1.5 text-center ${failCounts.teeth > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.teeth)}</td>
+                    </tr>`;
+                });
+
+                tableHTML += `</tbody></table>
+                <div class="mt-2 text-sm text-gray-700">
+                    * รายงานนี้แสดงจำนวนครั้งที่นักเรียนประเมินสุขอนามัย <strong class="text-red-600">"ไม่ผ่าน"</strong> ในรอบเดือน
+                </div>`;
+            }
+            else if (type === 'nutrition') {
+                let stats = { total: 0, thin: 0, normal: 0, fat_1: 0, fat_2: 0, sumBMI: 0 };
+                
+                tableHTML = `<table class="w-full text-sm border-collapse border border-gray-400 mb-6">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="border border-gray-400 p-2 w-16">เลขที่</th>
+                            <th class="border border-gray-400 p-2 text-left">ชื่อ-สกุล</th>
+                            <th class="border border-gray-400 p-2 w-24">น้ำหนัก (กก.)</th>
+                            <th class="border border-gray-400 p-2 w-24">ส่วนสูง (ซม.)</th>
+                            <th class="border border-gray-400 p-2 w-24">BMI</th>
+                            <th class="border border-gray-400 p-2 w-32">แปลผล</th>
+                        </tr>
+                    </thead><tbody>`;
+
+                students.forEach(student => {
+                    const rec = appData.nutritionRecords[monthStr] ? appData.nutritionRecords[monthStr][student.id] : null;
+                    const w = rec && rec.w ? rec.w : '-';
+                    const h = rec && rec.h ? rec.h : '-';
+                    const bmi = rec && rec.bmi ? rec.bmi : 0;
+                    const res = getBMIResult(bmi);
+
+                    if(bmi > 0) {
+                        stats.total++;
+                        stats.sumBMI += bmi;
+                        if(res.text === 'ผอม') stats.thin++;
+                        else if(res.text === 'สมส่วน') stats.normal++;
+                        else if(res.text === 'ท้วม') stats.fat_1++;
+                        else if(res.text === 'อ้วน') stats.fat_2++;
+                    }
+
+                    let bgPrintStyle = '';
+                    if(res.text === 'ผอม') bgPrintStyle = 'background-color: #3b82f6 !important; color: white !important;';
+                    else if(res.text === 'สมส่วน') bgPrintStyle = 'background-color: #22c55e !important; color: white !important;';
+                    else if(res.text === 'ท้วม') bgPrintStyle = 'background-color: #f97316 !important; color: white !important;';
+                    else if(res.text === 'อ้วน') bgPrintStyle = 'background-color: #ef4444 !important; color: white !important;';
+
+                    tableHTML += `<tr>
+                        <td class="border border-gray-400 p-1.5 text-center">${student.code}</td>
+                        <td class="border border-gray-400 p-1.5 text-left">${student.name}</td>
+                        <td class="border border-gray-400 p-1.5 text-center">${w}</td>
+                        <td class="border border-gray-400 p-1.5 text-center">${h}</td>
+                        <td class="border border-gray-400 p-1.5 text-center font-bold">${bmi ? bmi.toFixed(1) : '-'}</td>
+                        <td class="border border-gray-400 p-1.5 text-center font-bold" style="${bgPrintStyle}">${res.text}</td>
+                    </tr>`;
+                });
+
+                tableHTML += `</tbody></table>`;
+                
+                const avgBMI = stats.total > 0 ? (stats.sumBMI / stats.total).toFixed(1) : 0;
+                tableHTML += `<div class="bg-gray-100 p-4 border border-gray-400 text-sm page-break-inside-avoid" style="background-color: #f3f4f6 !important;">
+                    <h4 class="font-bold mb-2">สรุปภาพรวมโภชนาการ (จากผู้ที่มีข้อมูล ${stats.total} คน)</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
+                        <div><p class="text-gray-600">BMI เฉลี่ย</p><p class="text-lg font-bold">${avgBMI}</p></div>
+                        <div><p class="text-blue-600">ผอม</p><p class="text-lg font-bold">${stats.thin} คน</p></div>
+                        <div><p class="text-green-600">สมส่วน</p><p class="text-lg font-bold">${stats.normal} คน</p></div>
+                        <div><p class="text-orange-600">ท้วม</p><p class="text-lg font-bold">${stats.fat_1} คน</p></div>
+                        <div><p class="text-red-600">อ้วน</p><p class="text-lg font-bold">${stats.fat_2} คน</p></div>
+                    </div>
+                </div>`;
+            }
+
+            contentDiv.innerHTML = tableHTML;
+
+            const signs = appData.settings.signers;
+            const schoolName = appData.settings.schoolName || '..............................';
+            
+            signDiv.innerHTML = `
+                <div class="text-center">
+                    <p class="mb-10 text-sm">ลงชื่อ.......................................................</p>
+                    <p class="text-sm">( ${signs[0] || '........................................'} )</p>
+                    <p class="text-xs text-gray-600 mt-1">ครูประจำชั้นคนที่ 1</p>
+                </div>
+                <div class="text-center">
+                    <p class="mb-10 text-sm">ลงชื่อ.......................................................</p>
+                    <p class="text-sm">( ${signs[1] || '........................................'} )</p>
+                    <p class="text-xs text-gray-600 mt-1">ครูประจำชั้นคนที่ 2</p>
+                </div>
+                <div class="text-center">
+                    <p class="mb-10 text-sm">ลงชื่อ.......................................................</p>
+                    <p class="text-sm">( ${signs[2] || '........................................'} )</p>
+                    <p class="text-xs text-gray-600 mt-1">ผู้อำนวยการโรงเรียน${schoolName}</p>
+                </div>
+            `;
+
+            setTimeout(() => {
+                document.getElementById('main-content').scrollTop = document.getElementById('main-content').scrollHeight;
+            }, 100);
+        }
+
+        // --- Module 6: Settings & Logo ---
+        function loadSettings() {
+            document.getElementById('set-school').value = appData.settings.schoolName || '';
+            document.getElementById('set-room').value = appData.settings.room || '';
+            document.getElementById('set-year').value = appData.settings.year || '';
+            document.getElementById('set-sign1').value = appData.settings.signers[0] || '';
+            document.getElementById('set-sign2').value = appData.settings.signers[1] || '';
+            document.getElementById('set-sign3').value = appData.settings.signers[2] || '';
+            
+            document.getElementById('sidebar-school-name').innerText = appData.settings.schoolName || 'โรงเรียนตัวอย่าง';
+
+            updateLogoPreviews(tempLogoData);
+        }
+
+        function handleLogoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    const maxSize = 200; 
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height && width > maxSize) {
+                        height *= maxSize / width;
+                        width = maxSize;
+                    } else if (height > maxSize) {
+                        width *= maxSize / height;
+                        height = maxSize;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    tempLogoData = canvas.toDataURL('image/png', 0.8);
+                    updateLogoPreviews(tempLogoData);
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeLogo() {
+            tempLogoData = '';
+            document.getElementById('set-logo-input').value = '';
+            updateLogoPreviews('');
+        }
+
+        function updateLogoPreviews(logoData) {
+            const sidebarIcon = document.getElementById('sidebar-default-icon');
+            const sidebarImg = document.getElementById('sidebar-logo-img');
+            const settingIcon = document.getElementById('setting-logo-icon');
+            const settingImg = document.getElementById('setting-logo-preview');
+
+            if (logoData) {
+                sidebarIcon.classList.add('hidden');
+                sidebarImg.src = logoData;
+                sidebarImg.classList.remove('hidden');
+
+                settingIcon.classList.add('hidden');
+                settingImg.src = logoData;
+                settingImg.classList.remove('hidden');
+            } else {
+                sidebarImg.classList.add('hidden');
+                sidebarImg.src = '';
+                sidebarIcon.classList.remove('hidden');
+
+                settingImg.classList.add('hidden');
+                settingImg.src = '';
+                settingIcon.classList.remove('hidden');
             }
         }
 
-        // ============================================================================
-        // START APP
-        // ============================================================================
-        window.onload = initApp;
+        function saveSettings(e) {
+            e.preventDefault();
+            appData.settings = {
+                schoolName: document.getElementById('set-school').value,
+                room: document.getElementById('set-room').value,
+                year: document.getElementById('set-year').value,
+                logo: tempLogoData,
+                signers: [
+                    document.getElementById('set-sign1').value,
+                    document.getElementById('set-sign2').value,
+                    document.getElementById('set-sign3').value
+                ]
+            };
+            saveData();
+            loadSettings();
+            
+            showConfirm('บันทึกสำเร็จ', 'การตั้งค่าระบบถูกบันทึกเรียบร้อยแล้ว', null);
+            document.getElementById('confirm-cancel').classList.add('hidden'); 
+        }
+
+        // --- Execute on Load ---
+        window.onload = () => {
+            initData(); // เริ่มดึงข้อมูลทันที ไม่บล็อกหน้าจอ
+            
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.target.classList.contains('hidden')) {
+                         document.getElementById('confirm-cancel').classList.remove('hidden');
+                    }
+                });
+            });
+            const dbox = document.getElementById('confirm-dialog');
+            if(dbox) observer.observe(dbox, { attributes: true, attributeFilter: ['class'] });
+        };
     </script>
 </body>
 </html>
