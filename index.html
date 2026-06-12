@@ -1216,6 +1216,19 @@
                 </div>
             `;
 
+            if (!appData.healthRecords[selectedDate]) {
+                appData.healthRecords[selectedDate] = {};
+                let hasChanges = false;
+                appData.students.forEach(s => {
+                    appData.healthRecords[selectedDate][s.id] = { uniform: true, hair: true, ears: true, skin: true, teeth: true };
+                    hasChanges = true;
+                });
+                if(hasChanges) saveData();
+            }
+
+            const records = appData.healthRecords[selectedDate];
+            const students = [...appData.students].sort((a, b) => parseInt(a.code) - parseInt(b.code));
+
             students.forEach(student => {
                 const rec = records[student.id] || { uniform: true, hair: true, ears: true, skin: true, teeth: true };
                 const disabledHTML = isHoliday ? 'disabled opacity-40 cursor-not-allowed' : '';
@@ -1411,6 +1424,19 @@
                     <div class="w-28 text-center">Result</div>
                 </div>
             `;
+
+            if (!appData.nutritionRecords[selectedMonth]) {
+                appData.nutritionRecords[selectedMonth] = {};
+                let hasChanges = false;
+                appData.students.forEach(s => {
+                    appData.nutritionRecords[selectedMonth][s.id] = { w: '', h: '', bmi: 0 };
+                    hasChanges = true;
+                });
+                if(hasChanges) saveData();
+            }
+
+            const records = appData.nutritionRecords[selectedMonth];
+            const students = [...appData.students].sort((a, b) => parseInt(a.code) - parseInt(b.code));
 
             students.forEach(student => {
                 const rec = records[student.id] || { w: '', h: '', bmi: 0 };
@@ -1930,21 +1956,29 @@
             const settingImg = document.getElementById('setting-logo-preview');
 
             if (logoData) {
-                sidebarIcon.classList.add('hidden');
-                sidebarImg.src = logoData;
-                sidebarImg.classList.remove('hidden');
+                if(sidebarIcon) sidebarIcon.classList.add('hidden');
+                if(sidebarImg) {
+                    sidebarImg.src = logoData;
+                    sidebarImg.classList.remove('hidden');
+                }
 
-                settingIcon.classList.add('hidden');
-                settingImg.src = logoData;
-                settingImg.classList.remove('hidden');
+                if(settingIcon) settingIcon.classList.add('hidden');
+                if(settingImg) {
+                    settingImg.src = logoData;
+                    settingImg.classList.remove('hidden');
+                }
             } else {
-                sidebarImg.classList.add('hidden');
-                sidebarImg.src = '';
-                sidebarIcon.classList.remove('hidden');
+                if(sidebarImg) {
+                    sidebarImg.classList.add('hidden');
+                    sidebarImg.src = '';
+                }
+                if(sidebarIcon) sidebarIcon.classList.remove('hidden');
 
-                settingImg.classList.add('hidden');
-                settingImg.src = '';
-                settingIcon.classList.remove('hidden');
+                if(settingImg) {
+                    settingImg.classList.add('hidden');
+                    settingImg.src = '';
+                }
+                if(settingIcon) settingIcon.classList.remove('hidden');
             }
         }
 
