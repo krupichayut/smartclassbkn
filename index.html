@@ -348,7 +348,7 @@
         @media print {
             @page { size: A4 landscape; margin: 10mm; }
             body { background: white !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            #sidebar, #mobile-menu-btn, .no-print { display: none !important; }
+            #sidebar, #mobile-menu-btn, .no-print, #floating-dock { display: none !important; }
             #main-content { margin: 0 !important; padding: 0 !important; width: 100% !important; overflow: visible !important; }
             .glass-panel { background: none !important; border: none !important; box-shadow: none !important; color: black !important; }
             table { border-collapse: collapse; width: 100%; page-break-inside: auto; }
@@ -371,44 +371,44 @@
             <i class="fas fa-graduation-cap text-xl text-white"></i>
         </div>
 
-        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 bg-white shadow-sm text-indigo-600">
+        <button onclick="switchTab('dashboard')" id="nav-dashboard" aria-label="เปิดหน้าภาพรวม" title="ภาพรวม" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 bg-white shadow-sm text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-300">
             <i class="fas fa-chart-line text-lg"></i>
             <span class="absolute left-full ml-4 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg opacity-0 md:group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">ภาพรวม</span>
         </button>
         
-        <button onclick="switchTab('attendance')" id="nav-attendance" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 hover:bg-white/60 text-slate-500 hover:text-slate-800">
+        <button onclick="switchTab('attendance')" id="nav-attendance" aria-label="เปิดหน้าบันทึกรายวัน" title="บันทึกรายวัน" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 hover:bg-white/60 text-slate-500 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-300">
             <i class="fas fa-calendar-check text-lg"></i>
             <span class="absolute left-full ml-4 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg opacity-0 md:group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">บันทึกรายวัน</span>
         </button>
         
-        <button onclick="switchTab('health')" id="nav-health" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 hover:bg-white/60 text-slate-500 hover:text-slate-800">
+        <button onclick="switchTab('health')" id="nav-health" aria-label="เปิดหน้าตรวจสุขภาพ" title="ตรวจสุขภาพ" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 hover:bg-white/60 text-slate-500 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-300">
             <i class="fas fa-notes-medical text-lg"></i>
             <span class="absolute left-full ml-4 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg opacity-0 md:group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">ตรวจสุขภาพ</span>
         </button>
         
-        <button onclick="switchTab('students')" id="nav-students" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 hover:bg-white/60 text-slate-500 hover:text-slate-800">
+        <button onclick="switchTab('students')" id="nav-students" aria-label="เปิดหน้าข้อมูลนักเรียน" title="ข้อมูลนักเรียน" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 hover:bg-white/60 text-slate-500 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-300">
             <i class="fas fa-user-graduate text-lg"></i>
             <span class="absolute left-full ml-4 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg opacity-0 md:group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">ข้อมูลนักเรียน</span>
         </button>
         
-        <button onclick="switchTab('nutrition')" id="nav-nutrition" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 hover:bg-white/60 text-slate-500 hover:text-slate-800">
+        <button onclick="switchTab('nutrition')" id="nav-nutrition" aria-label="เปิดหน้าโภชนาการ" title="โภชนาการ" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 hover:bg-white/60 text-slate-500 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-300">
             <i class="fas fa-apple-whole text-lg"></i>
             <span class="absolute left-full ml-4 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg opacity-0 md:group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">โภชนาการ</span>
         </button>
         
-        <button onclick="switchTab('holidays')" id="nav-holidays" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 hover:bg-white/60 text-slate-500 hover:text-slate-800">
+        <button onclick="switchTab('holidays')" id="nav-holidays" aria-label="เปิดหน้าตั้งคู่วันหยุด" title="ตั้งคู่วันหยุด" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 hover:bg-white/60 text-slate-500 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-300">
             <i class="fas fa-umbrella-beach text-lg"></i>
             <span class="absolute left-full ml-4 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg opacity-0 md:group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">ตั้งคู่วันหยุด</span>
         </button>
         
-        <button onclick="switchTab('reports')" id="nav-reports" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 hover:bg-white/60 text-slate-500 hover:text-slate-800">
+        <button onclick="switchTab('reports')" id="nav-reports" aria-label="เปิดหน้าออกรายงาน" title="ออกรายงาน" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 hover:bg-white/60 text-slate-500 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-300">
             <i class="fas fa-file-pdf text-lg"></i>
             <span class="absolute left-full ml-4 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg opacity-0 md:group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">ออกรายงาน</span>
         </button>
         
         <div class="hidden md:block w-8 border-t border-slate-300/30 my-2"></div>
         
-        <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 hover:bg-white/60 text-slate-500 hover:text-slate-800">
+        <button onclick="switchTab('settings')" id="nav-settings" aria-label="เปิดหน้าตั้งค่า" title="ตั้งค่า" class="nav-btn group flex-shrink-0 relative flex items-center justify-center w-12 h-12 rounded-[1.25rem] transition-all duration-300 hover:bg-white/60 text-slate-500 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-300">
             <i class="fas fa-cog text-lg"></i>
             <span class="absolute left-full ml-4 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg opacity-0 md:group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">ตั้งค่า</span>
         </button>
@@ -420,9 +420,15 @@
             
             <!-- Bento Header Area -->
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                <div>
-                    <h1 class="text-3xl font-bold font-heading text-slate-800 tracking-tight">SmartClass</h1>
-                    <p class="text-slate-500 font-medium" id="sidebar-school-name">โรงเรียนตัวอย่าง</p>
+                <div class="flex items-center gap-4">
+                    <img id="sidebar-logo-img" src="" alt="Logo" class="w-16 h-16 object-contain hidden rounded-xl shadow-sm border border-slate-100 bg-white">
+                    <div id="sidebar-default-icon" class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-emerald-400 flex items-center justify-center text-2xl text-white shadow-inner hidden">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold font-heading text-slate-800 tracking-tight">SmartClass</h1>
+                        <p class="text-slate-500 font-medium" id="sidebar-school-name">โรงเรียนตัวอย่าง</p>
+                    </div>
                 </div>
                 <!-- Database Status Badge -->
                 <div id="db-status" class="text-sm rounded-xl px-4 py-2 font-medium bento-box text-slate-600 border border-white/50 inline-flex items-center gap-2">
@@ -780,6 +786,24 @@
                             บันทึกการตั้งค่า
                         </button>
                     </form>
+
+                    <!-- Professional Tools: Backup & Reset -->
+                    <div class="mt-8 pt-6 border-t border-gray-300/30 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <button onclick="exportData()" class="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold py-2.5 rounded-lg border border-slate-200 transition-colors shadow-sm">
+                            <i class="fas fa-download mr-2 text-indigo-500"></i> สำรองข้อมูล (Export)
+                        </button>
+                        <div class="relative">
+                            <input type="file" id="import-file" accept=".json" class="hidden" onchange="importData(event)">
+                            <button onclick="document.getElementById('import-file').click()" class="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold py-2.5 rounded-lg border border-slate-200 transition-colors shadow-sm">
+                                <i class="fas fa-upload mr-2 text-emerald-500"></i> นำเข้าข้อมูล (Import)
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-red-100">
+                        <button onclick="confirmClearData()" class="w-full bg-red-50 hover:bg-red-100 text-red-600 font-bold py-3 rounded-lg border border-red-200 transition-colors shadow-sm text-sm">
+                            <i class="fas fa-exclamation-triangle mr-2"></i> ล้างข้อมูลทั้งหมด (Reset System)
+                        </button>
+                    </div>
                 </div>
             </section>
 
@@ -935,6 +959,21 @@
         }
 
         // --- Utils & Helpers ---
+        function calculateBMI(weight, heightCm) {
+            const w = parseFloat(weight);
+            const h = parseFloat(heightCm);
+            if(w && h) {
+                const h_m = h / 100;
+                return w / (h_m * h_m);
+            }
+            return 0;
+        }
+
+        function calculatePercentage(part, total) {
+            if(total <= 0) return "0.0";
+            return ((part / total) * 100).toFixed(1);
+        }
+
         function getTodayString() {
             const d = new Date();
             return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -1100,8 +1139,14 @@
                     <div class="w-12 text-center">No.</div>
                     <div class="flex-1">Student</div>
                     <div class="w-32 text-center">Status</div>
-                    <div class="w-24 text-center">Milk</div>
-                    <div class="w-24 text-center">Brush</div>
+                    <div class="w-24 text-center flex flex-col items-center">
+                        <span>Milk</span>
+                        <button onclick="toggleAllDaily('${selectedDate}', 'milk')" class="mt-1 text-[10px] bg-slate-200 hover:bg-indigo-500 hover:text-white text-slate-600 px-2 py-0.5 rounded cursor-pointer transition-colors" ${isHoliday ? 'disabled' : ''}>ALL</button>
+                    </div>
+                    <div class="w-24 text-center flex flex-col items-center">
+                        <span>Brush</span>
+                        <button onclick="toggleAllDaily('${selectedDate}', 'brush')" class="mt-1 text-[10px] bg-slate-200 hover:bg-indigo-500 hover:text-white text-slate-600 px-2 py-0.5 rounded cursor-pointer transition-colors" ${isHoliday ? 'disabled' : ''}>ALL</button>
+                    </div>
                 </div>
             `;
 
@@ -1153,18 +1198,44 @@
                         </div>
                     </div>
                     <div class="w-24 flex justify-center">
-                        <input type="checkbox" class="modern-checkbox w-6 h-6 rounded-lg border-slate-300 checked:bg-indigo-500 checked:border-indigo-500 transition-all cursor-pointer" 
+                        <input type="checkbox" id="cb-milk-${student.id}" class="modern-checkbox w-6 h-6 rounded-lg border-slate-300 checked:bg-indigo-500 checked:border-indigo-500 transition-all cursor-pointer focus:ring-2 focus:ring-indigo-300 focus:outline-none" 
                             onchange="updateDailyRecord('${selectedDate}', '${student.id}', 'milk', this.checked)" 
                             ${rec.milk ? 'checked' : ''} ${disabledHTML}>
                     </div>
                     <div class="w-24 flex justify-center">
-                        <input type="checkbox" class="modern-checkbox w-6 h-6 rounded-lg border-slate-300 checked:bg-indigo-500 checked:border-indigo-500 transition-all cursor-pointer" 
+                        <input type="checkbox" id="cb-brush-${student.id}" class="modern-checkbox w-6 h-6 rounded-lg border-slate-300 checked:bg-indigo-500 checked:border-indigo-500 transition-all cursor-pointer focus:ring-2 focus:ring-indigo-300 focus:outline-none" 
                             onchange="updateDailyRecord('${selectedDate}', '${student.id}', 'brush', this.checked)" 
                             ${rec.brush ? 'checked' : ''} ${disabledHTML}>
                     </div>
                 `;
                 listContainer.appendChild(row);
             });
+        }
+
+        function toggleAllDaily(date, field) {
+            if(!appData.dailyRecords[date]) return;
+            
+            let allChecked = true;
+            appData.students.forEach(s => {
+                const rec = appData.dailyRecords[date][s.id];
+                if(rec && (rec.status === 'มา' || rec.status === 'สาย') && !rec[field]) {
+                    allChecked = false;
+                }
+            });
+
+            const newValue = !allChecked;
+
+            appData.students.forEach(s => {
+                const rec = appData.dailyRecords[date][s.id];
+                if(rec && (rec.status === 'มา' || rec.status === 'สาย')) {
+                    rec[field] = newValue;
+                    const cb = document.getElementById(`cb-${field}-${s.id}`);
+                    if(cb && !cb.disabled) cb.checked = newValue;
+                }
+            });
+
+            saveData();
+            // Note: intentionally avoided renderDaily() to boost performance via direct DOM mutation
         }
 
         function updateDailyRecord(date, studentId, field, value) {
@@ -1300,9 +1371,9 @@
 
                 grid.innerHTML += `
                     <div class="bento-box p-6 relative group overflow-hidden">
-                        <div class="absolute top-0 right-0 p-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 z-10">
-                            <button onclick="editStudent('${student.id}')" class="w-8 h-8 rounded-full bg-white/80 backdrop-blur shadow-sm text-indigo-500 hover:text-indigo-600 hover:bg-white flex items-center justify-center transition-all hover:scale-110"><i class="fas fa-edit"></i></button>
-                            <button onclick="confirmDeleteStudent('${student.id}')" class="w-8 h-8 rounded-full bg-white/80 backdrop-blur shadow-sm text-rose-500 hover:text-rose-600 hover:bg-white flex items-center justify-center transition-all hover:scale-110"><i class="fas fa-trash"></i></button>
+                        <div class="absolute top-0 right-0 p-4 flex flex-col gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity translate-x-0 md:translate-x-4 group-hover:translate-x-0 z-10">
+                            <button onclick="editStudent('${student.id}')" aria-label="แก้ไขข้อมูลนักเรียน" title="แก้ไข" class="w-8 h-8 rounded-full bg-white/90 backdrop-blur shadow-sm border border-slate-100 text-indigo-500 hover:text-indigo-600 hover:bg-white flex items-center justify-center transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-indigo-300"><i class="fas fa-edit"></i></button>
+                            <button onclick="confirmDeleteStudent('${student.id}')" aria-label="ลบข้อมูลนักเรียน" title="ลบ" class="w-8 h-8 rounded-full bg-white/90 backdrop-blur shadow-sm border border-slate-100 text-rose-500 hover:text-rose-600 hover:bg-white flex items-center justify-center transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-rose-300"><i class="fas fa-trash"></i></button>
                         </div>
                         
                         <div class="flex items-center gap-4 mb-4 relative z-0">
@@ -1479,17 +1550,11 @@
             
             appData.nutritionRecords[month][studentId][field] = value;
             
-            const w = parseFloat(appData.nutritionRecords[month][studentId].w);
-            const h_cm = parseFloat(appData.nutritionRecords[month][studentId].h);
+            const w = appData.nutritionRecords[month][studentId].w;
+            const h_cm = appData.nutritionRecords[month][studentId].h;
             
-            let newBmi = 0;
-            if(w && h_cm) {
-                const h_m = h_cm / 100;
-                newBmi = w / (h_m * h_m);
-                appData.nutritionRecords[month][studentId].bmi = newBmi;
-            } else {
-                appData.nutritionRecords[month][studentId].bmi = 0;
-            }
+            let newBmi = calculateBMI(w, h_cm);
+            appData.nutritionRecords[month][studentId].bmi = newBmi;
 
             saveData();
             
@@ -1536,7 +1601,7 @@
                         </div>
                     </div>
                     <div>
-                        <button onclick="confirmDeleteHoliday('${h.id}')" class="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors shadow-sm">
+                        <button onclick="confirmDeleteHoliday('${h.id}')" aria-label="ลบวันหยุด" title="ลบวันหยุด" class="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-300">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -1698,7 +1763,7 @@
 
                     if(type === 'attendance') {
                         const totalPresent = present + late;
-                        const percent = ((totalPresent / totalWorkingDays) * 100).toFixed(1);
+                        const percent = calculatePercentage(totalPresent, totalWorkingDays);
                         tableHTML += `
                             <td class="border border-gray-400 p-1 text-center bg-green-50">${present}</td>
                             <td class="border border-gray-400 p-1 text-center bg-orange-50">${late}</td>
@@ -1707,7 +1772,7 @@
                             <td class="border border-gray-400 p-1 text-center font-bold bg-gray-100">${percent}%</td>
                         `;
                     } else {
-                        const percent = ((actionCount / totalWorkingDays) * 100).toFixed(1);
+                        const percent = calculatePercentage(actionCount, totalWorkingDays);
                         tableHTML += `
                             <td class="border border-gray-400 p-1 text-center bg-blue-50">${actionCount}</td>
                             <td class="border border-gray-400 p-1 text-center font-bold bg-gray-100">${percent}%</td>
@@ -2000,6 +2065,56 @@
             
             showConfirm('บันทึกสำเร็จ', 'การตั้งค่าระบบถูกบันทึกเรียบร้อยแล้ว', null);
             document.getElementById('confirm-cancel').classList.add('hidden'); 
+        }
+
+        // --- Professional Data Management ---
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "smartclass_backup_" + getTodayString() + ".json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function importData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const parsed = JSON.parse(event.target.result);
+                    
+                    // Defensive Schema Validation
+                    if (!parsed || typeof parsed !== 'object') throw new Error("Invalid data format");
+                    if (!Array.isArray(parsed.students)) throw new Error("Missing students array");
+                    if (typeof parsed.settings !== 'object') throw new Error("Missing settings object");
+
+                    if(parsed && typeof parsed === 'object') {
+                        showConfirm('นำเข้าข้อมูล', 'ข้อมูลเดิมจะถูกเขียนทับด้วยข้อมูลจากไฟล์นี้ ยืนยันหรือไม่?', () => {
+                            appData = parsed;
+                            saveData();
+                            initData();
+                            switchTab('dashboard');
+                        });
+                    }
+                } catch(err) {
+                    alert('ไฟล์ไม่ถูกต้องหรือไม่สามารถอ่านได้');
+                }
+                e.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        function confirmClearData() {
+            showConfirm('คำเตือน: ล้างข้อมูลทั้งหมด', 'ข้อมูลนักเรียน การเช็คชื่อ และการตั้งค่าทั้งหมดจะถูกลบอย่างถาวร ยืนยันหรือไม่?', () => {
+                appData = JSON.parse(JSON.stringify(MOCK_DATA));
+                tempLogoData = '';
+                saveData();
+                loadSettings();
+                switchTab('dashboard');
+            });
         }
 
         // --- Execute on Load ---
