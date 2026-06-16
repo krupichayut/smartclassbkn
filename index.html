@@ -1136,15 +1136,15 @@
             // Column Headers for Bento
             listContainer.innerHTML += `
                 <div class="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest px-6 mb-4">
-                    <div class="w-12 text-center">No.</div>
-                    <div class="flex-1">Student</div>
-                    <div class="w-32 text-center">Status</div>
+                    <div class="w-12 text-center">เลขที่</div>
+                    <div class="flex-1">ชื่อ-สกุล</div>
+                    <div class="w-32 text-center">สถานะ</div>
                     <div class="w-24 text-center flex flex-col items-center">
-                        <span>Milk</span>
+                        <span>ดื่มนม</span>
                         <button onclick="toggleAllDaily('${selectedDate}', 'milk')" class="mt-1 text-[10px] bg-slate-200 hover:bg-indigo-500 hover:text-white text-slate-600 px-2 py-0.5 rounded cursor-pointer transition-colors" ${isHoliday ? 'disabled' : ''}>ALL</button>
                     </div>
                     <div class="w-24 text-center flex flex-col items-center">
-                        <span>Brush</span>
+                        <span>แปรงฟัน</span>
                         <button onclick="toggleAllDaily('${selectedDate}', 'brush')" class="mt-1 text-[10px] bg-slate-200 hover:bg-indigo-500 hover:text-white text-slate-600 px-2 py-0.5 rounded cursor-pointer transition-colors" ${isHoliday ? 'disabled' : ''}>ALL</button>
                     </div>
                 </div>
@@ -1285,13 +1285,13 @@
             const listContainer = document.getElementById('health-list-container');
             listContainer.innerHTML = `
                 <div class="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest px-6 mb-4">
-                    <div class="w-12 text-center">No.</div>
-                    <div class="flex-1 min-w-[120px]">Student</div>
-                    <div class="w-24 text-center">Uniform</div>
-                    <div class="w-24 text-center">Hair</div>
-                    <div class="w-24 text-center">Ears</div>
-                    <div class="w-24 text-center">Skin</div>
-                    <div class="w-24 text-center">Teeth</div>
+                    <div class="w-12 text-center">เลขที่</div>
+                    <div class="flex-1 min-w-[120px]">ชื่อ-สกุล</div>
+                    <div class="w-24 text-center">แต่งกาย</div>
+                    <div class="w-24 text-center">ทรงผม</div>
+                    <div class="w-24 text-center">เล็บ/หู</div>
+                    <div class="w-24 text-center">ผิวหนัง</div>
+                    <div class="w-24 text-center">ฟัน</div>
                 </div>
             `;
 
@@ -1497,12 +1497,12 @@
             const listContainer = document.getElementById('nutrition-list-container');
             listContainer.innerHTML = `
                 <div class="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest px-6 mb-4">
-                    <div class="w-12 text-center">No.</div>
-                    <div class="flex-1 min-w-[120px]">Student</div>
-                    <div class="w-28 text-center">Weight (kg)</div>
-                    <div class="w-28 text-center">Height (cm)</div>
+                    <div class="w-12 text-center">เลขที่</div>
+                    <div class="flex-1 min-w-[120px]">ชื่อ-สกุล</div>
+                    <div class="w-28 text-center">น้ำหนัก (กก.)</div>
+                    <div class="w-28 text-center">ส่วนสูง (ซม.)</div>
                     <div class="w-24 text-center">BMI</div>
-                    <div class="w-28 text-center">Result</div>
+                    <div class="w-28 text-center">แปลผล</div>
                 </div>
             `;
 
