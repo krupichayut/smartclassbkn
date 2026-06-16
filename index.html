@@ -1284,14 +1284,29 @@
 
             const listContainer = document.getElementById('health-list-container');
             listContainer.innerHTML = `
-                <div class="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest px-6 mb-4">
-                    <div class="w-12 text-center">เลขที่</div>
-                    <div class="flex-1 min-w-[120px]">ชื่อ-สกุล</div>
-                    <div class="w-24 text-center">แต่งกาย</div>
-                    <div class="w-24 text-center">ทรงผม</div>
-                    <div class="w-24 text-center">เล็บ/หู</div>
-                    <div class="w-24 text-center">ผิวหนัง</div>
-                    <div class="w-24 text-center">ฟัน</div>
+                <div class="flex items-start text-[11px] font-bold text-slate-500 tracking-wide px-6 mb-4">
+                    <div class="w-12 text-center pt-2">เลขที่</div>
+                    <div class="flex-1 min-w-[120px] pt-2">ชื่อ-นามสกุล</div>
+                    <div class="w-24 text-center flex flex-col items-center gap-1">
+                        <span class="text-[#15919B]">เสื้อผ้า</span>
+                        <span class="text-[9px] font-normal text-slate-400 leading-tight">สะอาด<br>ไม่มีกลิ่นเหม็น</span>
+                    </div>
+                    <div class="w-24 text-center flex flex-col items-center gap-1">
+                        <span class="text-[#15919B]">ผมและศีรษะ</span>
+                        <span class="text-[9px] font-normal text-slate-400 leading-tight">ไม่มีเหา รังแค<br>สกปรก</span>
+                    </div>
+                    <div class="w-24 text-center flex flex-col items-center gap-1">
+                        <span class="text-[#15919B]">ใบหูและซอกหู</span>
+                        <span class="text-[9px] font-normal text-slate-400 leading-tight">ไม่มีคราบสกปรก<br>หรือขี้หู</span>
+                    </div>
+                    <div class="w-24 text-center flex flex-col items-center gap-1">
+                        <span class="text-[#15919B]">ใบหน้า/ผิวหนัง</span>
+                        <span class="text-[9px] font-normal text-slate-400 leading-tight">ไม่มีคราบสกปรก<br>หรือขี้ไคล</span>
+                    </div>
+                    <div class="w-24 text-center flex flex-col items-center gap-1">
+                        <span class="text-[#15919B]">ฟัน</span>
+                        <span class="text-[9px] font-normal text-slate-400 leading-tight">ไม่มีเศษอาหาร<br>หรือขี้ฟัน</span>
+                    </div>
                 </div>
             `;
 
