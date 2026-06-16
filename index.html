@@ -1521,13 +1521,33 @@
                 </div>
             `;
 
+            const allMonths = Object.keys(appData.nutritionRecords).sort();
+
             if (!appData.nutritionRecords[selectedMonth]) {
                 appData.nutritionRecords[selectedMonth] = {};
                 let hasChanges = false;
+                
                 appData.students.forEach(s => {
-                    appData.nutritionRecords[selectedMonth][s.id] = { w: '', h: '', bmi: 0 };
+                    // --- Auto-fill from previous month ---
+                    let prevRec = null;
+                    for (let i = allMonths.length - 1; i >= 0; i--) {
+                        if (allMonths[i] < selectedMonth) {
+                            const pastRec = appData.nutritionRecords[allMonths[i]][s.id];
+                            if (pastRec && (pastRec.w || pastRec.h)) {
+                                prevRec = pastRec;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (prevRec) {
+                        appData.nutritionRecords[selectedMonth][s.id] = { w: prevRec.w, h: prevRec.h, bmi: prevRec.bmi };
+                    } else {
+                        appData.nutritionRecords[selectedMonth][s.id] = { w: '', h: '', bmi: 0 };
+                    }
                     hasChanges = true;
                 });
+                
                 if(hasChanges) saveData();
             }
 
@@ -1538,6 +1558,25 @@
                 const rec = records[student.id] || { w: '', h: '', bmi: 0 };
                 const safeBmi = parseFloat(rec.bmi) || 0; // Prevent crash if rec.bmi is a String
                 const bmiRes = getBMIResult(safeBmi);
+
+                // Find previous data for display label
+                let prevRec = null;
+                let prevMonthLabel = '';
+                for (let i = allMonths.length - 1; i >= 0; i--) {
+                    if (allMonths[i] < selectedMonth) {
+                        const pastRec = appData.nutritionRecords[allMonths[i]][student.id];
+                        if (pastRec && (pastRec.w || pastRec.h)) {
+                            prevRec = pastRec;
+                            const [y, m] = allMonths[i].split('-');
+                            const thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+                            prevMonthLabel = `${thaiMonths[parseInt(m) - 1]}`;
+                            break;
+                        }
+                    }
+                }
+
+                const prevWHTML = prevRec && prevRec.w ? `<div class="text-[10px] text-slate-400 mt-1.5 font-medium bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100 w-full text-center truncate" title="ข้อมูลเดือน ${prevMonthLabel}">${prevMonthLabel}: ${prevRec.w}</div>` : '';
+                const prevHHTML = prevRec && prevRec.h ? `<div class="text-[10px] text-slate-400 mt-1.5 font-medium bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100 w-full text-center truncate" title="ข้อมูลเดือน ${prevMonthLabel}">${prevMonthLabel}: ${prevRec.h}</div>` : '';
 
                 const safeName = student.name || '?';
                 const initAvatar = safeName.charAt(0);
@@ -1552,16 +1591,20 @@
                         <div class="hidden sm:flex w-10 h-10 rounded-xl bg-gradient-to-br ${avatarBg || 'from-slate-400 to-slate-500'} text-white items-center justify-center font-bold text-lg shadow-inner">${initAvatar}</div>
                         <span class="font-bold text-slate-800 text-[1.05rem] tracking-tight truncate">${student.name || 'ไม่มีชื่อ'}</span>
                     </div>
-                    <div class="w-28 px-2">
+                    <div class="w-28 px-2 flex flex-col items-center">
                         <input type="number" step="0.1" class="w-full bg-slate-50 border border-slate-200 text-slate-700 font-bold p-2 rounded-xl text-center focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300 transition-all outline-none" 
                             value="${rec.w}" placeholder="0.0" onchange="updateNutrition('${selectedMonth}', '${student.id}', 'w', this.value)">
+                        ${prevWHTML}
                     </div>
-                    <div class="w-28 px-2">
+                    <div class="w-28 px-2 flex flex-col items-center">
                         <input type="number" step="0.1" class="w-full bg-slate-50 border border-slate-200 text-slate-700 font-bold p-2 rounded-xl text-center focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300 transition-all outline-none" 
                             value="${rec.h}" placeholder="0.0" onchange="updateNutrition('${selectedMonth}', '${student.id}', 'h', this.value)">
+                        ${prevHHTML}
                     </div>
-                    <div class="w-24 text-center font-bold text-indigo-500 text-lg" id="bmi-val-${student.id}">${safeBmi ? safeBmi.toFixed(1) : '-'}</div>
-                    <div class="w-28 text-center flex justify-center font-bold ${bmiRes.color}" id="bmi-res-td-${student.id}">
+                    <div class="w-24 text-center font-bold text-indigo-500 text-lg flex flex-col items-center justify-center" id="bmi-val-${student.id}">
+                        ${safeBmi ? safeBmi.toFixed(1) : '-'}
+                    </div>
+                    <div class="w-28 text-center flex flex-col items-center justify-center font-bold ${bmiRes.color}" id="bmi-res-td-${student.id}">
                         <span id="bmi-res-${student.id}" class="${bmiRes.bg || 'bg-slate-100'} px-3 py-1.5 rounded-lg text-xs shadow-sm">${bmiRes.text}</span>
                     </div>
                 `;
