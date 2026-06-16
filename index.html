@@ -1555,11 +1555,13 @@
             const students = [...appData.students].sort((a, b) => parseInt(a.code || 0) - parseInt(b.code || 0));
 
             students.forEach(student => {
-                const rec = records[student.id] || { w: '', h: '', bmi: 0 };
-                const safeBmi = parseFloat(rec.bmi) || 0; // Prevent crash if rec.bmi is a String
-                const bmiRes = getBMIResult(safeBmi);
+                let rec = records[student.id];
+                if (!rec) {
+                    rec = { w: '', h: '', bmi: 0 };
+                    records[student.id] = rec;
+                }
 
-                // Find previous data for display label
+                // Find previous data for display label and auto-fill
                 let prevRec = null;
                 let prevMonthLabel = '';
                 for (let i = allMonths.length - 1; i >= 0; i--) {
@@ -1575,8 +1577,18 @@
                     }
                 }
 
-                const prevWHTML = prevRec && prevRec.w ? `<div class="text-[10px] text-slate-400 mt-1.5 font-medium bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100 w-full text-center truncate" title="ข้อมูลเดือน ${prevMonthLabel}">${prevMonthLabel}: ${prevRec.w}</div>` : '';
-                const prevHHTML = prevRec && prevRec.h ? `<div class="text-[10px] text-slate-400 mt-1.5 font-medium bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100 w-full text-center truncate" title="ข้อมูลเดือน ${prevMonthLabel}">${prevMonthLabel}: ${prevRec.h}</div>` : '';
+                // Force auto-fill if the current month is empty, so data carries over even if initialized as blank
+                if (prevRec && (!rec.w && !rec.h)) {
+                    rec.w = prevRec.w;
+                    rec.h = prevRec.h;
+                    rec.bmi = prevRec.bmi;
+                }
+
+                const safeBmi = parseFloat(rec.bmi) || 0; // Prevent crash if rec.bmi is a String
+                const bmiRes = getBMIResult(safeBmi);
+
+                const prevWHTML = prevRec && prevRec.w ? `<div class="text-[10px] text-slate-400 mt-1.5 font-medium bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100 w-full text-center truncate" title="ข้อมูลเดือน ${prevMonthLabel}">ด.เดิม: ${prevRec.w}</div>` : '';
+                const prevHHTML = prevRec && prevRec.h ? `<div class="text-[10px] text-slate-400 mt-1.5 font-medium bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100 w-full text-center truncate" title="ข้อมูลเดือน ${prevMonthLabel}">ด.เดิม: ${prevRec.h}</div>` : '';
 
                 const safeName = student.name || '?';
                 const initAvatar = safeName.charAt(0);
