@@ -1168,16 +1168,17 @@
                 if(rec.status === 'ขาด') statusColor = 'bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.4)]';
 
                 // Initial Avatar generator
-                const initAvatar = student.name.charAt(0);
+                const safeName = student.name || '?';
+                const initAvatar = safeName.charAt(0);
                 const avatarColors = ['from-indigo-400 to-purple-400', 'from-emerald-400 to-teal-400', 'from-rose-400 to-orange-400', 'from-blue-400 to-cyan-400'];
                 const avatarBg = avatarColors[parseInt(student.code) % avatarColors.length];
 
                 const row = document.createElement('div');
                 row.className = `flex items-center py-4 px-6 mb-3 bg-white rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-200 cursor-pointer group`;
                 row.innerHTML = `
-                    <div class="w-12 text-center font-bold text-slate-300 group-hover:text-slate-500 transition-colors text-lg">${student.code.padStart(2, '0')}</div>
+                    <div class="w-12 text-center font-bold text-slate-300 group-hover:text-slate-500 transition-colors text-lg">${String(student.code || '0').padStart(2, '0')}</div>
                     <div class="flex-1 flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${avatarBg} text-white flex items-center justify-center font-bold text-lg shadow-inner">${initAvatar}</div>
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${avatarBg || 'from-slate-400 to-slate-500'} text-white flex items-center justify-center font-bold text-lg shadow-inner">${initAvatar}</div>
                         <div class="flex flex-col">
                             <div class="flex items-center">
                                 <span class="font-bold text-slate-800 text-[1.05rem] tracking-tight">${student.name}</span>
@@ -1274,6 +1275,13 @@
             const reasonEl = document.getElementById('health-holiday-reason');
             const isHoliday = appData.holidays.find(h => h.date === selectedDate);
             
+            if(isHoliday) {
+                holidayBanner.classList.remove('hidden');
+                reasonEl.textContent = `เหตุผล/ชื่อวันหยุด: ${isHoliday.name}`;
+            } else {
+                holidayBanner.classList.add('hidden');
+            }
+
             const listContainer = document.getElementById('health-list-container');
             listContainer.innerHTML = `
                 <div class="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest px-6 mb-4">
@@ -1298,7 +1306,7 @@
             }
 
             const records = appData.healthRecords[selectedDate];
-            const students = [...appData.students].sort((a, b) => parseInt(a.code) - parseInt(b.code));
+            const students = [...appData.students].sort((a, b) => parseInt(a.code || 0) - parseInt(b.code || 0));
 
             students.forEach(student => {
                 const rec = records[student.id] || { uniform: true, hair: true, ears: true, skin: true, teeth: true };
@@ -1312,17 +1320,18 @@
                     </select>
                 `;
 
-                const initAvatar = student.name.charAt(0);
+                const safeName = student.name || '?';
+                const initAvatar = safeName.charAt(0);
                 const avatarColors = ['from-indigo-400 to-purple-400', 'from-emerald-400 to-teal-400', 'from-rose-400 to-orange-400', 'from-blue-400 to-cyan-400'];
                 const avatarBg = avatarColors[parseInt(student.code) % avatarColors.length];
 
                 const row = document.createElement('div');
                 row.className = `flex items-center py-4 px-6 mb-3 bg-white rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-200`;
                 row.innerHTML = `
-                    <div class="w-12 text-center font-bold text-slate-300 text-lg">${student.code.padStart(2, '0')}</div>
+                    <div class="w-12 text-center font-bold text-slate-300 text-lg">${String(student.code || '0').padStart(2, '0')}</div>
                     <div class="flex-1 min-w-[120px] flex items-center gap-4">
-                        <div class="hidden sm:flex w-10 h-10 rounded-xl bg-gradient-to-br ${avatarBg} text-white items-center justify-center font-bold text-lg shadow-inner">${initAvatar}</div>
-                        <span class="font-bold text-slate-800 text-[1.05rem] tracking-tight truncate">${student.name}</span>
+                        <div class="hidden sm:flex w-10 h-10 rounded-xl bg-gradient-to-br ${avatarBg || 'from-slate-400 to-slate-500'} text-white items-center justify-center font-bold text-lg shadow-inner">${initAvatar}</div>
+                        <span class="font-bold text-slate-800 text-[1.05rem] tracking-tight truncate">${student.name || 'ไม่มีชื่อ'}</span>
                     </div>
                     <div class="w-24 px-1">${genSelect('uniform', rec.uniform)}</div>
                     <div class="w-24 px-1">${genSelect('hair', rec.hair)}</div>
@@ -1357,7 +1366,7 @@
             const grid = document.getElementById('students-grid');
             grid.innerHTML = '';
             
-            const students = [...appData.students].sort((a, b) => parseInt(a.code) - parseInt(b.code));
+            const students = [...appData.students].sort((a, b) => parseInt(a.code || 0) - parseInt(b.code || 0));
 
             students.forEach(student => {
                 let healthHTML = '';
@@ -1365,7 +1374,8 @@
                     healthHTML = `<div class="mt-4 text-xs bg-rose-50 text-rose-600 border border-rose-100 p-3 rounded-xl font-medium flex items-center shadow-sm"><i class="fas fa-heartbeat mr-2 text-rose-500"></i> ${student.healthInfo}</div>`;
                 }
 
-                const initAvatar = student.name.charAt(0);
+                const safeName = student.name || '?';
+                const initAvatar = safeName.charAt(0);
                 const avatarColors = ['from-indigo-400 to-purple-400', 'from-emerald-400 to-teal-400', 'from-rose-400 to-orange-400', 'from-blue-400 to-cyan-400'];
                 const avatarBg = avatarColors[parseInt(student.code) % avatarColors.length];
 
@@ -1377,14 +1387,14 @@
                         </div>
                         
                         <div class="flex items-center gap-4 mb-4 relative z-0">
-                            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br ${avatarBg} shadow-inner flex items-center justify-center text-2xl font-bold text-white relative">
+                            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br ${avatarBg || 'from-slate-400 to-slate-500'} shadow-inner flex items-center justify-center text-2xl font-bold text-white relative">
                                 ${initAvatar}
                                 <div class="absolute -bottom-2 -right-2 w-7 h-7 bg-white rounded-lg shadow-sm border border-slate-100 flex items-center justify-center text-xs font-bold text-slate-600">
-                                    ${student.code.padStart(2, '0')}
+                                    ${String(student.code || '0').padStart(2, '0')}
                                 </div>
                             </div>
                             <div>
-                                <h4 class="font-bold text-lg text-slate-800 leading-tight">${student.name}</h4>
+                                <h4 class="font-bold text-lg text-slate-800 leading-tight">${student.name || 'ไม่มีชื่อ'}</h4>
                                 <p class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wider">${student.gender}</p>
                             </div>
                         </div>
@@ -1507,23 +1517,25 @@
             }
 
             const records = appData.nutritionRecords[selectedMonth];
-            const students = [...appData.students].sort((a, b) => parseInt(a.code) - parseInt(b.code));
+            const students = [...appData.students].sort((a, b) => parseInt(a.code || 0) - parseInt(b.code || 0));
 
             students.forEach(student => {
                 const rec = records[student.id] || { w: '', h: '', bmi: 0 };
-                const bmiRes = getBMIResult(rec.bmi);
+                const safeBmi = parseFloat(rec.bmi) || 0; // Prevent crash if rec.bmi is a String
+                const bmiRes = getBMIResult(safeBmi);
 
-                const initAvatar = student.name.charAt(0);
+                const safeName = student.name || '?';
+                const initAvatar = safeName.charAt(0);
                 const avatarColors = ['from-indigo-400 to-purple-400', 'from-emerald-400 to-teal-400', 'from-rose-400 to-orange-400', 'from-blue-400 to-cyan-400'];
                 const avatarBg = avatarColors[parseInt(student.code) % avatarColors.length];
 
                 const row = document.createElement('div');
                 row.className = `flex items-center py-4 px-6 mb-3 bg-white rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-200`;
                 row.innerHTML = `
-                    <div class="w-12 text-center font-bold text-slate-300 text-lg">${student.code.padStart(2, '0')}</div>
+                    <div class="w-12 text-center font-bold text-slate-300 text-lg">${String(student.code || '0').padStart(2, '0')}</div>
                     <div class="flex-1 min-w-[120px] flex items-center gap-4">
-                        <div class="hidden sm:flex w-10 h-10 rounded-xl bg-gradient-to-br ${avatarBg} text-white items-center justify-center font-bold text-lg shadow-inner">${initAvatar}</div>
-                        <span class="font-bold text-slate-800 text-[1.05rem] tracking-tight truncate">${student.name}</span>
+                        <div class="hidden sm:flex w-10 h-10 rounded-xl bg-gradient-to-br ${avatarBg || 'from-slate-400 to-slate-500'} text-white items-center justify-center font-bold text-lg shadow-inner">${initAvatar}</div>
+                        <span class="font-bold text-slate-800 text-[1.05rem] tracking-tight truncate">${student.name || 'ไม่มีชื่อ'}</span>
                     </div>
                     <div class="w-28 px-2">
                         <input type="number" step="0.1" class="w-full bg-slate-50 border border-slate-200 text-slate-700 font-bold p-2 rounded-xl text-center focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300 transition-all outline-none" 
@@ -1533,7 +1545,7 @@
                         <input type="number" step="0.1" class="w-full bg-slate-50 border border-slate-200 text-slate-700 font-bold p-2 rounded-xl text-center focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300 transition-all outline-none" 
                             value="${rec.h}" placeholder="0.0" onchange="updateNutrition('${selectedMonth}', '${student.id}', 'h', this.value)">
                     </div>
-                    <div class="w-24 text-center font-bold text-indigo-500 text-lg" id="bmi-val-${student.id}">${rec.bmi ? rec.bmi.toFixed(1) : '-'}</div>
+                    <div class="w-24 text-center font-bold text-indigo-500 text-lg" id="bmi-val-${student.id}">${safeBmi ? safeBmi.toFixed(1) : '-'}</div>
                     <div class="w-28 text-center flex justify-center font-bold ${bmiRes.color}" id="bmi-res-td-${student.id}">
                         <span id="bmi-res-${student.id}" class="${bmiRes.bg || 'bg-slate-100'} px-3 py-1.5 rounded-lg text-xs shadow-sm">${bmiRes.text}</span>
                     </div>
