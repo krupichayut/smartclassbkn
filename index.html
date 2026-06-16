@@ -916,6 +916,38 @@
                 // FORCE: Guarantee structure exists to prevent 'undefined' crashes
                 appData.students = appData.students || [];
                 
+                // --- DATA RECOVERY SCRIPT (Heal Orphaned Records) ---
+                // If students were re-imported, their IDs changed. Recover old data by matching 'code' (เลขที่)
+                const currentStudentIds = new Set(appData.students.map(s => s.id));
+                const codeToCurrentId = {};
+                appData.students.forEach(s => {
+                    if (s.code) codeToCurrentId[s.code.toString()] = s.id;
+                });
+
+                const recoverRecords = (recordsObj) => {
+                    if (!recordsObj) return;
+                    Object.keys(recordsObj).forEach(timeKey => {
+                        const timeData = recordsObj[timeKey];
+                        Object.keys(timeData).forEach(oldId => {
+                            if (!currentStudentIds.has(oldId) && codeToCurrentId[oldId]) {
+                                const newId = codeToCurrentId[oldId];
+                                // Recover data if the new student's record is empty or missing
+                                if (!timeData[newId]) {
+                                    timeData[newId] = timeData[oldId];
+                                } else {
+                                    const ex = timeData[newId];
+                                    const isEmpty = (ex.w === '' && ex.h === '') || (ex.status === 'มา' && !ex.milk && !ex.brush) || (!ex.hair && !ex.nails && !ex.h20);
+                                    if (isEmpty) timeData[newId] = timeData[oldId];
+                                }
+                            }
+                        });
+                    });
+                };
+
+                recoverRecords(appData.dailyRecords);
+                recoverRecords(appData.healthRecords);
+                recoverRecords(appData.nutritionRecords);
+                
                 // --- DATA RECOVERY SCRIPT (Auto-restores missing parent info) ---
                 const recoveryParents = {
                     "1": { parentName: "ปาลิอัส ชูเมือง", parentPhone: "0936937439" },
