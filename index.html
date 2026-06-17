@@ -740,6 +740,10 @@
                             </button>
                         </div>
                     </div>
+                    <div class="mt-4 text-xs text-blue-800 bg-blue-50 p-2 rounded border border-blue-200 no-print flex items-start gap-2">
+                        <i class="fas fa-lightbulb mt-0.5"></i>
+                        <span><strong>เคล็ดลับ:</strong> คุณสามารถ <strong>คลิกที่ช่องในตารางรายงาน</strong> เพื่อเพิ่ม ลบ หรือแก้ไขข้อมูล (การมาเรียน/ดื่มนม/แปรงฟัน/โภชนาการ) ได้โดยตรงจากหน้านี้เลยครับ ไม่ต้องกลับไปที่หน้าหลัก!</span>
+                    </div>
                 </div>
 
                 <!-- Printable Area -->
@@ -917,27 +921,59 @@
                 appData.students = appData.students || [];
                 
                 // --- DATA RECOVERY SCRIPT (Heal Orphaned Records) ---
-                // If students were re-imported, their IDs changed. Recover old data by matching 'code' (เลขที่)
+                // If students were re-imported, their IDs changed. Recover old data by matching 'code' (เลขที่) or timestamp chronological order
                 const currentStudentIds = new Set(appData.students.map(s => s.id));
+                
                 const codeToCurrentId = {};
                 appData.students.forEach(s => {
                     if (s.code) codeToCurrentId[s.code.toString()] = s.id;
                 });
+
+                // Find all orphaned IDs
+                const allOrphanedIds = new Set();
+                const checkOrphans = (recordsObj) => {
+                    if (!recordsObj) return;
+                    Object.values(recordsObj).forEach(timeData => {
+                        Object.keys(timeData).forEach(id => {
+                            if (!currentStudentIds.has(id)) allOrphanedIds.add(id);
+                        });
+                    });
+                };
+                checkOrphans(appData.dailyRecords);
+                checkOrphans(appData.healthRecords);
+                checkOrphans(appData.nutritionRecords);
+
+                // Map old timestamp IDs to current students by sorting them chronologically
+                const orphanedTimestamps = Array.from(allOrphanedIds)
+                    .filter(id => id.length > 5 && !codeToCurrentId[id])
+                    .sort((a,b) => parseInt(a) - parseInt(b));
+                    
+                const timestampMapping = {};
+                if (orphanedTimestamps.length > 0 && appData.students.length > 0) {
+                    const sortedCurrent = [...appData.students].sort((a, b) => parseInt(a.code) - parseInt(b.code));
+                    const batchSize = sortedCurrent.length;
+                    orphanedTimestamps.forEach((oldId, index) => {
+                        const studentIndex = index % batchSize;
+                        timestampMapping[oldId] = sortedCurrent[studentIndex].id;
+                    });
+                }
 
                 const recoverRecords = (recordsObj) => {
                     if (!recordsObj) return;
                     Object.keys(recordsObj).forEach(timeKey => {
                         const timeData = recordsObj[timeKey];
                         Object.keys(timeData).forEach(oldId => {
-                            if (!currentStudentIds.has(oldId) && codeToCurrentId[oldId]) {
-                                const newId = codeToCurrentId[oldId];
-                                // Recover data if the new student's record is empty or missing
-                                if (!timeData[newId]) {
-                                    timeData[newId] = timeData[oldId];
-                                } else {
-                                    const ex = timeData[newId];
-                                    const isEmpty = (ex.w === '' && ex.h === '') || (ex.status === 'มา' && !ex.milk && !ex.brush) || (!ex.hair && !ex.nails && !ex.h20);
-                                    if (isEmpty) timeData[newId] = timeData[oldId];
+                            if (!currentStudentIds.has(oldId)) {
+                                const newId = codeToCurrentId[oldId] || timestampMapping[oldId];
+                                if (newId) {
+                                    // Recover data if the new student's record is empty or missing
+                                    if (!timeData[newId]) {
+                                        timeData[newId] = timeData[oldId];
+                                    } else {
+                                        const ex = timeData[newId];
+                                        const isEmpty = (ex.w === '' && ex.h === '') || (ex.status === 'มา' && !ex.milk && !ex.brush) || (!ex.hair && !ex.nails && !ex.h20);
+                                        if (isEmpty) timeData[newId] = timeData[oldId];
+                                    }
                                 }
                             }
                         });
@@ -1781,6 +1817,78 @@
             });
         }
 
+        // --- Interactive Report Edit Functions ---
+        window.toggleReportCell = function(type, dateKey, studentId) {
+            if (!appData.dailyRecords[dateKey]) appData.dailyRecords[dateKey] = {};
+            let rec = appData.dailyRecords[dateKey][studentId];
+            if (!rec) {
+                rec = { status: '', milk: false, brush: false };
+                appData.dailyRecords[dateKey][studentId] = rec;
+            }
+
+            if (type === 'attendance') {
+                const cycle = ['', 'มา', 'สาย', 'ลา', 'ขาด'];
+                let idx = cycle.indexOf(rec.status);
+                if (idx === -1) idx = 0;
+                rec.status = cycle[(idx + 1) % cycle.length];
+                
+                if (rec.status === '' && !rec.milk && !rec.brush) {
+                    delete appData.dailyRecords[dateKey][studentId];
+                }
+            } else if (type === 'milk') {
+                rec.milk = !rec.milk;
+                if (rec.status === '' && !rec.milk && !rec.brush) {
+                    delete appData.dailyRecords[dateKey][studentId];
+                }
+            } else if (type === 'brush') {
+                rec.brush = !rec.brush;
+                if (rec.status === '' && !rec.milk && !rec.brush) {
+                    delete appData.dailyRecords[dateKey][studentId];
+                }
+            }
+
+            saveData();
+            generateReport();
+        };
+
+        window.editNutritionCell = function(monthStr, studentId, field) {
+            if (!appData.nutritionRecords[monthStr]) appData.nutritionRecords[monthStr] = {};
+            let rec = appData.nutritionRecords[monthStr][studentId];
+            if (!rec) {
+                rec = { w: '', h: '', bmi: 0 };
+                appData.nutritionRecords[monthStr][studentId] = rec;
+            }
+
+            const currentVal = rec[field];
+            const label = field === 'w' ? 'น้ำหนัก (กก.)' : 'ส่วนสูง (ซม.)';
+            const newVal = prompt(`แก้ไข ${label}:`, currentVal);
+            
+            if (newVal !== null) {
+                const parsed = parseFloat(newVal);
+                if (!isNaN(parsed) && parsed > 0) {
+                    rec[field] = parsed;
+                } else if (newVal.trim() === '') {
+                    rec[field] = '';
+                }
+
+                const w = parseFloat(rec.w) || 0;
+                const h_cm = parseFloat(rec.h) || 0;
+                if (w > 0 && h_cm > 0) {
+                    const h_m = h_cm / 100;
+                    rec.bmi = w / (h_m * h_m);
+                } else {
+                    rec.bmi = 0;
+                }
+                
+                if (rec.w === '' && rec.h === '') {
+                    delete appData.nutritionRecords[monthStr][studentId];
+                }
+
+                saveData();
+                generateReport();
+            }
+        };
+
         // --- Module 5: Reports ---
         function generateReport() {
             const type = document.getElementById('report-type').value;
@@ -1825,7 +1933,7 @@
                             <th colspan="${daysInMonth}" class="border border-gray-400 p-1">วันที่</th>`;
                 
                 if(type === 'attendance') {
-                    tableHTML += `<th colspan="4" class="border border-gray-400 p-1 bg-blue-50">สรุป (วัน)</th><th rowspan="2" class="border border-gray-400 p-1 w-10 bg-gray-200">%</th>`;
+                    tableHTML += `<th colspan="6" class="border border-gray-400 p-1 bg-blue-50">สรุป (วัน)</th><th rowspan="2" class="border border-gray-400 p-1 w-10 bg-gray-200">%</th>`;
                 } else {
                     tableHTML += `<th colspan="2" class="border border-gray-400 p-1 bg-blue-50">สรุป</th>`;
                 }
@@ -1853,6 +1961,8 @@
                         <th class="border border-gray-400 p-0.5 w-6 bg-orange-50">สาย</th>
                         <th class="border border-gray-400 p-0.5 w-6 bg-blue-50">ลา</th>
                         <th class="border border-gray-400 p-0.5 w-6 bg-red-50">ขาด</th>
+                        <th class="border border-gray-400 p-0.5 w-6 bg-blue-100">นม</th>
+                        <th class="border border-gray-400 p-0.5 w-6 bg-teal-100">ฟัน</th>
                     `;
                 } else {
                     tableHTML += `
@@ -1887,10 +1997,17 @@
                                 else if(rec.status === 'สาย') { cellContent = 'ส'; late++; }
                                 else if(rec.status === 'ลา') { cellContent = 'ล'; leave++; }
                                 else if(rec.status === 'ขาด') { cellContent = 'ข'; absent++; }
+                                
+                                if(rec.milk) totalMilk++;
+                                if(rec.brush) totalBrush++;
                             } else if (type === 'milk') {
                                 if(rec.milk) { cellContent = '✓'; actionCount++; }
+                                else if(rec.status === 'ลา') { cellContent = 'ล'; }
+                                else if(rec.status === 'ขาด') { cellContent = 'ข'; }
                             } else if (type === 'brush') {
                                 if(rec.brush) { cellContent = '✓'; actionCount++; }
+                                else if(rec.status === 'ลา') { cellContent = 'ล'; }
+                                else if(rec.status === 'ขาด') { cellContent = 'ข'; }
                             }
                         }
 
@@ -1903,7 +2020,14 @@
 
                         if(bgClass) textStyle += ' background-color: #d1d5db !important;';
 
-                        tableHTML += `<td class="border border-gray-400 p-0 text-center font-bold text-[10px] ${bgClass}" style="${textStyle}">${cellContent}</td>`;
+                        let clickAction = '';
+                        if (!isWeekend && !isHoliday) {
+                            clickAction = `onclick="toggleReportCell('${type}', '${dateKey}', '${student.id}')" class="border border-gray-400 p-0 text-center font-bold text-[10px] cursor-pointer hover:bg-yellow-200 transition-colors duration-150 ${bgClass}"`;
+                        } else {
+                            clickAction = `class="border border-gray-400 p-0 text-center font-bold text-[10px] ${bgClass}"`;
+                        }
+
+                        tableHTML += `<td ${clickAction} style="${textStyle}">${cellContent}</td>`;
                     }
 
                     if(type === 'attendance') {
@@ -1914,6 +2038,8 @@
                             <td class="border border-gray-400 p-1 text-center bg-orange-50">${late}</td>
                             <td class="border border-gray-400 p-1 text-center bg-blue-50">${leave}</td>
                             <td class="border border-gray-400 p-1 text-center bg-red-50">${absent}</td>
+                            <td class="border border-gray-400 p-1 text-center bg-blue-100 text-blue-700">${totalMilk}</td>
+                            <td class="border border-gray-400 p-1 text-center bg-teal-100 text-teal-700">${totalBrush}</td>
                             <td class="border border-gray-400 p-1 text-center font-bold bg-gray-100">${percent}%</td>
                         `;
                     } else {
@@ -1945,6 +2071,8 @@
                         <span class="text-orange-600 font-bold">ส = สาย</span>
                         <span class="text-blue-600 font-bold">ล = ลา</span>
                         <span class="text-red-600 font-bold">ข = ขาด</span>
+                        <span class="text-blue-700 font-bold ml-2">นม = จำนวนวันดื่มนม</span>
+                        <span class="text-teal-700 font-bold">ฟัน = จำนวนวันแปรงฟัน</span>
                         <span class="text-gray-800 bg-gray-300 px-2 py-0.5 rounded border border-gray-400" style="background-color:#d1d5db !important; -webkit-print-color-adjust: exact;">สีเทา = วันหยุด/ส.-อา.</span>
                         <span class="ml-auto font-medium">*คิดเปอร์เซ็นต์จากวันทำการจริง (${totalWorkingDays} วัน)</span>
                     </div>`;
@@ -1952,6 +2080,8 @@
                     tableHTML += `<div class="mt-2 text-[11px] text-gray-700 flex justify-between items-center">
                         <div>
                             <span><strong class="text-green-600 text-sm">✓</strong> = ทำกิจกรรม</span>
+                            <span class="text-blue-600 font-bold ml-4">ล = ลา</span>
+                            <span class="text-red-600 font-bold ml-4">ข = ขาด</span>
                             <span class="text-gray-800 bg-gray-300 px-2 py-0.5 rounded border border-gray-400 ml-4" style="background-color:#d1d5db !important; -webkit-print-color-adjust: exact;">สีเทา = วันหยุด/ส.-อา.</span>
                         </div>
                         <span class="font-medium">*คิดเปอร์เซ็นต์จากวันทำการจริง (${totalWorkingDays} วัน)</span>
