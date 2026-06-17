@@ -1458,25 +1458,29 @@
                 </div>
             `;
 
-                    hasChanges = true;
-                });
-                if(hasChanges) saveData();
+            if (!appData.healthRecords[selectedMonth]) {
+                appData.healthRecords[selectedMonth] = {};
             }
 
-            const records = appData.healthRecords[selectedDate];
+            const records = appData.healthRecords[selectedMonth];
             const students = [...appData.students].sort((a, b) => parseInt(a.code || 0) - parseInt(b.code || 0));
 
             students.forEach(student => {
-                const rec = records[student.id] || { uniform: true, hair: true, ears: true, skin: true, teeth: true };
-                const disabledHTML = isHoliday ? 'disabled opacity-40 cursor-not-allowed' : '';
+                const rec = records[student.id] || { uniform: '', hair: '', ears: '', skin: '', teeth: '' };
                 
-                const genSelect = (field, isPass) => `
-                    <select id="health-${student.id}-${field}" class="appearance-none font-bold text-sm outline-none cursor-pointer w-full py-2 px-3 rounded-xl transition-all shadow-sm ${isPass ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 hover:border-emerald-300 focus:ring-2 focus:ring-emerald-200' : 'bg-rose-50 text-rose-600 border border-rose-100 hover:border-rose-300 focus:ring-2 focus:ring-rose-200'}" 
-                        onchange="updateHealthRecord('${selectedDate}', '${student.id}', '${field}', this.value === 'true', this)" ${disabledHTML}>
-                        <option value="true" ${isPass ? 'selected' : ''}>ผ่าน</option>
-                        <option value="false" ${!isPass ? 'selected' : ''}>ไม่ผ่าน</option>
-                    </select>
-                `;
+                const genSelect = (field, val) => {
+                    let colorClass = 'bg-slate-50 text-slate-600 border border-slate-200 hover:border-slate-300 focus:ring-2 focus:ring-slate-200'; // Default Empty
+                    if(val === 1) colorClass = 'bg-emerald-50 text-emerald-600 border border-emerald-100 hover:border-emerald-300 focus:ring-2 focus:ring-emerald-200';
+                    else if(val === 0) colorClass = 'bg-rose-50 text-rose-600 border border-rose-100 hover:border-rose-300 focus:ring-2 focus:ring-rose-200';
+
+                    return `
+                        <select id="health-${student.id}-${field}" class="appearance-none font-bold text-sm outline-none cursor-pointer w-full py-2 px-3 rounded-xl transition-all shadow-sm ${colorClass}" onchange="this.className = this.value === '1' ? 'appearance-none font-bold text-sm outline-none cursor-pointer w-full py-2 px-3 rounded-xl transition-all shadow-sm bg-emerald-50 text-emerald-600 border border-emerald-100 hover:border-emerald-300 focus:ring-2 focus:ring-emerald-200' : (this.value === '0' ? 'appearance-none font-bold text-sm outline-none cursor-pointer w-full py-2 px-3 rounded-xl transition-all shadow-sm bg-rose-50 text-rose-600 border border-rose-100 hover:border-rose-300 focus:ring-2 focus:ring-rose-200' : 'appearance-none font-bold text-sm outline-none cursor-pointer w-full py-2 px-3 rounded-xl transition-all shadow-sm bg-slate-50 text-slate-600 border border-slate-200 hover:border-slate-300 focus:ring-2 focus:ring-slate-200')">
+                            <option value="" ${val === '' ? 'selected' : ''}>-(ว่าง)-</option>
+                            <option value="1" ${val === 1 ? 'selected' : ''}>ผ่าน</option>
+                            <option value="0" ${val === 0 ? 'selected' : ''}>ไม่ผ่าน</option>
+                        </select>
+                    `;
+                };
 
                 const safeName = student.name || '?';
                 const initAvatar = safeName.charAt(0);
@@ -1489,7 +1493,7 @@
                     <div class="w-12 text-center font-bold text-slate-300 text-lg">${String(student.code || '0').padStart(2, '0')}</div>
                     <div class="flex-1 min-w-[120px] flex items-center gap-4">
                         <div class="hidden sm:flex w-10 h-10 rounded-xl bg-gradient-to-br ${avatarBg || 'from-slate-400 to-slate-500'} text-white items-center justify-center font-bold text-lg shadow-inner">${initAvatar}</div>
-                        <span class="font-bold text-slate-800 text-[1.05rem] tracking-tight truncate">${student.name || 'ไม่มีชื่อ'}</span>
+                        <span class="font-bold text-slate-800 text-[1.05rem] tracking-tight whitespace-nowrap min-w-[max-content]">${student.name || 'ไม่มีชื่อ'}</span>
                     </div>
                     <div class="w-24 px-1">${genSelect('uniform', rec.uniform)}</div>
                     <div class="w-24 px-1">${genSelect('hair', rec.hair)}</div>
@@ -1499,25 +1503,50 @@
                 `;
                 listContainer.appendChild(row);
             });
+
+            // Add Save Button at the bottom
+            const saveRow = document.createElement('div');
+            saveRow.className = "mt-6 flex justify-end";
+            saveRow.innerHTML = `
+                <button onclick="saveHealthData()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl transition-colors shadow-md text-lg flex items-center gap-2">
+                    <i class="fas fa-save"></i> บันทึกข้อมูลสุขภาพ
+                </button>
+            `;
+            listContainer.appendChild(saveRow);
         }
 
-        function updateHealthRecord(date, studentId, field, isPass, selectElement) {
-            if(!appData.healthRecords[date]) appData.healthRecords[date] = {};
-            if(!appData.healthRecords[date][studentId]) {
-                appData.healthRecords[date][studentId] = { uniform: true, hair: true, ears: true, skin: true, teeth: true };
-            }
-            
-            appData.healthRecords[date][studentId][field] = isPass;
-            saveData();
-            
-            if(selectElement) {
-                if(isPass) {
-                    selectElement.className = "appearance-none font-bold text-sm outline-none cursor-pointer w-full py-2 px-3 rounded-xl transition-all shadow-sm bg-emerald-50 text-emerald-600 border border-emerald-100 hover:border-emerald-300 focus:ring-2 focus:ring-emerald-200";
-                } else {
-                    selectElement.className = "appearance-none font-bold text-sm outline-none cursor-pointer w-full py-2 px-3 rounded-xl transition-all shadow-sm bg-rose-50 text-rose-600 border border-rose-100 hover:border-rose-300 focus:ring-2 focus:ring-rose-200";
+        window.saveHealthData = function() {
+            const selectedMonth = document.getElementById('health-month').value;
+            appData.healthRecords[selectedMonth] = {};
+            let hasData = false;
+
+            appData.students.forEach(student => {
+                const uniform = document.getElementById(\`health-\${student.id}-uniform\`).value;
+                const hair = document.getElementById(\`health-\${student.id}-hair\`).value;
+                const ears = document.getElementById(\`health-\${student.id}-ears\`).value;
+                const skin = document.getElementById(\`health-\${student.id}-skin\`).value;
+                const teeth = document.getElementById(\`health-\${student.id}-teeth\`).value;
+
+                if (uniform !== '' || hair !== '' || ears !== '' || skin !== '' || teeth !== '') {
+                    appData.healthRecords[selectedMonth][student.id] = {
+                        uniform: uniform === '' ? '' : parseInt(uniform),
+                        hair: hair === '' ? '' : parseInt(hair),
+                        ears: ears === '' ? '' : parseInt(ears),
+                        skin: skin === '' ? '' : parseInt(skin),
+                        teeth: teeth === '' ? '' : parseInt(teeth)
+                    };
+                    hasData = true;
                 }
+            });
+
+            if (!hasData) {
+                delete appData.healthRecords[selectedMonth];
             }
-        }
+
+            saveData();
+            showConfirm('บันทึกสำเร็จ', 'บันทึกข้อมูลสุขภาพประจำเดือนเรียบร้อยแล้ว', null);
+            document.getElementById('confirm-cancel').classList.add('hidden');
+        };
 
         // --- Module 2: Students Data ---
         function renderStudents() {
