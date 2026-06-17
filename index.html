@@ -2344,14 +2344,16 @@
                 tableHTML += `</tbody></table>`;
                 
                 const avgBMI = stats.total > 0 ? (stats.sumBMI / stats.total).toFixed(1) : 0;
-                tableHTML += `<div class="bg-gray-100 p-4 border border-gray-400 text-sm page-break-inside-avoid" style="background-color: #f3f4f6 !important;">
-                    <h4 class="font-bold mb-2">สรุปภาพรวมโภชนาการ (จากผู้ที่มีข้อมูล ${stats.total} คน)</h4>
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
-                        <div><p class="text-gray-600">BMI เฉลี่ย</p><p class="text-lg font-bold">${avgBMI}</p></div>
-                        <div><p class="text-blue-600">ผอม</p><p class="text-lg font-bold">${stats.thin} คน</p></div>
-                        <div><p class="text-green-600">สมส่วน</p><p class="text-lg font-bold">${stats.normal} คน</p></div>
-                        <div><p class="text-orange-600">ท้วม</p><p class="text-lg font-bold">${stats.fat_1} คน</p></div>
-                        <div><p class="text-red-600">อ้วน</p><p class="text-lg font-bold">${stats.fat_2} คน</p></div>
+                tableHTML += `<div class="bg-gray-100 p-3 border border-gray-400 text-sm page-break-inside-avoid" style="background-color: #f3f4f6 !important;">
+                    <div class="flex justify-between items-center px-4">
+                        <h4 class="font-bold">สรุปภาพรวมโภชนาการ (จากผู้ที่มีข้อมูล ${stats.total} คน)</h4>
+                        <div class="flex gap-6">
+                            <div class="flex items-center gap-2"><span class="text-gray-600">BMI เฉลี่ย:</span><span class="text-base font-bold">${avgBMI}</span></div>
+                            <div class="flex items-center gap-2"><span class="text-blue-600">ผอม:</span><span class="text-base font-bold">${stats.thin} คน</span></div>
+                            <div class="flex items-center gap-2"><span class="text-green-600">สมส่วน:</span><span class="text-base font-bold">${stats.normal} คน</span></div>
+                            <div class="flex items-center gap-2"><span class="text-orange-600">ท้วม:</span><span class="text-base font-bold">${stats.fat_1} คน</span></div>
+                            <div class="flex items-center gap-2"><span class="text-red-600">อ้วน:</span><span class="text-base font-bold">${stats.fat_2} คน</span></div>
+                        </div>
                     </div>
                 </div>`;
             }
