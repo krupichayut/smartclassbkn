@@ -1,0 +1,16 @@
+{
+  "name": "SmartClass - ระบบธุรการชั้นเรียน",
+  "short_name": "SmartClass",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F5F7FA",
+  "theme_color": "#15919B",
+  "icons": [
+    {
+      "src": "./logo/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
