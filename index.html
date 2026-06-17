@@ -1038,6 +1038,36 @@
                 appData.healthRecords = appData.healthRecords || {};
                 appData.nutritionRecords = appData.nutritionRecords || {};
                 appData.holidays = appData.holidays || [];
+                
+                // --- DATA MIGRATION: Daily Health to Monthly Health ---
+                const oldHealthKeys = Object.keys(appData.healthRecords).filter(k => k.length === 10 && k.includes('-'));
+                if (oldHealthKeys.length > 0) {
+                    console.log("Migrating daily health records to monthly...");
+                    oldHealthKeys.sort(); // Oldest to newest
+                    oldHealthKeys.forEach(dateKey => {
+                        const monthKey = dateKey.substring(0, 7); // YYYY-MM
+                        if (!appData.healthRecords[monthKey]) {
+                            appData.healthRecords[monthKey] = {};
+                        }
+                        const dailyData = appData.healthRecords[dateKey];
+                        // Override monthly with the latest daily data of that month
+                        Object.keys(dailyData).forEach(studentId => {
+                            const rec = dailyData[studentId];
+                            // Convert old true/false to 1/0
+                            appData.healthRecords[monthKey][studentId] = {
+                                uniform: rec.uniform === true ? 1 : (rec.uniform === false ? 0 : ''),
+                                hair: rec.hair === true ? 1 : (rec.hair === false ? 0 : ''),
+                                ears: rec.ears === true ? 1 : (rec.ears === false ? 0 : ''),
+                                skin: rec.skin === true ? 1 : (rec.skin === false ? 0 : ''),
+                                teeth: rec.teeth === true ? 1 : (rec.teeth === false ? 0 : '')
+                            };
+                        });
+                        // Delete old daily key
+                        delete appData.healthRecords[dateKey];
+                    });
+                    saveData();
+                }
+                // --- END MIGRATION ---
                 appData.settings = appData.settings || JSON.parse(JSON.stringify(MOCK_DATA.settings));
                 
                 tempLogoData = appData.settings.logo || '';
@@ -1393,20 +1423,12 @@
 
         // --- Module 1.5: Health Check ---
         function renderHealth() {
-            const dateInput = document.getElementById('health-date');
-            if(!dateInput.value) dateInput.value = getTodayString();
-            const selectedDate = dateInput.value;
+            const monthInput = document.getElementById('health-month');
+            if(!monthInput.value) monthInput.value = getMonthString();
+            const selectedMonth = monthInput.value;
 
             const holidayBanner = document.getElementById('health-holiday-banner');
-            const reasonEl = document.getElementById('health-holiday-reason');
-            const isHoliday = appData.holidays.find(h => h.date === selectedDate);
-            
-            if(isHoliday) {
-                holidayBanner.classList.remove('hidden');
-                reasonEl.textContent = `เหตุผล/ชื่อวันหยุด: ${isHoliday.name}`;
-            } else {
-                holidayBanner.classList.add('hidden');
-            }
+            holidayBanner.classList.add('hidden'); // ไม่ต้องแสดงในหน้ารายเดือน
 
             const listContainer = document.getElementById('health-list-container');
             listContainer.innerHTML = `
@@ -1436,11 +1458,6 @@
                 </div>
             `;
 
-            if (!appData.healthRecords[selectedDate]) {
-                appData.healthRecords[selectedDate] = {};
-                let hasChanges = false;
-                appData.students.forEach(s => {
-                    appData.healthRecords[selectedDate][s.id] = { uniform: true, hair: true, ears: true, skin: true, teeth: true };
                     hasChanges = true;
                 });
                 if(hasChanges) saveData();
@@ -1624,9 +1641,10 @@
         // --- Module 3: Nutrition ---
         function getBMIResult(bmi) {
             if(!bmi) return { text: '-', color: 'text-[#213A58]', bg: 'bg-slate-100' };
-            if(bmi < 18.5) return { text: 'ผอม', color: 'text-[#15919B]', bg: 'bg-blue-100' };
-            if(bmi >= 18.5 && bmi <= 22.9) return { text: 'สมส่วน', color: 'text-emerald-700', bg: 'bg-emerald-100' };
-            if(bmi >= 23.0 && bmi <= 24.9) return { text: 'ท้วม', color: 'text-orange-700', bg: 'bg-orange-100' };
+            if(bmi < 14.0) return { text: 'ผอม', color: 'text-blue-700', bg: 'bg-blue-100' };
+            if(bmi < 15.0) return { text: 'ค่อนข้างผอม', color: 'text-cyan-700', bg: 'bg-cyan-100' };
+            if(bmi <= 19.0) return { text: 'สมส่วน', color: 'text-emerald-700', bg: 'bg-emerald-100' };
+            if(bmi <= 22.9) return { text: 'ท้วม', color: 'text-orange-700', bg: 'bg-orange-100' };
             return { text: 'อ้วน', color: 'text-red-700', bg: 'bg-red-100' };
         }
 
@@ -2084,7 +2102,7 @@
 
                     tableHTML += `<tr>
                         <td class="border border-gray-400 p-1 text-center">${student.code}</td>
-                        <td class="border border-gray-400 p-1 truncate max-w-[120px] text-left">${student.name}</td>`;
+                        <td class="border border-gray-400 p-1 whitespace-nowrap min-w-[max-content] text-left">${student.name}</td>`;
 
                     for(let d = 1; d <= daysInMonth; d++) {
                         const dateKey = `${year}-${month.padStart(2, '0')}-${String(d).padStart(2, '0')}`;
@@ -2211,8 +2229,8 @@
                     <thead class="bg-gray-100">
                         <tr>
                             <th rowspan="2" class="border border-gray-400 p-2 w-16">เลขที่</th>
-                            <th rowspan="2" class="border border-gray-400 p-2 text-left">ชื่อ-สกุล</th>
-                            <th colspan="5" class="border border-gray-400 p-2 text-center bg-red-50 text-red-700">สรุปจำนวนครั้งที่ "ไม่ผ่าน" ในเดือนนี้ (ครั้ง)</th>
+                            <th rowspan="2" class="border border-gray-400 p-2 text-left whitespace-nowrap">ชื่อ-สกุล</th>
+                            <th colspan="5" class="border border-gray-400 p-2 text-center bg-red-50 text-red-700">ผลการประเมินสุขอนามัย (รายเดือน)</th>
                         </tr>
                         <tr>
                             <th class="border border-gray-400 p-2 w-24">เครื่องแต่งกาย</th>
@@ -2224,40 +2242,28 @@
                     </thead><tbody>`;
 
                 students.forEach(student => {
-                    let failCounts = { uniform: 0, hair: 0, ears: 0, skin: 0, teeth: 0 };
-                    
-                    for(let d = 1; d <= daysInMonth; d++) {
-                        const dateKey = `${year}-${month.padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                        if (appData.healthRecords[dateKey] && appData.healthRecords[dateKey][student.id]) {
-                            const rec = appData.healthRecords[dateKey][student.id];
-                            if(rec.uniform === 0) failCounts.uniform++;
-                            if(rec.hair === 0) failCounts.hair++;
-                            if(rec.ears === 0) failCounts.ears++;
-                            if(rec.skin === 0) failCounts.skin++;
-                            if(rec.teeth === 0) failCounts.teeth++;
-                        }
-                    }
+                    const rec = appData.healthRecords[monthStr] && appData.healthRecords[monthStr][student.id] 
+                                ? appData.healthRecords[monthStr][student.id] 
+                                : { uniform: '', hair: '', ears: '', skin: '', teeth: '' };
 
-                    const getFailHtml = (count) => {
-                        if (count > 0) return `<span class="text-red-600 font-bold">${count}</span>`;
+                    const getResHtml = (val) => {
+                        if (val === 1) return `<span class="text-green-600 font-bold">ผ่าน</span>`;
+                        if (val === 0) return `<span class="text-red-600 font-bold">ไม่ผ่าน</span>`;
                         return `<span class="text-gray-300">-</span>`;
                     };
 
                     tableHTML += `<tr>
                         <td class="border border-gray-400 p-1.5 text-center">${student.code}</td>
-                        <td class="border border-gray-400 p-1.5 text-left">${student.name}</td>
-                        <td class="border border-gray-400 p-1.5 text-center ${failCounts.uniform > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.uniform)}</td>
-                        <td class="border border-gray-400 p-1.5 text-center ${failCounts.hair > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.hair)}</td>
-                        <td class="border border-gray-400 p-1.5 text-center ${failCounts.ears > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.ears)}</td>
-                        <td class="border border-gray-400 p-1.5 text-center ${failCounts.skin > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.skin)}</td>
-                        <td class="border border-gray-400 p-1.5 text-center ${failCounts.teeth > 0 ? 'bg-red-50' : ''}">${getFailHtml(failCounts.teeth)}</td>
+                        <td class="border border-gray-400 p-1.5 text-left whitespace-nowrap min-w-[max-content]">${student.name}</td>
+                        <td class="border border-gray-400 p-1.5 text-center ${rec.uniform === 0 ? 'bg-red-50' : ''}">${getResHtml(rec.uniform)}</td>
+                        <td class="border border-gray-400 p-1.5 text-center ${rec.hair === 0 ? 'bg-red-50' : ''}">${getResHtml(rec.hair)}</td>
+                        <td class="border border-gray-400 p-1.5 text-center ${rec.ears === 0 ? 'bg-red-50' : ''}">${getResHtml(rec.ears)}</td>
+                        <td class="border border-gray-400 p-1.5 text-center ${rec.skin === 0 ? 'bg-red-50' : ''}">${getResHtml(rec.skin)}</td>
+                        <td class="border border-gray-400 p-1.5 text-center ${rec.teeth === 0 ? 'bg-red-50' : ''}">${getResHtml(rec.teeth)}</td>
                     </tr>`;
                 });
 
-                tableHTML += `</tbody></table>
-                <div class="mt-2 text-sm text-gray-700">
-                    * รายงานนี้แสดงจำนวนครั้งที่นักเรียนประเมินสุขอนามัย <strong class="text-red-600">"ไม่ผ่าน"</strong> ในรอบเดือน
-                </div>`;
+                tableHTML += `</tbody></table>`;
             }
             else if (type === 'nutrition') {
                 let stats = { total: 0, thin: 0, normal: 0, fat_1: 0, fat_2: 0, sumBMI: 0 };
@@ -2284,21 +2290,21 @@
                     if(bmi > 0) {
                         stats.total++;
                         stats.sumBMI += bmi;
-                        if(res.text === 'ผอม') stats.thin++;
+                        if(res.text === 'ผอม' || res.text === 'ค่อนข้างผอม') stats.thin++;
                         else if(res.text === 'สมส่วน') stats.normal++;
                         else if(res.text === 'ท้วม') stats.fat_1++;
                         else if(res.text === 'อ้วน') stats.fat_2++;
                     }
 
                     let bgPrintStyle = '';
-                    if(res.text === 'ผอม') bgPrintStyle = 'background-color: #3b82f6 !important; color: white !important;';
+                    if(res.text === 'ผอม' || res.text === 'ค่อนข้างผอม') bgPrintStyle = 'background-color: #3b82f6 !important; color: white !important;';
                     else if(res.text === 'สมส่วน') bgPrintStyle = 'background-color: #22c55e !important; color: white !important;';
                     else if(res.text === 'ท้วม') bgPrintStyle = 'background-color: #f97316 !important; color: white !important;';
                     else if(res.text === 'อ้วน') bgPrintStyle = 'background-color: #ef4444 !important; color: white !important;';
 
                     tableHTML += `<tr>
                         <td class="border border-gray-400 p-1.5 text-center">${student.code}</td>
-                        <td class="border border-gray-400 p-1.5 text-left">${student.name}</td>
+                        <td class="border border-gray-400 p-1.5 text-left whitespace-nowrap min-w-[max-content]">${student.name}</td>
                         <td class="border border-gray-400 p-1.5 text-center">${w}</td>
                         <td class="border border-gray-400 p-1.5 text-center">${h}</td>
                         <td class="border border-gray-400 p-1.5 text-center font-bold">${bmi ? bmi.toFixed(1) : '-'}</td>
