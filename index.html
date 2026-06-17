@@ -800,6 +800,28 @@
                         </div>
 
                         <div class="pt-6 mt-6 border-t border-gray-300/30">
+                            <h3 class="font-bold text-slate-800 mb-4 text-lg">วันเปิด-ปิดภาคเรียน (เพื่อเว้นว่างและไม่คิดเปอร์เซ็นต์ในรายงาน)</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm mb-1 text-[#213A58] font-medium">ภาคเรียนที่ 1</label>
+                                    <div class="flex gap-2">
+                                        <input type="date" id="set-term1-start" class="glass-input w-full p-2 rounded-lg" title="วันเปิดภาคเรียนที่ 1">
+                                        <span class="self-center">-</span>
+                                        <input type="date" id="set-term1-end" class="glass-input w-full p-2 rounded-lg" title="วันปิดภาคเรียนที่ 1">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm mb-1 text-[#213A58] font-medium">ภาคเรียนที่ 2</label>
+                                    <div class="flex gap-2">
+                                        <input type="date" id="set-term2-start" class="glass-input w-full p-2 rounded-lg" title="วันเปิดภาคเรียนที่ 2">
+                                        <span class="self-center">-</span>
+                                        <input type="date" id="set-term2-end" class="glass-input w-full p-2 rounded-lg" title="วันปิดภาคเรียนที่ 2">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-6 mt-6 border-t border-gray-300/30">
                             <h3 class="font-bold text-slate-800 mb-4 text-lg">รายนามผู้ลงนามในรายงาน</h3>
                             <div class="space-y-4">
                                 <div>
@@ -2018,9 +2040,22 @@
                     const isWeekend = dObj.getDay() === 0 || dObj.getDay() === 6;
                     const isHoliday = appData.holidays.some(h => h.date === dateKey);
                     
-                    if(!isWeekend && !isHoliday) totalWorkingDays++;
+                    let inTerm = true;
+                    if (appData.settings.term1Start || appData.settings.term2Start) {
+                        inTerm = false;
+                        const dTime = dObj.getTime();
+                        const t1s = appData.settings.term1Start ? new Date(appData.settings.term1Start).getTime() : 0;
+                        const t1e = appData.settings.term1End ? new Date(appData.settings.term1End).getTime() : 9999999999999;
+                        const t2s = appData.settings.term2Start ? new Date(appData.settings.term2Start).getTime() : 0;
+                        const t2e = appData.settings.term2End ? new Date(appData.settings.term2End).getTime() : 9999999999999;
 
-                    const bgClass = (isWeekend || isHoliday) ? 'bg-gray-300' : '';
+                        if (t1s && dTime >= t1s && dTime <= t1e) inTerm = true;
+                        if (t2s && dTime >= t2s && dTime <= t2e) inTerm = true;
+                    }
+                    
+                    if(!isWeekend && !isHoliday && inTerm) totalWorkingDays++;
+
+                    const bgClass = (isWeekend || isHoliday || !inTerm) ? 'bg-gray-300' : '';
                     tableHTML += `<th class="border border-gray-400 p-0.5 w-5 ${bgClass}" ${bgClass ? 'style="background-color: #d1d5db !important;"' : ''}>${d}</th>`;
                 }
 
@@ -2056,14 +2091,26 @@
                         const dObj = new Date(parseInt(year), parseInt(month) - 1, d);
                         const isWeekend = dObj.getDay() === 0 || dObj.getDay() === 6;
                         const isHoliday = appData.holidays.some(h => h.date === dateKey);
-                        const bgClass = (isWeekend || isHoliday) ? 'bg-gray-300' : '';
+
+                        let inTerm = true;
+                        if (appData.settings.term1Start || appData.settings.term2Start) {
+                            inTerm = false;
+                            const dTime = dObj.getTime();
+                            const t1s = appData.settings.term1Start ? new Date(appData.settings.term1Start).getTime() : 0;
+                            const t1e = appData.settings.term1End ? new Date(appData.settings.term1End).getTime() : 9999999999999;
+                            const t2s = appData.settings.term2Start ? new Date(appData.settings.term2Start).getTime() : 0;
+                            const t2e = appData.settings.term2End ? new Date(appData.settings.term2End).getTime() : 9999999999999;
+
+                            if (t1s && dTime >= t1s && dTime <= t1e) inTerm = true;
+                            if (t2s && dTime >= t2s && dTime <= t2e) inTerm = true;
+                        }
+
+                        const bgClass = (isWeekend || isHoliday || !inTerm) ? 'bg-gray-300' : '';
                         
                         let cellContent = '';
                         const rec = appData.dailyRecords[dateKey] ? appData.dailyRecords[dateKey][student.id] : null;
 
-                        if (isHoliday || (isWeekend && !rec)) {
-                            // ปล่อยว่าง
-                        } else if (rec) {
+                        if (rec) {
                             if(type === 'attendance') {
                                 if(rec.status === 'มา') { cellContent = '/'; present++; }
                                 else if(rec.status === 'สาย') { cellContent = 'ส'; late++; }
@@ -2092,12 +2139,8 @@
 
                         if(bgClass) textStyle += ' background-color: #d1d5db !important;';
 
-                        let clickAction = '';
-                        if (!isWeekend && !isHoliday) {
-                            clickAction = `onclick="toggleReportCell('${type}', '${dateKey}', '${student.id}')" class="border border-gray-400 p-0 text-center font-bold text-[10px] cursor-pointer hover:bg-yellow-200 transition-colors duration-150 ${bgClass}"`;
-                        } else {
-                            clickAction = `class="border border-gray-400 p-0 text-center font-bold text-[10px] ${bgClass}"`;
-                        }
+                        // Allow all cells to be clickable, user can override weekends/holidays/out of term
+                        let clickAction = `onclick="toggleReportCell('${type}', '${dateKey}', '${student.id}')" class="border border-gray-400 p-0 text-center font-bold text-[10px] cursor-pointer hover:bg-yellow-200 transition-colors duration-150 ${bgClass}"`;
 
                         tableHTML += `<td ${clickAction} style="${textStyle}">${cellContent}</td>`;
                     }
@@ -2311,6 +2354,10 @@
             document.getElementById('set-school').value = appData.settings.schoolName || '';
             document.getElementById('set-room').value = appData.settings.room || '';
             document.getElementById('set-year').value = appData.settings.year || '';
+            document.getElementById('set-term1-start').value = appData.settings.term1Start || '';
+            document.getElementById('set-term1-end').value = appData.settings.term1End || '';
+            document.getElementById('set-term2-start').value = appData.settings.term2Start || '';
+            document.getElementById('set-term2-end').value = appData.settings.term2End || '';
             document.getElementById('set-sign1').value = appData.settings.signers[0] || '';
             document.getElementById('set-sign2').value = appData.settings.signers[1] || '';
             document.getElementById('set-sign3').value = appData.settings.signers[2] || '';
@@ -2400,6 +2447,10 @@
                 schoolName: document.getElementById('set-school').value,
                 room: document.getElementById('set-room').value,
                 year: document.getElementById('set-year').value,
+                term1Start: document.getElementById('set-term1-start').value,
+                term1End: document.getElementById('set-term1-end').value,
+                term2Start: document.getElementById('set-term2-start').value,
+                term2End: document.getElementById('set-term2-end').value,
                 logo: tempLogoData,
                 signers: [
                     document.getElementById('set-sign1').value,
