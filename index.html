@@ -839,6 +839,11 @@
                             <i class="fas fa-exclamation-triangle mr-2"></i> ล้างข้อมูลทั้งหมด (Reset System)
                         </button>
                     </div>
+                    <div class="mt-4 pt-4 border-t border-blue-100">
+                        <button onclick="forceRescueData()" class="w-full bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold py-3 rounded-lg border border-blue-200 transition-colors shadow-sm text-sm">
+                            <i class="fas fa-life-ring mr-2"></i> กู้ข้อมูลฉุกเฉิน (ดึงประวัติเก่าทั้งหมดมาบันทึกซ้ำ)
+                        </button>
+                    </div>
                 </div>
             </section>
 
@@ -1818,6 +1823,72 @@
         }
 
         // --- Interactive Report Edit Functions ---
+        window.forceRescueData = function() {
+            try {
+                const localData = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (!localData) { alert('ไม่มีข้อมูลให้กู้คืนครับ'); return; }
+                let restored = 0;
+                
+                const currentIds = new Set(appData.students.map(s => s.id));
+                const sortedCurrent = [...appData.students].sort((a, b) => parseInt(a.code) - parseInt(b.code));
+                
+                function rescueObj(obj) {
+                    if(!obj) return;
+                    let orphans = new Set();
+                    Object.values(obj).forEach(timeData => {
+                        Object.keys(timeData).forEach(id => {
+                            if (!currentIds.has(id)) orphans.add(id);
+                        });
+                    });
+                    
+                    if(orphans.size === 0) return;
+                    
+                    const orphanedTimestamps = Array.from(orphans)
+                        .filter(id => id.length > 5)
+                        .sort((a,b) => parseInt(a) - parseInt(b));
+                        
+                    const map = {};
+                    orphanedTimestamps.forEach((oldId, i) => {
+                        map[oldId] = sortedCurrent[i % sortedCurrent.length].id;
+                    });
+                    
+                    Object.values(obj).forEach(timeData => {
+                        orphanedTimestamps.forEach(oldId => {
+                            if (timeData[oldId]) {
+                                const newId = map[oldId];
+                                if (!timeData[newId]) {
+                                    timeData[newId] = timeData[oldId];
+                                    restored++;
+                                } else {
+                                    const ex = timeData[newId];
+                                    // if it's explicitly 'มา' but no milk/brush, it's considered empty/default.
+                                    const isEmpty = (ex.w === '' && ex.h === '') || (ex.status === 'มา' && !ex.milk && !ex.brush) || (!ex.hair && !ex.nails && !ex.h20) || (!ex.uniform && !ex.ears && !ex.skin && !ex.teeth);
+                                    if (isEmpty) {
+                                        timeData[newId] = timeData[oldId];
+                                        restored++;
+                                    }
+                                }
+                            }
+                        });
+                    });
+                }
+                
+                rescueObj(appData.dailyRecords);
+                rescueObj(appData.healthRecords);
+                rescueObj(appData.nutritionRecords);
+                
+                if (restored > 0) {
+                    saveData();
+                    alert('กู้คืนสำเร็จ! จำนวน ' + restored + ' รายการ กรุณากลับไปที่หน้ารายงานเพื่อตรวจสอบครับ');
+                } else {
+                    alert('ระบบได้สแกนแล้ว แต่ไม่พบประวัติที่สูญหาย หรือข้อมูลทั้งหมดได้ถูกเชื่อมโยงกลับมาเรียบร้อยแล้วครับ');
+                }
+            } catch(e) {
+                console.error(e);
+                alert('เกิดข้อผิดพลาดในการกู้ข้อมูล');
+            }
+        };
+
         window.toggleReportCell = function(type, dateKey, studentId) {
             if (!appData.dailyRecords[dateKey]) appData.dailyRecords[dateKey] = {};
             let rec = appData.dailyRecords[dateKey][studentId];
@@ -2116,11 +2187,11 @@
                         const dateKey = `${year}-${month.padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                         if (appData.healthRecords[dateKey] && appData.healthRecords[dateKey][student.id]) {
                             const rec = appData.healthRecords[dateKey][student.id];
-                            if(!rec.uniform) failCounts.uniform++;
-                            if(!rec.hair) failCounts.hair++;
-                            if(!rec.ears) failCounts.ears++;
-                            if(!rec.skin) failCounts.skin++;
-                            if(!rec.teeth) failCounts.teeth++;
+                            if(rec.uniform === 0) failCounts.uniform++;
+                            if(rec.hair === 0) failCounts.hair++;
+                            if(rec.ears === 0) failCounts.ears++;
+                            if(rec.skin === 0) failCounts.skin++;
+                            if(rec.teeth === 0) failCounts.teeth++;
                         }
                     }
 
