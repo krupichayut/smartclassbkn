@@ -1521,11 +1521,11 @@
             let hasData = false;
 
             appData.students.forEach(student => {
-                const uniform = document.getElementById(\`health-\${student.id}-uniform\`).value;
-                const hair = document.getElementById(\`health-\${student.id}-hair\`).value;
-                const ears = document.getElementById(\`health-\${student.id}-ears\`).value;
-                const skin = document.getElementById(\`health-\${student.id}-skin\`).value;
-                const teeth = document.getElementById(\`health-\${student.id}-teeth\`).value;
+                const uniform = document.getElementById(`health-${student.id}-uniform`).value;
+                const hair = document.getElementById(`health-${student.id}-hair`).value;
+                const ears = document.getElementById(`health-${student.id}-ears`).value;
+                const skin = document.getElementById(`health-${student.id}-skin`).value;
+                const teeth = document.getElementById(`health-${student.id}-teeth`).value;
 
                 if (uniform !== '' || hair !== '' || ears !== '' || skin !== '' || teeth !== '') {
                     appData.healthRecords[selectedMonth][student.id] = {
