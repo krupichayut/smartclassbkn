@@ -681,24 +681,35 @@
             <!-- Tab: Holidays -->
             <section id="tab-holidays" class="tab-content hidden fade-in">
                 <header class="mb-6 mt-8 md:mt-0">
-                    <h2 class="text-2xl font-bold text-[#15919B]"><i class="fas fa-umbrella-beach mr-2"></i> ตั้งค่าว้นหยุดพิเศษ</h2>
-                    <p class="text-[#213A58]">ระบบจะปิดการเช็คชื่อในวันหยุดที่กำหนด</p>
+                    <h2 class="text-2xl font-bold text-[#15919B]"><i class="fas fa-umbrella-beach mr-2"></i> ตั้งค่าว้นหยุด / วันชดเชย</h2>
+                    <p class="text-[#213A58]">ระบบจะปิดการเช็คชื่อในวันหยุด และเปิดให้เช็คชื่อปกติในวันชดเชย</p>
                 </header>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="glass-panel p-6 rounded-2xl lg:col-span-1 h-fit">
-                        <h3 class="font-bold mb-4 text-lg text-[#15919B]">เพิ่มวันหยุด</h3>
+                        <h3 class="font-bold mb-4 text-lg text-[#15919B]">เพิ่มวันหยุด / วันชดเชย</h3>
                         <form id="holiday-form" onsubmit="addHoliday(event)" class="space-y-4">
                             <div>
                                 <label class="block text-sm mb-1 text-[#213A58] font-medium">วันที่</label>
                                 <input type="date" id="holiday-date-input" required class="glass-input w-full p-2 rounded-lg">
                             </div>
                             <div>
+                                <label class="block text-sm mb-1 text-[#213A58] font-medium">ประเภท</label>
+                                <select id="holiday-type-input" class="glass-input w-full p-2 rounded-lg" onchange="toggleMakeupDate()">
+                                    <option value="holiday">วันหยุด (Holiday)</option>
+                                    <option value="makeup">วันเรียนชดเชย (Makeup Day)</option>
+                                </select>
+                            </div>
+                            <div id="makeup-date-container" class="hidden">
+                                <label class="block text-sm mb-1 text-[#213A58] font-medium">ชดเชยวันหยุดของวันที่ (ถ้ามี)</label>
+                                <input type="date" id="makeup-for-date-input" class="glass-input w-full p-2 rounded-lg">
+                            </div>
+                            <div>
                                 <label class="block text-sm mb-1 text-[#213A58] font-medium">ชื่อวันหยุด / เหตุผล</label>
-                                <input type="text" id="holiday-name" required placeholder="เช่น วันแม่แห่งชาติ, กีฬาสี" class="glass-input w-full p-2 rounded-lg">
+                                <input type="text" id="holiday-name" required placeholder="เช่น วันแม่แห่งชาติ, เรียนชดเชย" class="glass-input w-full p-2 rounded-lg">
                             </div>
                             <button type="submit" class="w-full exec-btn">
-                                บันทึกวันหยุด
+                                บันทึกข้อมูล
                             </button>
                         </form>
                     </div>
@@ -1267,16 +1278,35 @@
             const selectedDate = dateInput.value;
 
             const holidayBanner = document.getElementById('attendance-holiday-banner');
-            const reasonEl = document.getElementById('attendance-holiday-reason');
-            const isHoliday = appData.holidays.find(h => h.date === selectedDate);
+            const isHolidayObj = appData.holidays.find(h => h.date === selectedDate);
+            const isHoliday = isHolidayObj && !isHolidayObj.isMakeup;
+            const isMakeup = isHolidayObj && isHolidayObj.isMakeup;
             
             const grid = document.getElementById('zen-daily-container');
             grid.innerHTML = '<div class="space-y-2 pb-10" id="zen-daily-list"></div>';
             const listContainer = document.getElementById('zen-daily-list');
 
-            if(isHoliday) {
+            if(isHolidayObj) {
                 holidayBanner.classList.remove('hidden');
-                reasonEl.textContent = `เหตุผล/ชื่อวันหยุด: ${isHoliday.name}`;
+                if (isMakeup) {
+                    holidayBanner.className = "mb-6 bg-emerald-50 border border-emerald-200 text-emerald-700 p-4 rounded-xl flex items-center gap-3 shadow-sm";
+                    holidayBanner.innerHTML = `
+                        <i class="fas fa-info-circle text-2xl text-emerald-500"></i>
+                        <div>
+                            <h4 class="font-bold text-lg">วันนี้เป็นวันเรียนชดเชย</h4>
+                            <p class="text-sm">เหตุผล: ${isHolidayObj.name} (สามารถเช็คชื่อได้ตามปกติ)</p>
+                        </div>
+                    `;
+                } else {
+                    holidayBanner.className = "mb-6 bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl flex items-center gap-3 shadow-sm";
+                    holidayBanner.innerHTML = `
+                        <i class="fas fa-bullhorn text-2xl text-red-500"></i>
+                        <div>
+                            <h4 class="font-bold text-lg">วันนี้เป็นวันหยุด!</h4>
+                            <p class="text-sm">เหตุผล/ชื่อวันหยุด: ${isHolidayObj.name}</p>
+                        </div>
+                    `;
+                }
             } else {
                 holidayBanner.classList.add('hidden');
             }
@@ -1856,7 +1886,7 @@
                     <div class="flex items-center gap-4">
                         <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center text-xl shadow-inner"><i class="fas fa-calendar-day"></i></div>
                         <div>
-                            <h4 class="font-bold text-slate-800 text-[1.1rem]">${h.name}</h4>
+                            <h4 class="font-bold text-slate-800 text-[1.1rem]">${h.name} ${h.isMakeup ? '<span class="text-xs ml-2 bg-emerald-100 text-emerald-600 px-2 py-1 rounded-full border border-emerald-200">วันชดเชย</span>' : '<span class="text-xs ml-2 bg-rose-100 text-rose-600 px-2 py-1 rounded-full border border-rose-200">วันหยุด</span>'}</h4>
                             <p class="text-sm font-bold text-slate-500 mt-1">${getThaiDate(h.date)}</p>
                         </div>
                     </div>
@@ -1870,18 +1900,36 @@
             });
         }
 
+        function toggleMakeupDate() {
+            const type = document.getElementById('holiday-type-input').value;
+            const container = document.getElementById('makeup-date-container');
+            if (type === 'makeup') {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+                document.getElementById('makeup-for-date-input').value = '';
+            }
+        }
+
         function addHoliday(e) {
             e.preventDefault();
             const date = document.getElementById('holiday-date-input').value;
-            const name = document.getElementById('holiday-name').value;
+            const type = document.getElementById('holiday-type-input').value;
+            const isMakeup = type === 'makeup';
+            const makeupForDate = document.getElementById('makeup-for-date-input') ? document.getElementById('makeup-for-date-input').value : '';
+            let name = document.getElementById('holiday-name').value;
+            
+            if (isMakeup && makeupForDate) {
+                name = `${name} (ชดเชยของวันที่ ${getThaiDate(makeupForDate)})`;
+            }
             
             if(appData.holidays.some(h => h.date === date)) {
-                showConfirm('ข้อมูลซ้ำ', 'มีวันหยุดในวันนี้บันทึกไว้แล้ว', null);
+                showConfirm('ข้อมูลซ้ำ', 'มีข้อมูลในวันนี้บันทึกไว้แล้ว', null);
                 document.getElementById('confirm-cancel').classList.add('hidden');
                 return;
             }
 
-            appData.holidays.push({ id: Date.now().toString(), date, name });
+            appData.holidays.push({ id: Date.now().toString(), date, name, isMakeup });
             saveData();
             
             document.getElementById('holiday-form').reset();
@@ -2088,7 +2136,9 @@
                     const dateKey = `${year}-${month.padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                     const dObj = new Date(parseInt(year), parseInt(month) - 1, d);
                     const isWeekend = dObj.getDay() === 0 || dObj.getDay() === 6;
-                    const isHoliday = appData.holidays.some(h => h.date === dateKey);
+                    const isHolidayObj = appData.holidays.find(h => h.date === dateKey);
+                    const isHoliday = isHolidayObj && !isHolidayObj.isMakeup;
+                    const isMakeup = isHolidayObj && isHolidayObj.isMakeup;
                     
                     let inTerm = true;
                     if (appData.settings.term1Start || appData.settings.term2Start) {
@@ -2103,9 +2153,9 @@
                         if (t2s && dTime >= t2s && dTime <= t2e) inTerm = true;
                     }
                     
-                    if(!isWeekend && !isHoliday && inTerm) totalWorkingDays++;
+                    if((!isWeekend && !isHoliday && inTerm) || isMakeup) totalWorkingDays++;
 
-                    const bgClass = (isWeekend || isHoliday || !inTerm) ? 'bg-gray-300' : '';
+                    const bgClass = ((isWeekend || isHoliday || !inTerm) && !isMakeup) ? 'bg-gray-300' : '';
                     tableHTML += `<th class="border border-gray-400 p-0.5 w-5 ${bgClass}" ${bgClass ? 'style="background-color: #d1d5db !important;"' : ''}>${d}</th>`;
                 }
 
@@ -2140,7 +2190,9 @@
                         const dateKey = `${year}-${month.padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                         const dObj = new Date(parseInt(year), parseInt(month) - 1, d);
                         const isWeekend = dObj.getDay() === 0 || dObj.getDay() === 6;
-                        const isHoliday = appData.holidays.some(h => h.date === dateKey);
+                        const isHolidayObj = appData.holidays.find(h => h.date === dateKey);
+                        const isHoliday = isHolidayObj && !isHolidayObj.isMakeup;
+                        const isMakeup = isHolidayObj && isHolidayObj.isMakeup;
 
                         let inTerm = true;
                         if (appData.settings.term1Start || appData.settings.term2Start) {
@@ -2155,7 +2207,7 @@
                             if (t2s && dTime >= t2s && dTime <= t2e) inTerm = true;
                         }
 
-                        const bgClass = (isWeekend || isHoliday || !inTerm) ? 'bg-gray-300' : '';
+                        const bgClass = ((isWeekend || isHoliday || !inTerm) && !isMakeup) ? 'bg-gray-300' : '';
                         
                         let cellContent = '';
                         const rec = appData.dailyRecords[dateKey] ? appData.dailyRecords[dateKey][student.id] : null;
