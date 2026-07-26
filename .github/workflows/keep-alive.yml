@@ -1,0 +1,19 @@
+name: Keep Supabase Awake
+
+on:
+  schedule:
+    # ตั้งเวลาทำงานอัตโนมัติทุกๆ 3 วัน เวลา 00:00 UTC (ตรงกับ 07:00 น. เช้าเวลาไทย)
+    - cron: '0 0 */3 * *'
+  workflow_dispatch: # เปิดปุ่มให้กดรันตรวจสอบเองได้จากหน้าแถบ Actions ของ GitHub
+
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase Database to Prevent Sleep / Pausing
+        run: |
+          curl -s -X GET "https://nnxfkprivlvwturbybhf.supabase.co/rest/v1/classroom_data?select=id&limit=1" \
+          -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ueGZrcHJpdmx2d3R1cmJ5YmhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NTAwNzUsImV4cCI6MjA5NDMyNjA3NX0.1VJgA5v7roJAGxUdUu052pwlrRH0y2SVs8elhka5Ofk" \
+          -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ueGZrcHJpdmx2d3R1cmJ5YmhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NTAwNzUsImV4cCI6MjA5NDMyNjA3NX0.1VJgA5v7roJAGxUdUu052pwlrRH0y2SVs8elhka5Ofk" \
+          -H "Content-Type: application/json"
+          echo "Supabase successfully pinged! Server stays awake!"
