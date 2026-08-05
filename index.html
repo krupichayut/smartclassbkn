@@ -640,6 +640,13 @@
                                     </select>
                                 </div>
                                 <div>
+                                    <label class="block text-sm mb-1 text-[#213A58] font-medium">สถานะนักเรียน</label>
+                                    <select id="student-status" class="glass-input w-full p-2 rounded-lg font-bold text-slate-700">
+                                        <option value="ปกติ">🟢 ปกติ (กำลังศึกษา)</option>
+                                        <option value="ย้ายออก">🔒 ย้ายออก</option>
+                                    </select>
+                                </div>
+                                <div>
                                     <label class="block text-sm mb-1 text-[#213A58] font-medium">ข้อมูลสุขภาพ (แพ้นม, โรคประจำตัว)</label>
                                     <input type="text" id="student-health-info" placeholder="เช่น แพ้นมวัว, หอบหืด (เว้นว่างได้)" class="glass-input w-full p-2 rounded-lg">
                                 </div>
@@ -1226,8 +1233,14 @@
             const today = getTodayString();
             document.getElementById('dashboard-date-display').innerText = `ข้อมูลประจำวันที่ ${getThaiDate(today)}`;
             
-            const totalStudents = appData.students.length;
-            document.getElementById('dash-total-students').innerText = totalStudents;
+            const totalStudents = appData.students.filter(s => s.status !== 'ย้ายออก').length;
+            const transferredCount = appData.students.filter(s => s.status === 'ย้ายออก').length;
+            const totalEl = document.getElementById('dash-total-students');
+            if(transferredCount > 0) {
+                totalEl.innerHTML = `${totalStudents} <span class="text-xs font-normal text-amber-100 block mt-1"><i class="fas fa-sign-out-alt"></i> ย้ายออก ${transferredCount} คน</span>`;
+            } else {
+                totalEl.innerText = totalStudents;
+            }
             
             let presentCount = 0;
             let absentCount = 0;
@@ -1289,12 +1302,14 @@
             if(isHolidayObj) {
                 holidayBanner.classList.remove('hidden');
                 if (isMakeup) {
+                    const makeupNote = isHolidayObj.makeupForDate ? `<p class="text-xs text-emerald-600 font-bold mt-1"><i class="fas fa-exchange-alt mr-1"></i> เป็นวันเรียนชดเชยของวันหยุดที่: ${getThaiDate(isHolidayObj.makeupForDate)}</p>` : '';
                     holidayBanner.className = "mb-6 bg-emerald-50 border border-emerald-200 text-emerald-700 p-4 rounded-xl flex items-center gap-3 shadow-sm";
                     holidayBanner.innerHTML = `
-                        <i class="fas fa-info-circle text-2xl text-emerald-500"></i>
+                        <i class="fas fa-school text-2xl text-emerald-500"></i>
                         <div>
-                            <h4 class="font-bold text-lg">วันนี้เป็นวันเรียนชดเชย</h4>
-                            <p class="text-sm">เหตุผล: ${isHolidayObj.name} (สามารถเช็คชื่อได้ตามปกติ)</p>
+                            <h4 class="font-bold text-lg flex items-center gap-2">วันนี้เป็นวันเรียนชดเชย <span class="text-xs bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-full border border-emerald-200 font-bold">เปิดให้ลงเวลาเรียน</span></h4>
+                            <p class="text-sm">เหตุผล: ${isHolidayObj.name} (สามารถเช็คชื่อและบันทึกกิจกรรมได้ตามปกติ)</p>
+                            ${makeupNote}
                         </div>
                     `;
                 } else {
@@ -1315,7 +1330,11 @@
                 appData.dailyRecords[selectedDate] = {};
                 let hasChanges = false;
                 appData.students.forEach(s => {
-                    appData.dailyRecords[selectedDate][s.id] = { status: 'มา', milk: false, brush: false };
+                    if(s.status !== 'ย้ายออก') {
+                        appData.dailyRecords[selectedDate][s.id] = { status: 'มา', milk: false, brush: false };
+                    } else {
+                        appData.dailyRecords[selectedDate][s.id] = { status: 'ย้าย', milk: false, brush: false };
+                    }
                     hasChanges = true;
                 });
                 if(hasChanges) saveData();
@@ -1342,9 +1361,10 @@
             `;
 
             students.forEach(student => {
-                const rec = records[student.id] || { status: 'มา', milk: false, brush: false };
-                const isAbsent = rec.status === 'ขาด' || rec.status === 'ลา';
-                const disabledHTML = isAbsent || isHoliday ? 'disabled opacity-40 cursor-not-allowed' : '';
+                const isTransferred = student.status === 'ย้ายออก';
+                const rec = records[student.id] || { status: isTransferred ? 'ย้าย' : 'มา', milk: false, brush: false };
+                const isAbsent = rec.status === 'ขาด' || rec.status === 'ลา' || rec.status === 'ย้าย';
+                const disabledHTML = isAbsent || isHoliday || isTransferred ? 'disabled opacity-40 cursor-not-allowed' : '';
                 
                 let healthBadge = '';
                 if(student.healthInfo) {
@@ -1362,23 +1382,12 @@
                 const safeName = student.name || '?';
                 const initAvatar = safeName.charAt(0);
                 const avatarColors = ['from-indigo-400 to-purple-400', 'from-emerald-400 to-teal-400', 'from-rose-400 to-orange-400', 'from-blue-400 to-cyan-400'];
-                const avatarBg = avatarColors[parseInt(student.code) % avatarColors.length];
+                const avatarBg = isTransferred ? 'from-slate-400 to-slate-500 opacity-60' : avatarColors[parseInt(student.code) % avatarColors.length];
 
-                const row = document.createElement('div');
-                row.className = `flex items-center py-4 px-6 mb-3 bg-white rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-200 cursor-pointer group`;
-                row.innerHTML = `
-                    <div class="w-12 text-center font-bold text-slate-300 group-hover:text-slate-500 transition-colors text-lg">${String(student.code || '0').padStart(2, '0')}</div>
-                    <div class="flex-1 flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${avatarBg || 'from-slate-400 to-slate-500'} text-white flex items-center justify-center font-bold text-lg shadow-inner">${initAvatar}</div>
-                        <div class="flex flex-col">
-                            <div class="flex items-center">
-                                <span class="font-bold text-slate-800 text-[1.05rem] tracking-tight">${student.name}</span>
-                                ${healthBadge}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="w-32 flex justify-center items-center">
-                        <div class="relative flex items-center">
+                const statusControls = isTransferred ? `
+                    <span class="px-3 py-1.5 bg-amber-50 text-amber-600 border border-amber-200 rounded-xl font-bold text-xs flex items-center shadow-sm w-full justify-center"><i class="fas fa-sign-out-alt mr-1.5"></i> 🔒 ย้ายออก</span>
+                ` : `
+                        <div class="relative flex items-center w-full">
                             <div id="status-dot-${student.id}" class="absolute left-3 w-2.5 h-2.5 rounded-full ${statusColor} z-10 transition-colors duration-300"></div>
                             <select class="appearance-none bg-slate-50 border border-slate-200 font-bold text-sm text-slate-700 outline-none cursor-pointer w-full py-2 pl-8 pr-4 rounded-xl transition-colors hover:bg-slate-100 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100" 
                                 onchange="updateDailyRecord('${selectedDate}', '${student.id}', 'status', this.value);" ${isHoliday ? 'disabled' : ''}>
@@ -1388,16 +1397,33 @@
                                 <option value="ขาด" ${rec.status==='ขาด'?'selected':''}>ขาดเรียน</option>
                             </select>
                         </div>
+                `;
+
+                const row = document.createElement('div');
+                row.className = `flex items-center py-4 px-6 mb-3 bg-white rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-200 cursor-pointer group ${isTransferred ? 'bg-slate-50/60' : ''}`;
+                row.innerHTML = `
+                    <div class="w-12 text-center font-bold text-slate-300 group-hover:text-slate-500 transition-colors text-lg">${String(student.code || '0').padStart(2, '0')}</div>
+                    <div class="flex-1 flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${avatarBg || 'from-slate-400 to-slate-500'} text-white flex items-center justify-center font-bold text-lg shadow-inner">${initAvatar}</div>
+                        <div class="flex flex-col">
+                            <div class="flex items-center">
+                                <span class="font-bold text-slate-800 text-[1.05rem] tracking-tight ${isTransferred ? 'line-through text-slate-500' : ''}">${student.name}</span>
+                                ${healthBadge}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-32 flex justify-center items-center">
+                        ${statusControls}
                     </div>
                     <div class="w-24 flex justify-center">
                         <input type="checkbox" id="cb-milk-${student.id}" class="modern-checkbox w-6 h-6 rounded-lg border-slate-300 checked:bg-indigo-500 checked:border-indigo-500 transition-all cursor-pointer focus:ring-2 focus:ring-indigo-300 focus:outline-none" 
                             onchange="updateDailyRecord('${selectedDate}', '${student.id}', 'milk', this.checked)" 
-                            ${rec.milk ? 'checked' : ''} ${disabledHTML}>
+                            ${rec.milk && !isTransferred ? 'checked' : ''} ${disabledHTML}>
                     </div>
                     <div class="w-24 flex justify-center">
                         <input type="checkbox" id="cb-brush-${student.id}" class="modern-checkbox w-6 h-6 rounded-lg border-slate-300 checked:bg-indigo-500 checked:border-indigo-500 transition-all cursor-pointer focus:ring-2 focus:ring-indigo-300 focus:outline-none" 
                             onchange="updateDailyRecord('${selectedDate}', '${student.id}', 'brush', this.checked)" 
-                            ${rec.brush ? 'checked' : ''} ${disabledHTML}>
+                            ${rec.brush && !isTransferred ? 'checked' : ''} ${disabledHTML}>
                     </div>
                 `;
                 listContainer.appendChild(row);
@@ -1409,6 +1435,7 @@
             
             let allChecked = true;
             appData.students.forEach(s => {
+                if(s.status === 'ย้ายออก') return;
                 const rec = appData.dailyRecords[date][s.id];
                 if(rec && (rec.status === 'มา' || rec.status === 'สาย') && !rec[field]) {
                     allChecked = false;
@@ -1418,6 +1445,7 @@
             const newValue = !allChecked;
 
             appData.students.forEach(s => {
+                if(s.status === 'ย้ายออก') return;
                 const rec = appData.dailyRecords[date][s.id];
                 if(rec && (rec.status === 'มา' || rec.status === 'สาย')) {
                     rec[field] = newValue;
@@ -1431,6 +1459,8 @@
         }
 
         function updateDailyRecord(date, studentId, field, value) {
+            const student = appData.students.find(s => s.id === studentId);
+            if(student && student.status === 'ย้ายออก') return;
             if(!appData.dailyRecords[date]) appData.dailyRecords[date] = {};
             if(!appData.dailyRecords[date][studentId]) {
                 appData.dailyRecords[date][studentId] = { status: 'มา', milk: false, brush: false };
@@ -1501,9 +1531,13 @@
             const students = [...appData.students].sort((a, b) => parseInt(a.code || 0) - parseInt(b.code || 0));
 
             students.forEach(student => {
+                const isTransferred = student.status === 'ย้ายออก';
                 const rec = records[student.id] || { uniform: '', hair: '', ears: '', skin: '', teeth: '' };
                 
                 const genSelect = (field, val) => {
+                    if (isTransferred) {
+                        return `<span class="px-2 py-1.5 bg-slate-100 text-slate-400 rounded-lg text-xs font-bold block text-center border border-slate-200">ย้ายออก</span>`;
+                    }
                     let colorClass = 'bg-slate-50 text-slate-600 border border-slate-200 hover:border-slate-300 focus:ring-2 focus:ring-slate-200'; // Default Empty
                     if(val === 1) colorClass = 'bg-emerald-50 text-emerald-600 border border-emerald-100 hover:border-emerald-300 focus:ring-2 focus:ring-emerald-200';
                     else if(val === 0) colorClass = 'bg-rose-50 text-rose-600 border border-rose-100 hover:border-rose-300 focus:ring-2 focus:ring-rose-200';
@@ -1520,15 +1554,15 @@
                 const safeName = student.name || '?';
                 const initAvatar = safeName.charAt(0);
                 const avatarColors = ['from-indigo-400 to-purple-400', 'from-emerald-400 to-teal-400', 'from-rose-400 to-orange-400', 'from-blue-400 to-cyan-400'];
-                const avatarBg = avatarColors[parseInt(student.code) % avatarColors.length];
+                const avatarBg = isTransferred ? 'from-slate-400 to-slate-500 opacity-60' : avatarColors[parseInt(student.code) % avatarColors.length];
 
                 const row = document.createElement('div');
-                row.className = `flex items-center py-4 px-6 mb-3 bg-white rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-200`;
+                row.className = `flex items-center py-4 px-6 mb-3 bg-white rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-200 ${isTransferred ? 'bg-slate-50/60' : ''}`;
                 row.innerHTML = `
                     <div class="w-12 text-center font-bold text-slate-300 text-lg">${String(student.code || '0').padStart(2, '0')}</div>
                     <div class="flex-1 min-w-[120px] flex items-center gap-4">
                         <div class="hidden sm:flex w-10 h-10 rounded-xl bg-gradient-to-br ${avatarBg || 'from-slate-400 to-slate-500'} text-white items-center justify-center font-bold text-lg shadow-inner">${initAvatar}</div>
-                        <span class="font-bold text-slate-800 text-[1.05rem] tracking-tight whitespace-nowrap min-w-[max-content]">${student.name || 'ไม่มีชื่อ'}</span>
+                        <span class="font-bold text-slate-800 text-[1.05rem] tracking-tight whitespace-nowrap min-w-[max-content] ${isTransferred ? 'line-through text-slate-500' : ''}">${student.name || 'ไม่มีชื่อ'} ${isTransferred ? '<span class="ml-2 px-2 py-0.5 bg-amber-50 text-amber-600 border border-amber-200 rounded-md text-xs font-bold not-italic no-underline inline-block">🔒 ย้ายออก</span>' : ''}</span>
                     </div>
                     <div class="w-24 px-1">${genSelect('uniform', rec.uniform)}</div>
                     <div class="w-24 px-1">${genSelect('hair', rec.hair)}</div>
@@ -1556,11 +1590,12 @@
             let hasData = false;
 
             appData.students.forEach(student => {
-                const uniform = document.getElementById(`health-${student.id}-uniform`).value;
-                const hair = document.getElementById(`health-${student.id}-hair`).value;
-                const ears = document.getElementById(`health-${student.id}-ears`).value;
-                const skin = document.getElementById(`health-${student.id}-skin`).value;
-                const teeth = document.getElementById(`health-${student.id}-teeth`).value;
+                if (student.status === 'ย้ายออก') return;
+                const uniform = document.getElementById(`health-${student.id}-uniform`)?.value || '';
+                const hair = document.getElementById(`health-${student.id}-hair`)?.value || '';
+                const ears = document.getElementById(`health-${student.id}-ears`)?.value || '';
+                const skin = document.getElementById(`health-${student.id}-skin`)?.value || '';
+                const teeth = document.getElementById(`health-${student.id}-teeth`)?.value || '';
 
                 if (uniform !== '' || hair !== '' || ears !== '' || skin !== '' || teeth !== '') {
                     appData.healthRecords[selectedMonth][student.id] = {
@@ -1591,18 +1626,20 @@
             const students = [...appData.students].sort((a, b) => parseInt(a.code || 0) - parseInt(b.code || 0));
 
             students.forEach(student => {
+                const isTransferred = student.status === 'ย้ายออก';
                 let healthHTML = '';
                 if(student.healthInfo) {
                     healthHTML = `<div class="mt-4 text-xs bg-rose-50 text-rose-600 border border-rose-100 p-3 rounded-xl font-medium flex items-center shadow-sm"><i class="fas fa-heartbeat mr-2 text-rose-500"></i> ${student.healthInfo}</div>`;
                 }
+                const statusBadge = isTransferred ? `<span class="inline-block mt-2 px-2.5 py-1 bg-amber-50 text-amber-600 border border-amber-200 rounded-lg font-bold text-xs shadow-sm"><i class="fas fa-sign-out-alt mr-1"></i> 🔒 ย้ายออกแล้ว</span>` : `<span class="inline-block mt-2 px-2 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-md font-bold text-[11px]">🟢 กำลังศึกษา</span>`;
 
                 const safeName = student.name || '?';
                 const initAvatar = safeName.charAt(0);
                 const avatarColors = ['from-indigo-400 to-purple-400', 'from-emerald-400 to-teal-400', 'from-rose-400 to-orange-400', 'from-blue-400 to-cyan-400'];
-                const avatarBg = avatarColors[parseInt(student.code) % avatarColors.length];
+                const avatarBg = isTransferred ? 'from-slate-400 to-slate-500 opacity-60' : avatarColors[parseInt(student.code) % avatarColors.length];
 
                 grid.innerHTML += `
-                    <div class="bento-box p-6 relative group overflow-hidden">
+                    <div class="bento-box p-6 relative group overflow-hidden ${isTransferred ? 'bg-slate-50/70 border-slate-200' : ''}">
                         <div class="absolute top-0 right-0 p-4 flex flex-col gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity translate-x-0 md:translate-x-4 group-hover:translate-x-0 z-10">
                             <button onclick="editStudent('${student.id}')" aria-label="แก้ไขข้อมูลนักเรียน" title="แก้ไข" class="w-8 h-8 rounded-full bg-white/90 backdrop-blur shadow-sm border border-slate-100 text-indigo-500 hover:text-indigo-600 hover:bg-white flex items-center justify-center transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-indigo-300"><i class="fas fa-edit"></i></button>
                             <button onclick="confirmDeleteStudent('${student.id}')" aria-label="ลบข้อมูลนักเรียน" title="ลบ" class="w-8 h-8 rounded-full bg-white/90 backdrop-blur shadow-sm border border-slate-100 text-rose-500 hover:text-rose-600 hover:bg-white flex items-center justify-center transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-rose-300"><i class="fas fa-trash"></i></button>
@@ -1616,8 +1653,9 @@
                                 </div>
                             </div>
                             <div>
-                                <h4 class="font-bold text-lg text-slate-800 leading-tight">${student.name || 'ไม่มีชื่อ'}</h4>
+                                <h4 class="font-bold text-lg text-slate-800 leading-tight ${isTransferred ? 'line-through text-slate-500' : ''}">${student.name || 'ไม่มีชื่อ'}</h4>
                                 <p class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wider">${student.gender}</p>
+                                ${statusBadge}
                             </div>
                         </div>
 
@@ -1644,6 +1682,7 @@
         function openStudentModal() {
             document.getElementById('student-id').value = '';
             document.getElementById('student-form').reset();
+            if(document.getElementById('student-status')) document.getElementById('student-status').value = 'ปกติ';
             document.getElementById('student-parent-name').value = '';
             document.getElementById('student-parent-phone').value = '';
             document.getElementById('student-modal-title').innerText = 'เพิ่มนักเรียน';
@@ -1661,6 +1700,7 @@
             document.getElementById('student-code').value = student.code;
             document.getElementById('student-name').value = student.name;
             document.getElementById('student-gender').value = student.gender;
+            if(document.getElementById('student-status')) document.getElementById('student-status').value = student.status || 'ปกติ';
             document.getElementById('student-health-info').value = student.healthInfo || '';
             document.getElementById('student-parent-name').value = student.parentName || '';
             document.getElementById('student-parent-phone').value = student.parentPhone || '';
@@ -1677,6 +1717,7 @@
                 code: document.getElementById('student-code').value,
                 name: document.getElementById('student-name').value,
                 gender: document.getElementById('student-gender').value,
+                status: document.getElementById('student-status')?.value || 'ปกติ',
                 healthInfo: document.getElementById('student-health-info').value,
                 parentName: document.getElementById('student-parent-name').value,
                 parentPhone: document.getElementById('student-parent-phone').value
@@ -1736,6 +1777,7 @@
                 let hasChanges = false;
                 
                 appData.students.forEach(s => {
+                    if(s.status === 'ย้ายออก') return;
                     // --- Auto-fill from previous month ---
                     let prevRec = null;
                     for (let i = allMonths.length - 1; i >= 0; i--) {
@@ -1763,6 +1805,7 @@
             const students = [...appData.students].sort((a, b) => parseInt(a.code || 0) - parseInt(b.code || 0));
 
             students.forEach(student => {
+                const isTransferred = student.status === 'ย้ายออก';
                 let rec = records[student.id];
                 if (!rec) {
                     rec = { w: '', h: '', bmi: 0 };
@@ -1786,7 +1829,7 @@
                 }
 
                 // Force auto-fill if the current month is empty, so data carries over even if initialized as blank
-                if (prevRec && (!rec.w && !rec.h)) {
+                if (prevRec && (!rec.w && !rec.h) && !isTransferred) {
                     rec.w = prevRec.w;
                     rec.h = prevRec.h;
                     rec.bmi = prevRec.bmi;
@@ -1801,24 +1844,24 @@
                 const safeName = student.name || '?';
                 const initAvatar = safeName.charAt(0);
                 const avatarColors = ['from-indigo-400 to-purple-400', 'from-emerald-400 to-teal-400', 'from-rose-400 to-orange-400', 'from-blue-400 to-cyan-400'];
-                const avatarBg = avatarColors[parseInt(student.code) % avatarColors.length];
+                const avatarBg = isTransferred ? 'from-slate-400 to-slate-500 opacity-60' : avatarColors[parseInt(student.code) % avatarColors.length];
 
                 const row = document.createElement('div');
-                row.className = `flex items-center py-4 px-6 mb-3 bg-white rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-200`;
+                row.className = `flex items-center py-4 px-6 mb-3 bg-white rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-200 ${isTransferred ? 'bg-slate-50/60' : ''}`;
                 row.innerHTML = `
                     <div class="w-12 text-center font-bold text-slate-300 text-lg">${String(student.code || '0').padStart(2, '0')}</div>
                     <div class="flex-1 min-w-[120px] flex items-center gap-4">
                         <div class="hidden sm:flex w-10 h-10 rounded-xl bg-gradient-to-br ${avatarBg || 'from-slate-400 to-slate-500'} text-white items-center justify-center font-bold text-lg shadow-inner">${initAvatar}</div>
-                        <span class="font-bold text-slate-800 text-[1.05rem] tracking-tight truncate">${student.name || 'ไม่มีชื่อ'}</span>
+                        <span class="font-bold text-slate-800 text-[1.05rem] tracking-tight truncate ${isTransferred ? 'line-through text-slate-500' : ''}">${student.name || 'ไม่มีชื่อ'} ${isTransferred ? '<span class="ml-2 px-2 py-0.5 bg-amber-50 text-amber-600 border border-amber-200 rounded text-xs font-bold not-italic no-underline inline-block">🔒 ย้ายออก</span>' : ''}</span>
                     </div>
                     <div class="w-28 px-2 flex flex-col items-center">
                         <input type="number" step="0.1" class="w-full bg-slate-50 border border-slate-200 text-slate-700 font-bold p-2 rounded-xl text-center focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300 transition-all outline-none" 
-                            value="${rec.w}" placeholder="0.0" onchange="updateNutrition('${selectedMonth}', '${student.id}', 'w', this.value)">
+                            value="${rec.w}" placeholder="0.0" onchange="updateNutrition('${selectedMonth}', '${student.id}', 'w', this.value)" ${isTransferred ? 'disabled opacity-40 cursor-not-allowed' : ''}>
                         ${prevWHTML}
                     </div>
                     <div class="w-28 px-2 flex flex-col items-center">
                         <input type="number" step="0.1" class="w-full bg-slate-50 border border-slate-200 text-slate-700 font-bold p-2 rounded-xl text-center focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300 transition-all outline-none" 
-                            value="${rec.h}" placeholder="0.0" onchange="updateNutrition('${selectedMonth}', '${student.id}', 'h', this.value)">
+                            value="${rec.h}" placeholder="0.0" onchange="updateNutrition('${selectedMonth}', '${student.id}', 'h', this.value)" ${isTransferred ? 'disabled opacity-40 cursor-not-allowed' : ''}>
                         ${prevHHTML}
                     </div>
                     <div class="w-24 text-center font-bold text-indigo-500 text-lg flex flex-col items-center justify-center" id="bmi-val-${student.id}">
@@ -1833,6 +1876,8 @@
         }
 
         function updateNutrition(month, studentId, field, value) {
+            const student = appData.students.find(s => s.id === studentId);
+            if(student && student.status === 'ย้ายออก') return;
             if(!appData.nutritionRecords[month]) appData.nutritionRecords[month] = {};
             if(!appData.nutritionRecords[month][studentId]) {
                 appData.nutritionRecords[month][studentId] = { w: '', h: '', bmi: 0 };
@@ -1879,19 +1924,63 @@
                 return;
             }
 
+            const activeStudentsCount = appData.students.filter(s => s.status !== 'ย้ายออก').length;
+
             appData.holidays.sort((a, b) => a.date.localeCompare(b.date)).forEach(h => {
+                let badgeHTML = '';
+                let actionBtnHTML = '';
+                let iconHTML = '';
+                let extraInfoHTML = '';
+                let borderClass = 'border-slate-100 hover:border-slate-200';
+                
+                if (h.isMakeup) {
+                    borderClass = 'border-emerald-100 hover:border-emerald-300 bg-gradient-to-r from-emerald-50/20 to-white';
+                    iconHTML = `<div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shadow-inner flex-shrink-0"><i class="fas fa-school"></i></div>`;
+                    
+                    const recordsForDay = appData.dailyRecords[h.date];
+                    let checkedCount = 0;
+                    if (recordsForDay) {
+                        checkedCount = Object.keys(recordsForDay).length;
+                    }
+                    
+                    let statusBadge = '';
+                    if (checkedCount > 0) {
+                        statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200/60 shadow-xs"><i class="fas fa-check-circle mr-1 text-emerald-500"></i> ลงเวลาแล้ว (${checkedCount}/${activeStudentsCount} คน)</span>`;
+                    } else {
+                        statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-600 border border-amber-200/60 shadow-xs"><i class="fas fa-clock mr-1 text-amber-500"></i> ยังไม่ลงเวลาเรียน</span>`;
+                    }
+
+                    const makeupNote = h.makeupForDate ? `<div class="text-xs font-bold text-emerald-600 mt-1"><i class="fas fa-exchange-alt mr-1 text-[10px]"></i> ชดเชยวันหยุดของ: ${getThaiDate(h.makeupForDate)}</div>` : '';
+                    extraInfoHTML = `${makeupNote}<div class="mt-1.5">${statusBadge}</div>`;
+
+                    badgeHTML = `
+                        <span class="text-xs ml-2 bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-full font-bold border border-emerald-200">วันเรียนชดเชย</span>
+                    `;
+
+                    actionBtnHTML = `
+                        <button onclick="jumpToMakeupAttendance('${h.date}')" aria-label="ลงเวลาเรียนวันชดเชย" title="ไปหน้าเช็คชื่อวันชดเชยนี้" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs sm:text-sm transition-all shadow-sm hover:shadow-md flex items-center gap-1.5 whitespace-nowrap">
+                            <i class="fas fa-edit"></i> <span class="hidden sm:inline">ลงเวลาเรียน</span>
+                        </button>
+                    `;
+                } else {
+                    iconHTML = `<div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center text-xl shadow-inner flex-shrink-0"><i class="fas fa-calendar-day"></i></div>`;
+                    badgeHTML = `<span class="text-xs ml-2 bg-rose-50 text-rose-600 px-2.5 py-0.5 rounded-full font-bold border border-rose-100">วันหยุด</span>`;
+                }
+
                 const row = document.createElement('div');
-                row.className = `flex items-center justify-between py-4 px-6 mb-3 bg-white rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-200`;
+                row.className = `flex flex-col sm:flex-row sm:items-center justify-between py-4 px-6 mb-3 bg-white rounded-[1.5rem] border shadow-sm transition-all hover:shadow-md gap-4 ${borderClass}`;
                 row.innerHTML = `
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center text-xl shadow-inner"><i class="fas fa-calendar-day"></i></div>
+                    <div class="flex items-start sm:items-center gap-4">
+                        ${iconHTML}
                         <div>
-                            <h4 class="font-bold text-slate-800 text-[1.1rem]">${h.name} ${h.isMakeup ? '<span class="text-xs ml-2 bg-emerald-100 text-emerald-600 px-2 py-1 rounded-full border border-emerald-200">วันชดเชย</span>' : '<span class="text-xs ml-2 bg-rose-100 text-rose-600 px-2 py-1 rounded-full border border-rose-200">วันหยุด</span>'}</h4>
-                            <p class="text-sm font-bold text-slate-500 mt-1">${getThaiDate(h.date)}</p>
+                            <h4 class="font-bold text-slate-800 text-[1.05rem] sm:text-[1.1rem] flex flex-wrap items-center gap-1">${h.name} ${badgeHTML}</h4>
+                            <p class="text-sm font-bold text-slate-500 mt-1"><i class="far fa-calendar mr-1 text-slate-400"></i> ${getThaiDate(h.date)}</p>
+                            ${extraInfoHTML}
                         </div>
                     </div>
-                    <div>
-                        <button onclick="confirmDeleteHoliday('${h.id}')" aria-label="ลบวันหยุด" title="ลบวันหยุด" class="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-300">
+                    <div class="flex items-center self-end sm:self-auto gap-2">
+                        ${actionBtnHTML}
+                        <button onclick="confirmDeleteHoliday('${h.id}')" aria-label="ลบวันหยุด" title="ลบ" class="w-10 h-10 rounded-xl bg-slate-50 hover:bg-rose-50 border border-slate-100 text-rose-500 flex items-center justify-center hover:text-rose-600 transition-colors shadow-xs focus:outline-none focus:ring-2 focus:ring-rose-200 flex-shrink-0">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -1929,7 +2018,7 @@
                 return;
             }
 
-            appData.holidays.push({ id: Date.now().toString(), date, name, isMakeup });
+            appData.holidays.push({ id: Date.now().toString(), date, name, isMakeup, makeupForDate: isMakeup ? makeupForDate : '' });
             saveData();
             
             document.getElementById('holiday-form').reset();
@@ -1943,6 +2032,12 @@
                 renderHolidays();
             });
         }
+
+        window.jumpToMakeupAttendance = function(dateStr) {
+            const dateInput = document.getElementById('daily-date');
+            if(dateInput) dateInput.value = dateStr;
+            switchTab('attendance');
+        };
 
         // --- Interactive Report Edit Functions ---
         window.forceRescueData = function() {
@@ -2012,6 +2107,11 @@
         };
 
         window.toggleReportCell = function(type, dateKey, studentId) {
+            const student = appData.students.find(s => s.id === studentId);
+            if(student && student.status === 'ย้ายออก') {
+                alert('นักเรียนย้ายออกแล้ว ไม่สามารถแก้ไขข้อมูลได้ครับ');
+                return;
+            }
             if (!appData.dailyRecords[dateKey]) appData.dailyRecords[dateKey] = {};
             let rec = appData.dailyRecords[dateKey][studentId];
             if (!rec) {
@@ -2045,6 +2145,11 @@
         };
 
         window.editNutritionCell = function(monthStr, studentId, field) {
+            const student = appData.students.find(s => s.id === studentId);
+            if(student && student.status === 'ย้ายออก') {
+                alert('นักเรียนย้ายออกแล้ว ไม่สามารถแก้ไขข้อมูลได้ครับ');
+                return;
+            }
             if (!appData.nutritionRecords[monthStr]) appData.nutritionRecords[monthStr] = {};
             let rec = appData.nutritionRecords[monthStr][studentId];
             if (!rec) {
@@ -2179,12 +2284,14 @@
                 tableHTML += `</tr></thead><tbody>`;
 
                 students.forEach(student => {
+                    const isTransferred = student.status === 'ย้ายออก';
+                    const nameDisp = `${student.name} ${isTransferred ? '<span class="text-xs text-amber-600 font-bold ml-1">(ย้ายออก)</span>' : ''}`;
                     let present = 0, late = 0, leave = 0, absent = 0, actionCount = 0;
                     let totalMilk = 0, totalBrush = 0;
 
                     tableHTML += `<tr>
                         <td class="border border-gray-400 p-1 text-center">${student.code}</td>
-                        <td class="border border-gray-400 p-1 whitespace-nowrap min-w-[max-content] text-left">${student.name}</td>`;
+                        <td class="border border-gray-400 p-1 whitespace-nowrap min-w-[max-content] text-left">${nameDisp}</td>`;
 
                     for(let d = 1; d <= daysInMonth; d++) {
                         const dateKey = `${year}-${month.padStart(2, '0')}-${String(d).padStart(2, '0')}`;
@@ -2214,35 +2321,37 @@
 
                         if (rec) {
                             if(type === 'attendance') {
-                                if(rec.status === 'มา') { cellContent = '/'; present++; }
+                                if(rec.status === 'มา') { cellContent = '✓'; present++; }
                                 else if(rec.status === 'สาย') { cellContent = 'ส'; late++; }
                                 else if(rec.status === 'ลา') { cellContent = 'ล'; leave++; }
                                 else if(rec.status === 'ขาด') { cellContent = 'ข'; absent++; }
+                                else if(rec.status === 'ย้าย') { cellContent = 'ย้าย'; }
                                 
                                 if(rec.milk) totalMilk++;
                                 if(rec.brush) totalBrush++;
-                            } else if (type === 'milk') {
-                                if(rec.milk) { cellContent = '✓'; actionCount++; }
+                            } else if (type === 'milk' || type === 'brush') {
+                                const field = type === 'milk' ? rec.milk : rec.brush;
+                                if(field) { cellContent = '✓'; actionCount++; }
                                 else if(rec.status === 'ลา') { cellContent = 'ล'; }
                                 else if(rec.status === 'ขาด') { cellContent = 'ข'; }
-                            } else if (type === 'brush') {
-                                if(rec.brush) { cellContent = '✓'; actionCount++; }
-                                else if(rec.status === 'ลา') { cellContent = 'ล'; }
-                                else if(rec.status === 'ขาด') { cellContent = 'ข'; }
+                                else if(rec.status === 'ย้าย') { cellContent = 'ย้าย'; }
                             }
+                        }
+                        if (cellContent === '' && isTransferred) {
+                            cellContent = 'ย้าย';
                         }
 
                         let textStyle = '';
                         if(cellContent === 'ส') textStyle = 'color: #f97316;'; 
                         else if(cellContent === 'ล') textStyle = 'color: #3b82f6;';
                         else if(cellContent === 'ข') textStyle = 'color: #ef4444;';
-                        else if(cellContent === '/') textStyle = 'color: #22c55e;';
                         else if(cellContent === '✓') textStyle = 'color: #22c55e; font-weight: bold;';
+                        else if(cellContent === 'ย้าย') textStyle = 'color: #9ca3af; font-size: 8px; font-weight: normal;';
 
                         if(bgClass) textStyle += ' background-color: #d1d5db !important;';
 
                         // Allow all cells to be clickable, user can override weekends/holidays/out of term
-                        let clickAction = `onclick="toggleReportCell('${type}', '${dateKey}', '${student.id}')" class="border border-gray-400 p-0 text-center font-bold text-[10px] cursor-pointer hover:bg-yellow-200 transition-colors duration-150 ${bgClass}"`;
+                        let clickAction = isTransferred ? `class="border border-gray-400 p-0 text-center font-bold text-[10px] bg-gray-50 cursor-not-allowed ${bgClass}"` : `onclick="toggleReportCell('${type}', '${dateKey}', '${student.id}')" class="border border-gray-400 p-0 text-center font-bold text-[10px] cursor-pointer hover:bg-yellow-200 transition-colors duration-150 ${bgClass}"`;
 
                         tableHTML += `<td ${clickAction} style="${textStyle}">${cellContent}</td>`;
                     }
@@ -2284,7 +2393,7 @@
                 if(type === 'attendance') {
                     tableHTML += `<div class="mt-2 text-[11px] text-gray-700 flex flex-wrap gap-4 items-center">
                         <span><strong>สัญลักษณ์:</strong></span>
-                        <span class="text-green-600 font-bold">/ = มาเรียน</span>
+                        <span class="text-green-600 font-bold">✓ = มาเรียน</span>
                         <span class="text-orange-600 font-bold">ส = สาย</span>
                         <span class="text-blue-600 font-bold">ล = ลา</span>
                         <span class="text-red-600 font-bold">ข = ขาด</span>
@@ -2326,6 +2435,8 @@
                     </thead><tbody>`;
 
                 students.forEach(student => {
+                    const isTransferred = student.status === 'ย้ายออก';
+                    const nameDisp = `${student.name} ${isTransferred ? '<span class="text-xs text-amber-600 font-bold ml-1">(ย้ายออก)</span>' : ''}`;
                     const rec = appData.healthRecords[monthStr] && appData.healthRecords[monthStr][student.id] 
                                 ? appData.healthRecords[monthStr][student.id] 
                                 : { uniform: '', hair: '', ears: '', skin: '', teeth: '' };
@@ -2333,12 +2444,12 @@
                     const getResHtml = (val) => {
                         if (val === 1) return `<span class="text-green-600 font-bold">ผ่าน</span>`;
                         if (val === 0) return `<span class="text-red-600 font-bold">ไม่ผ่าน</span>`;
-                        return `<span class="text-gray-300">-</span>`;
+                        return isTransferred ? `<span class="text-gray-400 text-xs">ย้าย</span>` : `<span class="text-gray-300">-</span>`;
                     };
 
                     tableHTML += `<tr>
                         <td class="border border-gray-400 p-1.5 text-center">${student.code}</td>
-                        <td class="border border-gray-400 p-1.5 text-left whitespace-nowrap min-w-[max-content]">${student.name}</td>
+                        <td class="border border-gray-400 p-1.5 text-left whitespace-nowrap min-w-[max-content]">${nameDisp}</td>
                         <td class="border border-gray-400 p-1.5 text-center ${rec.uniform === 0 ? 'bg-red-50' : ''}">${getResHtml(rec.uniform)}</td>
                         <td class="border border-gray-400 p-1.5 text-center ${rec.hair === 0 ? 'bg-red-50' : ''}">${getResHtml(rec.hair)}</td>
                         <td class="border border-gray-400 p-1.5 text-center ${rec.ears === 0 ? 'bg-red-50' : ''}">${getResHtml(rec.ears)}</td>
@@ -2365,13 +2476,16 @@
                     </thead><tbody>`;
 
                 students.forEach(student => {
+                    const isTransferred = student.status === 'ย้ายออก';
+                    const nameDisp = `${student.name} ${isTransferred ? '<span class="text-xs text-amber-600 font-bold ml-1">(ย้ายออก)</span>' : ''}`;
                     const rec = appData.nutritionRecords[monthStr] ? appData.nutritionRecords[monthStr][student.id] : null;
-                    const w = rec && rec.w ? rec.w : '-';
-                    const h = rec && rec.h ? rec.h : '-';
+                    const w = rec && rec.w ? rec.w : (isTransferred ? 'ย้าย' : '-');
+                    const h = rec && rec.h ? rec.h : (isTransferred ? 'ย้าย' : '-');
                     const bmi = rec && rec.bmi ? rec.bmi : 0;
                     const res = getBMIResult(bmi);
+                    const resDisp = bmi > 0 ? res.text : (isTransferred ? 'ย้ายออก' : '-');
 
-                    if(bmi > 0) {
+                    if(bmi > 0 && !isTransferred) {
                         stats.total++;
                         stats.sumBMI += bmi;
                         if(res.text === 'ผอม' || res.text === 'ค่อนข้างผอม') stats.thin++;
@@ -2381,18 +2495,22 @@
                     }
 
                     let bgPrintStyle = '';
-                    if(res.text === 'ผอม' || res.text === 'ค่อนข้างผอม') bgPrintStyle = 'background-color: #3b82f6 !important; color: white !important;';
-                    else if(res.text === 'สมส่วน') bgPrintStyle = 'background-color: #22c55e !important; color: white !important;';
-                    else if(res.text === 'ท้วม') bgPrintStyle = 'background-color: #f97316 !important; color: white !important;';
-                    else if(res.text === 'อ้วน') bgPrintStyle = 'background-color: #ef4444 !important; color: white !important;';
+                    if(bmi > 0 && !isTransferred) {
+                        if(res.text === 'ผอม' || res.text === 'ค่อนข้างผอม') bgPrintStyle = 'background-color: #3b82f6 !important; color: white !important;';
+                        else if(res.text === 'สมส่วน') bgPrintStyle = 'background-color: #22c55e !important; color: white !important;';
+                        else if(res.text === 'ท้วม') bgPrintStyle = 'background-color: #f97316 !important; color: white !important;';
+                        else if(res.text === 'อ้วน') bgPrintStyle = 'background-color: #ef4444 !important; color: white !important;';
+                    } else if (isTransferred && !bmi) {
+                        bgPrintStyle = 'color: #9ca3af !important;';
+                    }
 
                     tableHTML += `<tr>
                         <td class="border border-gray-400 p-1.5 text-center">${student.code}</td>
-                        <td class="border border-gray-400 p-1.5 text-left whitespace-nowrap min-w-[max-content]">${student.name}</td>
+                        <td class="border border-gray-400 p-1.5 text-left whitespace-nowrap min-w-[max-content]">${nameDisp}</td>
                         <td class="border border-gray-400 p-1.5 text-center">${w}</td>
                         <td class="border border-gray-400 p-1.5 text-center">${h}</td>
                         <td class="border border-gray-400 p-1.5 text-center font-bold">${bmi ? bmi.toFixed(1) : '-'}</td>
-                        <td class="border border-gray-400 p-1.5 text-center font-bold" style="${bgPrintStyle}">${res.text}</td>
+                        <td class="border border-gray-400 p-1.5 text-center font-bold" style="${bgPrintStyle}">${resDisp}</td>
                     </tr>`;
                 });
 
