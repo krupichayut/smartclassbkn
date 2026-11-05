@@ -557,9 +557,14 @@
                         <h2 class="text-2xl font-bold text-[#15919B]"><i class="fas fa-calendar-check mr-2"></i> บันทึกรายวัน</h2>
                         <p class="text-[#213A58]">เช็คชื่อ ดื่มนม และแปรงฟัน</p>
                     </div>
-                    <div class="flex items-center space-x-2">
-                        <label class="text-[#213A58] font-medium">เลือกวันที่:</label>
-                        <input type="date" id="daily-date" class="glass-input px-3 py-2 rounded-lg" onchange="renderDaily()">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" onclick="markAllDailyComplete(document.getElementById('daily-date').value || getTodayString())" class="px-3.5 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-sm transition-all hover:shadow flex items-center gap-1.5 cursor-pointer">
+                            <i class="fas fa-check-double"></i> ผ่านทั้งหมด (มา+นม+แปรง)
+                        </button>
+                        <div class="flex items-center space-x-2">
+                            <label class="text-[#213A58] font-medium">เลือกวันที่:</label>
+                            <input type="date" id="daily-date" class="glass-input px-3 py-2 rounded-lg" onchange="renderDaily()">
+                        </div>
                     </div>
                 </header>
 
@@ -583,9 +588,14 @@
                         <h2 class="text-2xl font-bold text-[#15919B]"><i class="fas fa-notes-medical mr-2"></i> บันทึกสุขภาพ</h2>
                         <p class="text-[#213A58]">ประเมินสุขอนามัยประจำวัน (ตั้งค่าเริ่มต้นเป็น "ผ่าน" ทั้งหมด)</p>
                     </div>
-                    <div class="flex items-center space-x-2">
-                        <label class="text-[#213A58] font-medium">เลือกเดือน:</label>
-                        <input type="month" id="health-month" class="glass-input px-3 py-2 rounded-lg" onchange="renderHealth()">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" onclick="markAllHealthPass()" class="px-3.5 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-sm transition-all hover:shadow flex items-center gap-1.5 cursor-pointer">
+                            <i class="fas fa-check-double"></i> ผ่านทั้งหมด (ทุกคนทุกข้อ)
+                        </button>
+                        <div class="flex items-center space-x-2">
+                            <label class="text-[#213A58] font-medium">เลือกเดือน:</label>
+                            <input type="month" id="health-month" class="glass-input px-3 py-2 rounded-lg" onchange="renderHealth()">
+                        </div>
                     </div>
                 </header>
 
@@ -617,27 +627,29 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="students-grid"></div>
 
                 <!-- Student Modal -->
-                <div id="student-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/50 backdrop-blur-sm">
-                    <div class="glass-panel p-6 rounded-2xl w-full max-w-md mx-4 relative fade-in">
+                <div id="student-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/50 backdrop-blur-sm p-4">
+                    <div class="glass-panel p-6 rounded-2xl w-full max-w-xl mx-auto relative max-h-[92vh] overflow-y-auto fade-in">
                         <button onclick="closeStudentModal()" class="absolute top-4 right-4 text-slate-400 hover:text-[#213A58]"><i class="fas fa-times text-xl"></i></button>
                         <h3 class="text-xl font-bold text-[#15919B] mb-4" id="student-modal-title">เพิ่มนักเรียน</h3>
                         <form id="student-form" onsubmit="saveStudent(event)">
                             <input type="hidden" id="student-id">
                             <div class="space-y-4">
-                                <div>
-                                    <label class="block text-sm mb-1 text-[#213A58] font-medium">เลขที่</label>
-                                    <input type="number" id="student-code" required class="glass-input w-full p-2 rounded-lg">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm mb-1 text-[#213A58] font-medium">เลขที่</label>
+                                        <input type="number" id="student-code" required class="glass-input w-full p-2 rounded-lg">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm mb-1 text-[#213A58] font-medium">เพศ</label>
+                                        <select id="student-gender" class="glass-input w-full p-2 rounded-lg">
+                                            <option value="ชาย">ชาย</option>
+                                            <option value="หญิง">หญิง</option>
+                                        </select>
+                                    </div>
                                 </div>
                                 <div>
                                     <label class="block text-sm mb-1 text-[#213A58] font-medium">ชื่อ - นามสกุล</label>
                                     <input type="text" id="student-name" required class="glass-input w-full p-2 rounded-lg">
-                                </div>
-                                <div>
-                                    <label class="block text-sm mb-1 text-[#213A58] font-medium">เพศ</label>
-                                    <select id="student-gender" class="glass-input w-full p-2 rounded-lg">
-                                        <option value="ชาย">ชาย</option>
-                                        <option value="หญิง">หญิง</option>
-                                    </select>
                                 </div>
                                 <div>
                                     <label class="block text-sm mb-1 text-[#213A58] font-medium">สถานะนักเรียน</label>
@@ -650,19 +662,129 @@
                                     <label class="block text-sm mb-1 text-[#213A58] font-medium">ข้อมูลสุขภาพ (แพ้นม, โรคประจำตัว)</label>
                                     <input type="text" id="student-health-info" placeholder="เช่น แพ้นมวัว, หอบหืด (เว้นว่างได้)" class="glass-input w-full p-2 rounded-lg">
                                 </div>
-                                <div>
-                                    <label class="block text-sm mb-1 text-[#213A58] font-medium">ชื่อผู้ปกครอง</label>
-                                    <input type="text" id="student-parent-name" placeholder="ชื่อ - นามสกุล (เว้นว่างได้)" class="glass-input w-full p-2 rounded-lg">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm mb-1 text-[#213A58] font-medium">ชื่อผู้ปกครอง</label>
+                                        <input type="text" id="student-parent-name" placeholder="ชื่อ - นามสกุล (เว้นว่างได้)" class="glass-input w-full p-2 rounded-lg">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm mb-1 text-[#213A58] font-medium">เบอร์โทรศัพท์ผู้ปกครอง</label>
+                                        <input type="tel" id="student-parent-phone" placeholder="08X-XXX-XXXX (เว้นว่างได้)" class="glass-input w-full p-2 rounded-lg">
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="block text-sm mb-1 text-[#213A58] font-medium">เบอร์โทรศัพท์ผู้ปกครอง</label>
-                                    <input type="tel" id="student-parent-phone" placeholder="08X-XXX-XXXX (เว้นว่างได้)" class="glass-input w-full p-2 rounded-lg">
+
+                                <!-- Section: เอกสารสำคัญ (สำเนาบัตรประชาชน & สำเนาทะเบียนบ้าน) -->
+                                <div class="pt-4 border-t border-slate-100">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <label class="block text-sm text-[#213A58] font-bold flex items-center gap-1.5">
+                                            <i class="fas fa-folder-open text-[#15919B]"></i> เอกสารสำคัญประจำตัวนักเรียน
+                                        </label>
+                                        <span class="text-[11px] text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full font-medium">ระบบย่อภาพอัตโนมัติ ประหยัดพื้นที่</span>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <!-- 1. สำเนาบัตรประชาชน -->
+                                        <div class="border border-slate-200 rounded-2xl p-4 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                                    <i class="fas fa-id-card text-indigo-500"></i> สำเนาบัตรประชาชน
+                                                </span>
+                                                <span id="preview-idcard-badge" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-slate-200 text-slate-600">ยังไม่มี</span>
+                                            </div>
+                                            
+                                            <!-- Thumbnail Box -->
+                                            <div id="preview-idcard-box" class="h-32 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center bg-white overflow-hidden relative group mb-3">
+                                                <img id="preview-idcard-img" class="w-full h-full object-contain hidden" alt="สำเนาบัตร ปชช.">
+                                                <div id="preview-idcard-empty" class="text-center p-3 text-slate-400">
+                                                    <i class="fas fa-image text-2xl mb-1 text-slate-300"></i>
+                                                    <p class="text-[11px]">ไม่มีภาพสำเนาบัตร</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <input type="hidden" id="student-doc-idcard">
+                                            <input type="file" id="file-idcard" accept="image/*" class="hidden" onchange="handleDocumentUpload(this, 'idcard')">
+                                            
+                                            <div class="flex gap-2">
+                                                <button type="button" onclick="document.getElementById('file-idcard').click()" class="flex-1 py-1.5 px-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer">
+                                                    <i class="fas fa-camera"></i> เลือกภาพ/ถ่ายรูป
+                                                </button>
+                                                <button type="button" id="btn-delete-idcard" onclick="removeDocument('idcard')" class="hidden py-1.5 px-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-bold transition-colors cursor-pointer" title="ลบภาพ">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- 2. สำเนาทะเบียนบ้าน -->
+                                        <div class="border border-slate-200 rounded-2xl p-4 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                                    <i class="fas fa-home text-emerald-500"></i> สำเนาทะเบียนบ้าน
+                                                </span>
+                                                <span id="preview-housereg-badge" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-slate-200 text-slate-600">ยังไม่มี</span>
+                                            </div>
+                                            
+                                            <!-- Thumbnail Box -->
+                                            <div id="preview-housereg-box" class="h-32 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center bg-white overflow-hidden relative group mb-3">
+                                                <img id="preview-housereg-img" class="w-full h-full object-contain hidden" alt="สำเนาทะเบียนบ้าน">
+                                                <div id="preview-housereg-empty" class="text-center p-3 text-slate-400">
+                                                    <i class="fas fa-image text-2xl mb-1 text-slate-300"></i>
+                                                    <p class="text-[11px]">ไม่มีภาพสำเนาทะเบียนบ้าน</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <input type="hidden" id="student-doc-housereg">
+                                            <input type="file" id="file-housereg" accept="image/*" class="hidden" onchange="handleDocumentUpload(this, 'housereg')">
+                                            
+                                            <div class="flex gap-2">
+                                                <button type="button" onclick="document.getElementById('file-housereg').click()" class="flex-1 py-1.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer">
+                                                    <i class="fas fa-camera"></i> เลือกภาพ/ถ่ายรูป
+                                                </button>
+                                                <button type="button" id="btn-delete-housereg" onclick="removeDocument('housereg')" class="hidden py-1.5 px-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-bold transition-colors cursor-pointer" title="ลบภาพ">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
+
                                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition-colors mt-4 shadow-sm">
                                     บันทึกข้อมูล
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+
+                <!-- Document Viewer / Lightbox Modal -->
+                <div id="doc-viewer-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-950/80 backdrop-blur-md p-4">
+                    <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-fade-in border border-slate-100">
+                        <!-- Header -->
+                        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+                            <div class="flex items-center gap-3">
+                                <div id="doc-viewer-icon" class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg shadow-inner">
+                                    <i class="fas fa-id-card"></i>
+                                </div>
+                                <div>
+                                    <h3 id="doc-viewer-title" class="font-bold text-slate-800 text-lg">สำเนาเอกสาร</h3>
+                                    <p id="doc-viewer-subtitle" class="text-xs text-slate-500 font-medium">ชื่อนักเรียน</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button id="doc-viewer-download" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 cursor-pointer shadow-sm hover:shadow">
+                                    <i class="fas fa-download"></i> ดาวน์โหลด
+                                </button>
+                                <button onclick="printDocumentViewer()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 cursor-pointer">
+                                    <i class="fas fa-print"></i> พิมพ์
+                                </button>
+                                <button onclick="closeDocumentViewer()" class="w-9 h-9 rounded-xl hover:bg-slate-200/60 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-all cursor-pointer ml-1">
+                                    <i class="fas fa-times text-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Image Container -->
+                        <div class="flex-1 overflow-auto p-4 sm:p-6 flex items-center justify-center bg-slate-900/5 min-h-[350px]">
+                            <img id="doc-viewer-img" src="" alt="Document Preview" class="max-h-[70vh] w-auto max-w-full rounded-2xl shadow-md object-contain border border-slate-200 bg-white">
+                        </div>
                     </div>
                 </div>
             </section>
@@ -1348,7 +1470,10 @@
                 <div class="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest px-6 mb-4">
                     <div class="w-12 text-center">เลขที่</div>
                     <div class="flex-1">ชื่อ-สกุล</div>
-                    <div class="w-32 text-center">สถานะ</div>
+                    <div class="w-32 text-center flex flex-col items-center">
+                        <span>สถานะ</span>
+                        <button onclick="markAllAttendance('${selectedDate}', 'มา')" class="mt-1 text-[10px] bg-slate-200 hover:bg-emerald-500 hover:text-white text-slate-600 px-2 py-0.5 rounded cursor-pointer transition-colors font-bold" ${isHoliday ? 'disabled' : ''}>ALL มา</button>
+                    </div>
                     <div class="w-24 text-center flex flex-col items-center">
                         <span>ดื่มนม</span>
                         <button onclick="toggleAllDaily('${selectedDate}', 'milk')" class="mt-1 text-[10px] bg-slate-200 hover:bg-indigo-500 hover:text-white text-slate-600 px-2 py-0.5 rounded cursor-pointer transition-colors" ${isHoliday ? 'disabled' : ''}>ALL</button>
@@ -1486,6 +1611,260 @@
             saveData();
         }
 
+        // --- Quick Pass & Document Vault Helpers ---
+        function markAllAttendance(date, statusVal) {
+            if(!appData.dailyRecords[date]) return;
+            appData.students.forEach(s => {
+                if(s.status === 'ย้ายออก') return;
+                if(!appData.dailyRecords[date][s.id]) {
+                    appData.dailyRecords[date][s.id] = { status: statusVal, milk: false, brush: false };
+                } else {
+                    appData.dailyRecords[date][s.id].status = statusVal;
+                }
+            });
+            saveData();
+            renderDaily();
+        }
+
+        function markAllDailyComplete(date) {
+            if(!appData.dailyRecords[date]) {
+                appData.dailyRecords[date] = {};
+            }
+            appData.students.forEach(s => {
+                if(s.status === 'ย้ายออก') return;
+                appData.dailyRecords[date][s.id] = {
+                    status: 'มา',
+                    milk: true,
+                    brush: true
+                };
+            });
+            saveData();
+            renderDaily();
+        }
+
+        window.markAllHealthPass = function() {
+            const students = appData.students.filter(s => s.status !== 'ย้ายออก');
+            const fields = ['uniform', 'hair', 'ears', 'skin', 'teeth'];
+            const activeClass = 'appearance-none font-bold text-sm outline-none cursor-pointer w-full py-2 px-3 rounded-xl transition-all shadow-sm bg-emerald-50 text-emerald-600 border border-emerald-100 hover:border-emerald-300 focus:ring-2 focus:ring-emerald-200';
+            
+            students.forEach(student => {
+                fields.forEach(f => {
+                    const el = document.getElementById(`health-${student.id}-${f}`);
+                    if (el) {
+                        el.value = '1';
+                        el.className = activeClass;
+                    }
+                });
+            });
+        };
+
+        window.markColumnHealthPass = function(field) {
+            const students = appData.students.filter(s => s.status !== 'ย้ายออก');
+            const activeClass = 'appearance-none font-bold text-sm outline-none cursor-pointer w-full py-2 px-3 rounded-xl transition-all shadow-sm bg-emerald-50 text-emerald-600 border border-emerald-100 hover:border-emerald-300 focus:ring-2 focus:ring-emerald-200';
+            
+            students.forEach(student => {
+                const el = document.getElementById(`health-${student.id}-${field}`);
+                if (el) {
+                    el.value = '1';
+                    el.className = activeClass;
+                }
+            });
+        };
+
+        window.markStudentHealthPass = function(studentId) {
+            const fields = ['uniform', 'hair', 'ears', 'skin', 'teeth'];
+            const activeClass = 'appearance-none font-bold text-sm outline-none cursor-pointer w-full py-2 px-3 rounded-xl transition-all shadow-sm bg-emerald-50 text-emerald-600 border border-emerald-100 hover:border-emerald-300 focus:ring-2 focus:ring-emerald-200';
+            
+            fields.forEach(f => {
+                const el = document.getElementById(`health-${studentId}-${f}`);
+                if (el) {
+                    el.value = '1';
+                    el.className = activeClass;
+                }
+            });
+        };
+
+        // --- Smart Canvas Image Compression & Vault Functions ---
+        function compressImage(file, maxDimension = 1280, quality = 0.72) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let width = img.width;
+                        let height = img.height;
+                        if (width > height) {
+                            if (width > maxDimension) {
+                                height = Math.round((height * maxDimension) / width);
+                                width = maxDimension;
+                            }
+                        } else {
+                            if (height > maxDimension) {
+                                width = Math.round((width * maxDimension) / height);
+                                height = maxDimension;
+                            }
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                        resolve(dataUrl);
+                    };
+                    img.onerror = reject;
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function setDocPreview(type, dataUrl) {
+            const input = document.getElementById(`student-doc-${type}`);
+            const img = document.getElementById(`preview-${type}-img`);
+            const empty = document.getElementById(`preview-${type}-empty`);
+            const badge = document.getElementById(`preview-${type}-badge`);
+            const delBtn = document.getElementById(`btn-delete-${type}`);
+            
+            if (input) input.value = dataUrl || '';
+            if (dataUrl) {
+                if (img) { img.src = dataUrl; img.classList.remove('hidden'); }
+                if (empty) empty.classList.add('hidden');
+                if (badge) {
+                    badge.innerText = 'มีแล้ว';
+                    badge.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-700';
+                }
+                if (delBtn) delBtn.classList.remove('hidden');
+            } else {
+                if (img) { img.src = ''; img.classList.add('hidden'); }
+                if (empty) empty.classList.remove('hidden');
+                if (badge) {
+                    badge.innerText = 'ยังไม่มี';
+                    badge.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-slate-200 text-slate-600';
+                }
+                if (delBtn) delBtn.classList.add('hidden');
+            }
+        }
+
+        function removeDocument(type) {
+            setDocPreview(type, '');
+            const fileInput = document.getElementById(`file-${type}`);
+            if (fileInput) fileInput.value = '';
+        }
+
+        async function handleDocumentUpload(fileInput, type) {
+            if (!fileInput.files || !fileInput.files[0]) return;
+            const file = fileInput.files[0];
+            
+            const badge = document.getElementById(`preview-${type}-badge`);
+            if (badge) {
+                badge.innerText = 'กำลังย่อขนาด...';
+                badge.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700 animate-pulse';
+            }
+            
+            try {
+                const compressedDataUrl = await compressImage(file, 1280, 0.72);
+                setDocPreview(type, compressedDataUrl);
+            } catch (err) {
+                console.error('Error compressing image:', err);
+                showConfirm('เกิดข้อผิดพลาด', 'ไม่สามารถประมวลผลรูปภาพได้ กรุณาลองใหม่อีกครั้ง', null);
+                document.getElementById('confirm-cancel')?.classList.add('hidden');
+                setDocPreview(type, '');
+            }
+        }
+
+        function downloadDocument(dataUrl, fileName) {
+            if (!dataUrl) {
+                showConfirm('ไม่พบเอกสาร', 'ยังไม่มีการอัปโหลดเอกสารนี้', null);
+                document.getElementById('confirm-cancel')?.classList.add('hidden');
+                return;
+            }
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = fileName || 'document.jpg';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function downloadStudentDocument(studentId, type) {
+            const student = appData.students.find(s => s.id === studentId);
+            if (!student) return;
+            const isIdCard = type === 'idcard';
+            const dataUrl = isIdCard ? student.docIdCard : student.docHouseReg;
+            const title = isIdCard ? 'สำเนาบัตรประชาชน' : 'สำเนาทะเบียนบ้าน';
+            const safeStudentName = student.name || 'นักเรียน';
+            const fileName = `${title}_${safeStudentName.replace(/\s+/g, '_')}.jpg`;
+            downloadDocument(dataUrl, fileName);
+        }
+
+        function viewDocument(studentId, type) {
+            const student = appData.students.find(s => s.id === studentId);
+            if (!student) return;
+            
+            const isIdCard = type === 'idcard';
+            const dataUrl = isIdCard ? student.docIdCard : student.docHouseReg;
+            const title = isIdCard ? 'สำเนาบัตรประจำตัวประชาชน' : 'สำเนาทะเบียนบ้าน';
+            const iconHTML = isIdCard ? '<i class="fas fa-id-card text-indigo-600"></i>' : '<i class="fas fa-home text-emerald-600"></i>';
+            const safeStudentName = student.name || 'นักเรียน';
+            const fileName = `${title}_${safeStudentName.replace(/\s+/g, '_')}.jpg`;
+            
+            if (!dataUrl) {
+                showConfirm('ไม่พบเอกสาร', `ยังไม่มีการอัปโหลด${title}สำหรับ ${safeStudentName}`, null);
+                document.getElementById('confirm-cancel')?.classList.add('hidden');
+                return;
+            }
+            
+            document.getElementById('doc-viewer-title').innerText = title;
+            document.getElementById('doc-viewer-subtitle').innerText = `เลขที่ ${student.code || '-'} ${safeStudentName}`;
+            document.getElementById('doc-viewer-icon').innerHTML = iconHTML;
+            document.getElementById('doc-viewer-img').src = dataUrl;
+            
+            const downloadBtn = document.getElementById('doc-viewer-download');
+            downloadBtn.onclick = () => downloadDocument(dataUrl, fileName);
+            
+            document.getElementById('doc-viewer-modal').classList.remove('hidden');
+        }
+
+        function closeDocumentViewer() {
+            document.getElementById('doc-viewer-modal').classList.add('hidden');
+            document.getElementById('doc-viewer-img').src = '';
+        }
+
+        function printDocumentViewer() {
+            const img = document.getElementById('doc-viewer-img');
+            const title = document.getElementById('doc-viewer-title').innerText;
+            const subtitle = document.getElementById('doc-viewer-subtitle').innerText;
+            if (!img.src) return;
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${title} - ${subtitle}</title>
+                    <style>
+                        body { margin: 20px; font-family: 'Prompt', sans-serif; text-align: center; }
+                        h2 { margin-bottom: 4px; color: #1e293b; }
+                        p { margin-top: 0; color: #64748b; font-size: 14px; }
+                        img { max-width: 90%; max-height: 80vh; border: 1px solid #cbd5e1; border-radius: 8px; margin-top: 10px; }
+                        @media print {
+                            body { margin: 0; }
+                            img { max-width: 100%; border: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h2>${title}</h2>
+                    <p>${subtitle}</p>
+                    <img src="${img.src}" onload="window.print(); window.close();" />
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+
         // --- Module 1.5: Health Check ---
         function renderHealth() {
             const monthInput = document.getElementById('health-month');
@@ -1503,22 +1882,27 @@
                     <div class="w-24 text-center flex flex-col items-center gap-1">
                         <span class="text-[#15919B]">เสื้อผ้า</span>
                         <span class="text-[9px] font-normal text-slate-400 leading-tight">สะอาด<br>ไม่มีกลิ่นเหม็น</span>
+                        <button type="button" onclick="markColumnHealthPass('uniform')" class="mt-0.5 text-[10px] bg-emerald-50 hover:bg-emerald-500 hover:text-white text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded cursor-pointer transition-colors font-bold">ALL ผ่าน</button>
                     </div>
                     <div class="w-24 text-center flex flex-col items-center gap-1">
                         <span class="text-[#15919B]">ผมและศีรษะ</span>
                         <span class="text-[9px] font-normal text-slate-400 leading-tight">ไม่มีเหา รังแค<br>สกปรก</span>
+                        <button type="button" onclick="markColumnHealthPass('hair')" class="mt-0.5 text-[10px] bg-emerald-50 hover:bg-emerald-500 hover:text-white text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded cursor-pointer transition-colors font-bold">ALL ผ่าน</button>
                     </div>
                     <div class="w-24 text-center flex flex-col items-center gap-1">
                         <span class="text-[#15919B]">ใบหูและซอกหู</span>
                         <span class="text-[9px] font-normal text-slate-400 leading-tight">ไม่มีคราบสกปรก<br>หรือขี้หู</span>
+                        <button type="button" onclick="markColumnHealthPass('ears')" class="mt-0.5 text-[10px] bg-emerald-50 hover:bg-emerald-500 hover:text-white text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded cursor-pointer transition-colors font-bold">ALL ผ่าน</button>
                     </div>
                     <div class="w-24 text-center flex flex-col items-center gap-1">
                         <span class="text-[#15919B]">ใบหน้า/ผิวหนัง</span>
                         <span class="text-[9px] font-normal text-slate-400 leading-tight">ไม่มีคราบสกปรก<br>หรือขี้ไคล</span>
+                        <button type="button" onclick="markColumnHealthPass('skin')" class="mt-0.5 text-[10px] bg-emerald-50 hover:bg-emerald-500 hover:text-white text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded cursor-pointer transition-colors font-bold">ALL ผ่าน</button>
                     </div>
                     <div class="w-24 text-center flex flex-col items-center gap-1">
                         <span class="text-[#15919B]">ฟัน</span>
                         <span class="text-[9px] font-normal text-slate-400 leading-tight">ไม่มีเศษอาหาร<br>หรือขี้ฟัน</span>
+                        <button type="button" onclick="markColumnHealthPass('teeth')" class="mt-0.5 text-[10px] bg-emerald-50 hover:bg-emerald-500 hover:text-white text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded cursor-pointer transition-colors font-bold">ALL ผ่าน</button>
                     </div>
                 </div>
             `;
@@ -1563,6 +1947,7 @@
                     <div class="flex-1 min-w-[120px] flex items-center gap-4">
                         <div class="hidden sm:flex w-10 h-10 rounded-xl bg-gradient-to-br ${avatarBg || 'from-slate-400 to-slate-500'} text-white items-center justify-center font-bold text-lg shadow-inner">${initAvatar}</div>
                         <span class="font-bold text-slate-800 text-[1.05rem] tracking-tight whitespace-nowrap min-w-[max-content] ${isTransferred ? 'line-through text-slate-500' : ''}">${student.name || 'ไม่มีชื่อ'} ${isTransferred ? '<span class="ml-2 px-2 py-0.5 bg-amber-50 text-amber-600 border border-amber-200 rounded-md text-xs font-bold not-italic no-underline inline-block">🔒 ย้ายออก</span>' : ''}</span>
+                        ${!isTransferred ? `<button type="button" onclick="markStudentHealthPass('${student.id}')" title="ผ่านทุกข้อคนนี้" class="ml-2 text-[11px] bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 border border-slate-200 hover:border-emerald-300 px-2 py-1 rounded-lg font-bold transition-all flex items-center gap-1 cursor-pointer"><i class="fas fa-check text-emerald-500"></i> ผ่านทุกข้อ</button>` : ''}
                     </div>
                     <div class="w-24 px-1">${genSelect('uniform', rec.uniform)}</div>
                     <div class="w-24 px-1">${genSelect('hair', rec.hair)}</div>
@@ -1674,6 +2059,45 @@
                             ` : ''}
                         </div>
                         ${healthHTML}
+
+                        <!-- Document Vault Badges & Action Buttons -->
+                        <div class="mt-4 pt-3 border-t border-slate-100/70 flex items-center gap-2">
+                            ${student.docIdCard ? `
+                                <div class="flex-1 flex items-center gap-1">
+                                    <button onclick="viewDocument('${student.id}', 'idcard')" class="flex-1 py-1.5 px-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-100 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer shadow-xs" title="คลิกเพื่อดูภาพขยาย">
+                                        <i class="fas fa-id-card text-indigo-500"></i>
+                                        <span>บัตร ปชช.</span>
+                                        <i class="fas fa-eye text-[10px] text-indigo-400"></i>
+                                    </button>
+                                    <button onclick="downloadStudentDocument('${student.id}', 'idcard')" class="w-8 h-8 rounded-xl bg-slate-50 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 border border-slate-100 flex items-center justify-center text-xs transition-colors cursor-pointer" title="ดาวน์โหลดสำเนาบัตร">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            ` : `
+                                <div class="flex-1 py-1.5 px-2 bg-slate-50 text-slate-400 border border-slate-100/80 rounded-xl text-[11px] font-medium flex items-center justify-center gap-1 text-center" title="ยังไม่มีสำเนาบัตร ปชช.">
+                                    <i class="fas fa-id-card text-slate-300"></i>
+                                    <span>ไม่มีบัตร ปชช.</span>
+                                </div>
+                            `}
+
+                            ${student.docHouseReg ? `
+                                <div class="flex-1 flex items-center gap-1">
+                                    <button onclick="viewDocument('${student.id}', 'housereg')" class="flex-1 py-1.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-100 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer shadow-xs" title="คลิกเพื่อดูภาพขยาย">
+                                        <i class="fas fa-home text-emerald-500"></i>
+                                        <span>ทะเบียนบ้าน</span>
+                                        <i class="fas fa-eye text-[10px] text-emerald-400"></i>
+                                    </button>
+                                    <button onclick="downloadStudentDocument('${student.id}', 'housereg')" class="w-8 h-8 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 border border-slate-100 flex items-center justify-center text-xs transition-colors cursor-pointer" title="ดาวน์โหลดสำเนาทะเบียนบ้าน">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            ` : `
+                                <div class="flex-1 py-1.5 px-2 bg-slate-50 text-slate-400 border border-slate-100/80 rounded-xl text-[11px] font-medium flex items-center justify-center gap-1 text-center" title="ยังไม่มีสำเนาทะเบียนบ้าน">
+                                    <i class="fas fa-home text-slate-300"></i>
+                                    <span>ไม่มีทะเบียนบ้าน</span>
+                                </div>
+                            `}
+                        </div>
                     </div>
                 `;
             });
@@ -1685,6 +2109,8 @@
             if(document.getElementById('student-status')) document.getElementById('student-status').value = 'ปกติ';
             document.getElementById('student-parent-name').value = '';
             document.getElementById('student-parent-phone').value = '';
+            setDocPreview('idcard', '');
+            setDocPreview('housereg', '');
             document.getElementById('student-modal-title').innerText = 'เพิ่มนักเรียน';
             document.getElementById('student-modal').classList.remove('hidden');
         }
@@ -1705,6 +2131,9 @@
             document.getElementById('student-parent-name').value = student.parentName || '';
             document.getElementById('student-parent-phone').value = student.parentPhone || '';
             
+            setDocPreview('idcard', student.docIdCard || '');
+            setDocPreview('housereg', student.docHouseReg || '');
+
             document.getElementById('student-modal-title').innerText = 'แก้ไขข้อมูลนักเรียน';
             document.getElementById('student-modal').classList.remove('hidden');
         }
@@ -1720,7 +2149,9 @@
                 status: document.getElementById('student-status')?.value || 'ปกติ',
                 healthInfo: document.getElementById('student-health-info').value,
                 parentName: document.getElementById('student-parent-name').value,
-                parentPhone: document.getElementById('student-parent-phone').value
+                parentPhone: document.getElementById('student-parent-phone').value,
+                docIdCard: document.getElementById('student-doc-idcard')?.value || '',
+                docHouseReg: document.getElementById('student-doc-housereg')?.value || ''
             };
 
             if(id) {
