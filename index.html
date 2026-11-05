@@ -22,6 +22,9 @@
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <!-- jsPDF for Document PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
     <style>
         :root {
             --bento-bg: #F5F7FA;
@@ -770,8 +773,11 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
-                                <button id="doc-viewer-download" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 cursor-pointer shadow-sm hover:shadow">
-                                    <i class="fas fa-download"></i> ดาวน์โหลด
+                                <button id="doc-viewer-pdf" class="px-3.5 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 cursor-pointer shadow-sm hover:shadow" title="ดาวน์โหลดเป็นไฟล์ PDF หน้า A4">
+                                    <i class="fas fa-file-pdf"></i> ดาวน์โหลด PDF
+                                </button>
+                                <button id="doc-viewer-download" class="px-3.5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 cursor-pointer shadow-sm hover:shadow" title="ดาวน์โหลดไฟล์รูปภาพต้นฉบับ">
+                                    <i class="fas fa-image"></i> โหลดรูป (JPG)
                                 </button>
                                 <button onclick="printDocumentViewer()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 cursor-pointer">
                                     <i class="fas fa-print"></i> พิมพ์
@@ -1799,6 +1805,129 @@
             downloadDocument(dataUrl, fileName);
         }
 
+        async function downloadStudentDocumentPDF(studentId, type) {
+            const student = appData.students.find(s => s.id === studentId);
+            if (!student) return;
+            const isIdCard = type === 'idcard';
+            const dataUrl = isIdCard ? student.docIdCard : student.docHouseReg;
+            const docTitle = isIdCard ? 'สำเนาบัตรประจำตัวประชาชน' : 'สำเนาทะเบียนบ้าน';
+            const safeStudentName = student.name || 'นักเรียน';
+            const fileName = `${docTitle}_${safeStudentName.replace(/\s+/g, '_')}.pdf`;
+            
+            if (!dataUrl) {
+                showConfirm('ไม่พบเอกสาร', `ยังไม่มีการอัปโหลด${docTitle}สำหรับ ${safeStudentName}`, null);
+                document.getElementById('confirm-cancel')?.classList.add('hidden');
+                return;
+            }
+
+            // High-resolution A4 Canvas (1414 x 2000 px ~ 170 DPI, aspect ratio 1:1.414)
+            const canvas = document.createElement('canvas');
+            canvas.width = 1414;
+            canvas.height = 2000;
+            const ctx = canvas.getContext('2d');
+
+            // 1. Fill clean white background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 2. School Name & Date
+            const schoolName = (appData.schoolInfo && appData.schoolInfo.name) ? appData.schoolInfo.name : 'โรงเรียนบ้านควนเนียง';
+            const today = new Date();
+            const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+            const thaiDateStr = `วันที่ ${today.getDate()} เดือน ${thaiMonths[today.getMonth()]} พ.ศ. ${today.getFullYear() + 543}`;
+
+            // 3. Draw Header
+            ctx.fillStyle = '#0f172a';
+            ctx.textAlign = 'center';
+            ctx.font = 'bold 36px "Prompt", "Sarabun", sans-serif';
+            ctx.fillText(schoolName, canvas.width / 2, 100);
+
+            ctx.font = 'bold 44px "Prompt", "Sarabun", sans-serif';
+            ctx.fillStyle = isIdCard ? '#4338ca' : '#047857';
+            ctx.fillText(docTitle, canvas.width / 2, 162);
+
+            ctx.font = '500 28px "Prompt", "Sarabun", sans-serif';
+            ctx.fillStyle = '#334155';
+            ctx.fillText(`ชื่อ-นามสกุล: ${safeStudentName}     เลขที่: ${student.code || '-'}     สถานะ: ${student.status || 'ปกติ'}`, canvas.width / 2, 215);
+
+            // Header dividing line
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(100, 245);
+            ctx.lineTo(canvas.width - 100, 245);
+            ctx.stroke();
+
+            // 4. Draw Document Image in the Center with aspect ratio preservation
+            const docImg = new Image();
+            docImg.onload = () => {
+                const maxW = 1214;
+                const maxH = 1180;
+                let imgW = docImg.width;
+                let imgH = docImg.height;
+
+                const ratio = Math.min(maxW / imgW, maxH / imgH);
+                const finalW = imgW * ratio;
+                const finalH = imgH * ratio;
+
+                const posX = (canvas.width - finalW) / 2;
+                const posY = 270 + (maxH - finalH) / 2;
+
+                // Subtle frame box
+                ctx.fillStyle = '#f8fafc';
+                ctx.fillRect(posX - 6, posY - 6, finalW + 12, finalH + 12);
+                ctx.strokeStyle = '#cbd5e1';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(posX - 6, posY - 6, finalW + 12, finalH + 12);
+
+                // Draw image
+                ctx.drawImage(docImg, posX, posY, finalW, finalH);
+
+                // 5. Draw Footer Certification Box (สำเนาถูกต้อง)
+                const footerY = 1530;
+                ctx.fillStyle = '#1e293b';
+                ctx.textAlign = 'center';
+                ctx.font = 'bold 30px "Prompt", "Sarabun", sans-serif';
+                ctx.fillText('( สำเนาถูกต้อง )', canvas.width / 2, footerY);
+
+                ctx.font = '400 24px "Prompt", "Sarabun", sans-serif';
+                ctx.fillStyle = '#475569';
+                ctx.fillText('ลงชื่อ.................................................................... ผู้รับรอง', canvas.width / 2, footerY + 65);
+                ctx.fillText('(....................................................................)', canvas.width / 2, footerY + 125);
+                ctx.fillText('ตำแหน่ง....................................................................', canvas.width / 2, footerY + 185);
+                ctx.fillText(thaiDateStr, canvas.width / 2, footerY + 245);
+
+                // Export to PDF using jsPDF
+                if (window.jspdf && window.jspdf.jsPDF) {
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+                    const pageData = canvas.toDataURL('image/jpeg', 0.95);
+                    pdf.addImage(pageData, 'JPEG', 0, 0, 210, 297);
+                    pdf.save(fileName);
+                } else {
+                    // Fallback to browser print/save as PDF
+                    const printWin = window.open('', '_blank');
+                    const pageData = canvas.toDataURL('image/jpeg', 0.95);
+                    printWin.document.write(`
+                        <html><head><title>${fileName}</title></head>
+                        <body style="margin:0;display:flex;justify-content:center;background:#f1f5f9;">
+                            <img src="${pageData}" style="width:100%;max-width:210mm;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);background:#fff;" onload="window.print();" />
+                        </body></html>
+                    `);
+                    printWin.document.close();
+                }
+            };
+            docImg.onerror = () => {
+                showConfirm('เกิดข้อผิดพลาด', 'ไม่สามารถอ่านรูปภาพเพื่อสร้าง PDF ได้', null);
+                document.getElementById('confirm-cancel')?.classList.add('hidden');
+            };
+            docImg.src = dataUrl;
+        }
+
         function viewDocument(studentId, type) {
             const student = appData.students.find(s => s.id === studentId);
             if (!student) return;
@@ -1822,7 +1951,14 @@
             document.getElementById('doc-viewer-img').src = dataUrl;
             
             const downloadBtn = document.getElementById('doc-viewer-download');
-            downloadBtn.onclick = () => downloadDocument(dataUrl, fileName);
+            if (downloadBtn) {
+                downloadBtn.onclick = () => downloadDocument(dataUrl, fileName);
+            }
+            
+            const pdfBtn = document.getElementById('doc-viewer-pdf');
+            if (pdfBtn) {
+                pdfBtn.onclick = () => downloadStudentDocumentPDF(studentId, type);
+            }
             
             document.getElementById('doc-viewer-modal').classList.remove('hidden');
         }
@@ -2069,8 +2205,11 @@
                                         <span>บัตร ปชช.</span>
                                         <i class="fas fa-eye text-[10px] text-indigo-400"></i>
                                     </button>
-                                    <button onclick="downloadStudentDocument('${student.id}', 'idcard')" class="w-8 h-8 rounded-xl bg-slate-50 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 border border-slate-100 flex items-center justify-center text-xs transition-colors cursor-pointer" title="ดาวน์โหลดสำเนาบัตร">
-                                        <i class="fas fa-download"></i>
+                                    <button onclick="downloadStudentDocumentPDF('${student.id}', 'idcard')" class="w-8 h-8 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100 flex items-center justify-center text-xs transition-colors cursor-pointer" title="ดาวน์โหลด PDF A4">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </button>
+                                    <button onclick="downloadStudentDocument('${student.id}', 'idcard')" class="w-8 h-8 rounded-xl bg-slate-50 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 border border-slate-100 flex items-center justify-center text-xs transition-colors cursor-pointer" title="ดาวน์โหลดรูปภาพ JPG">
+                                        <i class="fas fa-image"></i>
                                     </button>
                                 </div>
                             ` : `
@@ -2087,8 +2226,11 @@
                                         <span>ทะเบียนบ้าน</span>
                                         <i class="fas fa-eye text-[10px] text-emerald-400"></i>
                                     </button>
-                                    <button onclick="downloadStudentDocument('${student.id}', 'housereg')" class="w-8 h-8 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 border border-slate-100 flex items-center justify-center text-xs transition-colors cursor-pointer" title="ดาวน์โหลดสำเนาทะเบียนบ้าน">
-                                        <i class="fas fa-download"></i>
+                                    <button onclick="downloadStudentDocumentPDF('${student.id}', 'housereg')" class="w-8 h-8 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100 flex items-center justify-center text-xs transition-colors cursor-pointer" title="ดาวน์โหลด PDF A4">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </button>
+                                    <button onclick="downloadStudentDocument('${student.id}', 'housereg')" class="w-8 h-8 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 border border-slate-100 flex items-center justify-center text-xs transition-colors cursor-pointer" title="ดาวน์โหลดรูปภาพ JPG">
+                                        <i class="fas fa-image"></i>
                                     </button>
                                 </div>
                             ` : `
