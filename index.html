@@ -25,6 +25,14 @@
     <!-- jsPDF for Document PDF Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
+    <!-- PDF.js for PDF Document Rasterization -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        if (window.pdfjsLib) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
+
     <style>
         :root {
             --bento-bg: #F5F7FA;
@@ -705,13 +713,13 @@
                                             </div>
                                             
                                             <input type="hidden" id="student-doc-idcard">
-                                            <input type="file" id="file-idcard" accept="image/*" class="hidden" onchange="handleDocumentUpload(this, 'idcard')">
+                                            <input type="file" id="file-idcard" accept="image/*,application/pdf,.pdf" class="hidden" onchange="handleDocumentUpload(this, 'idcard')">
                                             
                                             <div class="flex gap-2">
-                                                <button type="button" onclick="document.getElementById('file-idcard').click()" class="flex-1 py-1.5 px-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer">
-                                                    <i class="fas fa-camera"></i> เลือกภาพ/ถ่ายรูป
+                                                <button type="button" onclick="document.getElementById('file-idcard').click()" class="flex-1 py-1.5 px-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer" title="รองรับไฟล์ภาพ JPG, PNG และเอกสาร PDF">
+                                                    <i class="fas fa-file-arrow-up"></i> เลือกรูปภาพ / ไฟล์ PDF
                                                 </button>
-                                                <button type="button" id="btn-delete-idcard" onclick="removeDocument('idcard')" class="hidden py-1.5 px-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-bold transition-colors cursor-pointer" title="ลบภาพ">
+                                                <button type="button" id="btn-delete-idcard" onclick="removeDocument('idcard')" class="hidden py-1.5 px-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-bold transition-colors cursor-pointer" title="ลบเอกสาร">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
@@ -736,13 +744,13 @@
                                             </div>
                                             
                                             <input type="hidden" id="student-doc-housereg">
-                                            <input type="file" id="file-housereg" accept="image/*" class="hidden" onchange="handleDocumentUpload(this, 'housereg')">
+                                            <input type="file" id="file-housereg" accept="image/*,application/pdf,.pdf" class="hidden" onchange="handleDocumentUpload(this, 'housereg')">
                                             
                                             <div class="flex gap-2">
-                                                <button type="button" onclick="document.getElementById('file-housereg').click()" class="flex-1 py-1.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer">
-                                                    <i class="fas fa-camera"></i> เลือกภาพ/ถ่ายรูป
+                                                <button type="button" onclick="document.getElementById('file-housereg').click()" class="flex-1 py-1.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer" title="รองรับไฟล์ภาพ JPG, PNG และเอกสาร PDF">
+                                                    <i class="fas fa-file-arrow-up"></i> เลือกรูปภาพ / ไฟล์ PDF
                                                 </button>
-                                                <button type="button" id="btn-delete-housereg" onclick="removeDocument('housereg')" class="hidden py-1.5 px-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-bold transition-colors cursor-pointer" title="ลบภาพ">
+                                                <button type="button" id="btn-delete-housereg" onclick="removeDocument('housereg')" class="hidden py-1.5 px-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-bold transition-colors cursor-pointer" title="ลบเอกสาร">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
@@ -1759,22 +1767,54 @@
             if (fileInput) fileInput.value = '';
         }
 
+        async function convertPdfToImage(file) {
+            if (!window.pdfjsLib) {
+                throw new Error('ระบบไม่พบตัวอ่าน PDF กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต');
+            }
+            const arrayBuffer = await file.arrayBuffer();
+            const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+            const pdf = await loadingTask.promise;
+            if (pdf.numPages < 1) {
+                throw new Error('ไฟล์ PDF ไม่มีหน้าเอกสาร');
+            }
+            const page = await pdf.getPage(1);
+            const viewport = page.getViewport({ scale: 2.0 });
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            const ctx = canvas.getContext('2d');
+            
+            // Fill clean white background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+            return canvas.toDataURL('image/jpeg', 0.80);
+        }
+
         async function handleDocumentUpload(fileInput, type) {
             if (!fileInput.files || !fileInput.files[0]) return;
             const file = fileInput.files[0];
-            
             const badge = document.getElementById(`preview-${type}-badge`);
+            
+            const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+            
             if (badge) {
-                badge.innerText = 'กำลังย่อขนาด...';
+                badge.innerText = isPdf ? 'กำลังแปลง PDF...' : 'กำลังย่อขนาด...';
                 badge.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700 animate-pulse';
             }
             
             try {
-                const compressedDataUrl = await compressImage(file, 1280, 0.72);
-                setDocPreview(type, compressedDataUrl);
+                let finalDataUrl = '';
+                if (isPdf) {
+                    finalDataUrl = await convertPdfToImage(file);
+                } else {
+                    finalDataUrl = await compressImage(file, 1280, 0.72);
+                }
+                setDocPreview(type, finalDataUrl);
             } catch (err) {
-                console.error('Error compressing image:', err);
-                showConfirm('เกิดข้อผิดพลาด', 'ไม่สามารถประมวลผลรูปภาพได้ กรุณาลองใหม่อีกครั้ง', null);
+                console.error('Error processing document upload:', err);
+                showConfirm('เกิดข้อผิดพลาด', (err && err.message) ? err.message : 'ไม่สามารถประมวลผลไฟล์ได้ กรุณาลองใหม่อีกครั้ง', null);
                 document.getElementById('confirm-cancel')?.classList.add('hidden');
                 setDocPreview(type, '');
             }
